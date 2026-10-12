@@ -292,6 +292,6 @@ function makeAIPrompt(){const loc=document.getElementById("aiLocation").value||"
 async function copyAIPrompt(){const p=makeAIPrompt();const box=document.getElementById("aiPromptPreview");box.textContent=p;box.classList.remove("hidden");try{await navigator.clipboard.writeText(p);toast("Pedido copiado; cole no ChatGPT")}catch(e){toast("Pedido exibido abaixo para copiar manualmente")}}
 
 renderDays();renderUpcoming();renderBudget();renderShopping();renderChecks();
-if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=3").catch(()=>{});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=4").catch(()=>{});
 </script>
 </body></html>
