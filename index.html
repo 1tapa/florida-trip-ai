@@ -34,7 +34,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 :root{
  --bg:#f3f6fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dce5ef;
  --text:#12243a;--muted:#617187;--blue:#2474a6;--mint:#9ce5d0;
- --gold:#e5b65d;--danger:#b94848;--radius:22px;
+ --gold:#e5b65d;--danger:#b94848;--radius:22px;--teal:#0e7771;
 }
 html{background:var(--bg);scroll-behavior:smooth}
 body{background:linear-gradient(180deg,#eaf2f8 0,#f7f9fc 330px,#f3f6fa 100%);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.01em}
@@ -125,7 +125,7 @@ body{background:linear-gradient(180deg,#eaf2f8 0,#f7f9fc 330px,#f3f6fa 100%);col
 <body>
 <div class="app">
 <header class="top">
- <div class="brand"><div class="logo">✦</div><div><h1>Florida Trip <span style="color:var(--mint)">AI</span></h1><p>Seu guia particular na Flórida</p></div></div>
+ <div class="brand"><div class="logo">✦</div><div><h1>Florida Trip <span style="color:var(--teal)">AI</span></h1><p>Seu guia particular na Flórida</p></div></div>
  <div class="pill" id="offlinePill">● Roteiro salvo</div>
 </header>
 <div id="home" class="section active">
@@ -140,7 +140,7 @@ body{background:linear-gradient(180deg,#eaf2f8 0,#f7f9fc 330px,#f3f6fa 100%);col
    <div class="metric-row"><div><div class="small">ORÇAMENTO TOTAL</div><div class="big" id="totalBudget">$6.000</div></div><div style="font-size:28px">◉</div></div>
    <div class="progress"><span id="budgetBar"></span></div>
    <div class="metric-row"><span class="small">Gastos registrados</span><strong id="spent">$0</strong></div>
-   <div class="metric-row"><span class="small">Saldo restante</span><strong id="remaining" style="color:var(--mint)">$6.000</strong></div>
+   <div class="metric-row"><span class="small">Saldo restante</span><strong id="remaining" style="color:var(--teal)">$6.000</strong></div>
    <div class="actions"><button class="btn primary" onclick="go('budget')">Registrar gasto</button><button class="btn ghost" onclick="go('budget')">Ver orçamento</button></div>
   </article>
   <article class="card">
@@ -280,21 +280,32 @@ function save(){localStorage.setItem("floridaTripAI_v1",JSON.stringify(state));r
 function money(n){return "$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
 function go(id){document.querySelectorAll(".section").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));window.scrollTo({top:0,behavior:"smooth"});if(id==="itinerary")renderDays()}
-function renderDays(){document.getElementById("days").innerHTML=itinerary.map((d,i)=>`<div class="day" style="display:grid;grid-template-columns:63px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)"><div class="datebox"><strong>${d.date}</strong><span>${d.dow} · DEZ</span></div><div><h4>${escapeHtml(d.title)}</h4><p><b style="color:#dce8f7">${escapeHtml(d.where)}</b><br>${escapeHtml(d.desc)}</p>${d.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}<div class="actions"><button class="btn primary" type="button" onclick="showDay(${i})">Abrir página do dia →</button><button class="btn" type="button" onclick="editDay(${i})">Editar dia</button></div></div></div>`).join("")}
-function renderUpcoming(){document.getElementById("upcoming").innerHTML=itinerary.slice(0,3).map(d=>`<div class="day"><div class="datebox"><strong>${d.date}</strong><span>${d.dow}</span></div><div><h4>${d.title}</h4><p>${d.where}</p></div></div>`).join("")}
+function renderDays(){document.getElementById("days").innerHTML=itinerary.map((d,i)=>`<div class="day" style="display:grid;grid-template-columns:63px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)"><div class="datebox"><strong>${escapeHtml(d.date)}</strong><span>${escapeHtml(d.dow)} · DEZ</span></div><div><h4>${escapeHtml(d.title)}</h4><p><b style="color:var(--text)">${escapeHtml(d.where)}</b><br>${escapeHtml(d.desc)}</p>${d.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}<div class="actions"><button class="btn primary" type="button" onclick="showDay(${i})">Abrir página do dia →</button><button class="btn" type="button" onclick="editDay(${i})">Editar dia</button></div></div></div>`).join("")}
+function renderUpcoming(){document.getElementById("upcoming").innerHTML=itinerary.slice(0,3).map(d=>`<div class="day"><div class="datebox"><strong>${escapeHtml(d.date)}</strong><span>${escapeHtml(d.dow)}</span></div><div><h4>${escapeHtml(d.title)}</h4><p>${escapeHtml(d.where)}</p></div></div>`).join("")}
 function renderBudget(){const spent=state.expenses.reduce((a,e)=>a+Number(e.amount),0),left=state.budget-spent,p=Math.min(100,spent/state.budget*100);["spent","budgetSpent"].forEach(id=>document.getElementById(id).textContent=money(spent));["remaining","budgetRemaining"].forEach(id=>document.getElementById(id).textContent=money(left));["budgetBar","budgetBar2"].forEach(id=>document.getElementById(id).style.width=p+"%");document.getElementById("expenses").innerHTML=state.expenses.length?state.expenses.map((e,i)=>`<div class="moneyline"><div><strong>${escapeHtml(e.name)}</strong><br><span>${escapeHtml(e.category)}</span></div><div style="text-align:right"><strong>${money(e.amount)}</strong><br><button class="btn smallbtn" onclick="deleteExpense(${i})">Remover</button></div></div>`).join(""):'<div class="empty">Nenhuma despesa registrada ainda.</div>'}
 function deleteExpense(i){state.expenses.splice(i,1);save();toast("Despesa removida")}
 document.getElementById("expenseForm").addEventListener("submit",e=>{e.preventDefault();state.expenses.push({name:document.getElementById("expenseName").value,amount:Number(document.getElementById("expenseAmount").value),category:document.getElementById("expenseCategory").value});e.target.reset();save();toast("Despesa registrada")});
-function renderShopping(){document.getElementById("shoppingList").innerHTML=state.shopping.map((s,i)=>`<div class="listitem"><input type="checkbox" ${state.checks["shop"+i]?"checked":""} onchange="toggleShop(${i},this.checked)"><div class="desc"><strong>${escapeHtml(s)}</strong><small>Marque quando comprar</small></div><button class="btn smallbtn" onclick="removeShop(${i})">×</button></div>`).join("")}
-function toggleShop(i,v){state.checks["shop"+i]=v;save()}
-function removeShop(i){state.shopping.splice(i,1);save()}
+function renderShopping(){document.getElementById("shoppingList").innerHTML=state.shopping.map((s,i)=>`<div class="listitem"><input type="checkbox" ${state.checks[sk(i)]?"checked":""} onchange="toggleShop(${i},this.checked)"><div class="desc"><strong>${escapeHtml(s)}</strong><small>Marque quando comprar</small></div><button class="btn smallbtn" onclick="removeShop(${i})">×</button></div>`).join("")}
+function toggleShop(i,v){state.checks[sk(i)]=v;save()}
+function removeShop(i){delete state.checks[sk(i)];state.shopping.splice(i,1);save()}
 document.getElementById("shoppingForm").addEventListener("submit",e=>{e.preventDefault();state.shopping.push(document.getElementById("shoppingInput").value.trim());document.getElementById("shoppingInput").value="";save()});
+// As marcações ficam presas ao TEXTO do item (e não à posição), assim remover um item
+// da lista ou a IA reescrever o checklist não troca nem apaga o que já foi marcado.
+function ck(i){return "c:"+checklistItems[i]}
+function sk(i){return "shop:"+state.shopping[i]}
+function migrateChecks(){
+ let changed=false;
+ const has=k=>Object.prototype.hasOwnProperty.call(state.checks,k);
+ state.shopping.forEach((s,i)=>{const o="shop"+i;if(has(o)){if(state.checks[o])state.checks["shop:"+s]=true;delete state.checks[o];changed=true}});
+ checklistItems.forEach((s,i)=>{const o="c"+i;if(has(o)){if(state.checks[o])state.checks["c:"+s]=true;delete state.checks[o];changed=true}});
+ if(changed){try{localStorage.setItem("floridaTripAI_v1",JSON.stringify(state))}catch(e){}}
+}
 let checklistView="pre";
 function setChecklistView(v){checklistView=v;renderChecks()}
 function itemGroup(s){return s.startsWith("PARQUE:")?"parks":s.startsWith("COMPRAS:")?"shop":"pre"}
-function renderChecks(){const filtered=checklistItems.map((s,i)=>({s,i})).filter(x=>itemGroup(x.s)===checklistView);document.getElementById("fullChecklist").innerHTML=filtered.map(({s,i})=>`<div class="listitem"><input type="checkbox" ${state.checks["c"+i]?"checked":""} onchange="toggleCheck(${i},this.checked)"><div class="desc"><strong>${s.replace(/^(PARQUE:|COMPRAS:)\s*/,"")}</strong></div></div>`).join("");let done=checklistItems.filter((_,i)=>state.checks["c"+i]).length;document.getElementById("checkCount").textContent=done+"/"+checklistItems.length;document.getElementById("checkBar").style.width=done/checklistItems.length*100+"%";document.getElementById("miniChecklist").innerHTML=checklistItems.slice(0,3).map((s,i)=>`<div class="listitem"><input type="checkbox" ${state.checks["c"+i]?"checked":""} onchange="toggleCheck(${i},this.checked)"><div class="desc"><strong>${s}</strong></div></div>`).join("")}
-function toggleCheck(i,v){state.checks["c"+i]=v;save()}
-function resetChecklist(){checklistItems.forEach((_,i)=>delete state.checks["c"+i]);save();toast("Checklist desmarcado")}
+function renderChecks(){const filtered=checklistItems.map((s,i)=>({s,i})).filter(x=>itemGroup(x.s)===checklistView);document.getElementById("fullChecklist").innerHTML=filtered.map(({s,i})=>`<div class="listitem"><input type="checkbox" ${state.checks[ck(i)]?"checked":""} onchange="toggleCheck(${i},this.checked)"><div class="desc"><strong>${escapeHtml(s.replace(/^(PARQUE:|COMPRAS:)\s*/,""))}</strong></div></div>`).join("");let done=checklistItems.filter((_,i)=>state.checks[ck(i)]).length;document.getElementById("checkCount").textContent=done+"/"+checklistItems.length;document.getElementById("checkBar").style.width=done/checklistItems.length*100+"%";document.getElementById("miniChecklist").innerHTML=checklistItems.slice(0,3).map((s,i)=>`<div class="listitem"><input type="checkbox" ${state.checks[ck(i)]?"checked":""} onchange="toggleCheck(${i},this.checked)"><div class="desc"><strong>${escapeHtml(s)}</strong></div></div>`).join("")}
+function toggleCheck(i,v){state.checks[ck(i)]=v;save()}
+function resetChecklist(){checklistItems.forEach((_,i)=>delete state.checks[ck(i)]);save();toast("Checklist desmarcado")}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function loadWeather(){const title=document.getElementById("weatherTitle"),desc=document.getElementById("weatherDesc"),temp=document.getElementById("weatherTemp");title.textContent="Consultando…";try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=28.2920&longitude=-81.4076&current=temperature_2m,apparent_temperature,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNew_York&forecast_days=7");if(!r.ok)throw Error("API");const d=await r.json();const w=d.current;temp.textContent=Math.round(w.temperature_2m)+"°C";title.textContent="Kissimmee agora";desc.textContent="Sensação "+Math.round(w.apparent_temperature)+"°C · precipitação "+w.precipitation+" mm. Dados atuais; não é previsão para dezembro.";toast("Clima atualizado")}catch(e){title.textContent="Dados indisponíveis";desc.textContent="Verifique a conexão ou consulte uma fonte meteorológica perto da data.";temp.textContent="—"}}
 function exportData(){const blob=new Blob([JSON.stringify({itinerary,state},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="florida-trip-ai-dados.json";a.click();URL.revokeObjectURL(url)}
@@ -389,12 +400,18 @@ function showDay(i){
  document.getElementById("modalDayEyebrow").textContent="PLANO DO DIA · "+d.date+"/12/2026";
  document.getElementById("modalDayTitle").textContent=d.title;
  document.getElementById("modalDayWhere").textContent=d.where;
- const schedule=plan.schedule.map(x=>`<div class="plan-block"><div class="plan-time">${x[0]}</div><h4>${x[1]}</h4><p>${x[2]}</p></div>`).join("");
- const alts=plan.alternatives.map(x=>`<div class="option-box"><h4>${x[0]}</h4><p class="muted" style="margin:0;font-size:13px">${x[1]}</p></div>`).join("");
- document.getElementById("modalDayContent").innerHTML=`<p class="muted">${d.desc}</p><div class="actions"><button class="btn primary" onclick="go('assistant');document.getElementById('aiLocation').value='${d.date}/12/2026 — ${d.title}';document.getElementById('aiQuestion').focus();closeDayModal()">Perguntar à IA sobre este dia</button><button class="btn" onclick="window.print()">Imprimir plano</button></div><h3 style="margin-top:22px">Roteiro sugerido por horário</h3>${schedule}<h3 style="margin-top:22px">Alternativas e planos B</h3>${alts}<div class="notice">Os horários são uma proposta de planejamento, não reservas. Confirme funcionamento, ingressos, trânsito, filas e regras oficiais perto da viagem.</div><div class="modal-actions"><button class="btn primary" onclick="closeDayModal()">Concluir e voltar ao roteiro</button><button class="btn ghost" onclick="showDay(${(i+1)%itinerary.length})">Próximo dia →</button></div>`;
+ const schedule=plan.schedule.map(x=>`<div class="plan-block"><div class="plan-time">${escapeHtml(x[0])}</div><h4>${escapeHtml(x[1])}</h4><p>${escapeHtml(x[2])}</p></div>`).join("");
+ const alts=plan.alternatives.map(x=>`<div class="option-box"><h4>${escapeHtml(x[0])}</h4><p class="muted" style="margin:0;font-size:13px">${escapeHtml(x[1])}</p></div>`).join("");
+ document.getElementById("modalDayContent").innerHTML=`<p class="muted">${escapeHtml(d.desc)}</p><div class="actions"><button class="btn primary" onclick="askAIAboutDay(${i})">Perguntar à IA sobre este dia</button><button class="btn" onclick="window.print()">Imprimir plano</button></div><h3 style="margin-top:22px">Roteiro sugerido por horário</h3>${schedule}<h3 style="margin-top:22px">Alternativas e planos B</h3>${alts}<div class="notice">Os horários são uma proposta de planejamento, não reservas. Confirme funcionamento, ingressos, trânsito, filas e regras oficiais perto da viagem.</div><div class="modal-actions"><button class="btn primary" onclick="closeDayModal()">Concluir e voltar ao roteiro</button><button class="btn ghost" onclick="showDay(${(i+1)%itinerary.length})">Próximo dia →</button></div>`;
  modal.classList.add("open");document.body.style.overflow="hidden";
 }
 function closeDayModal(){document.getElementById("dayModal").classList.remove("open");document.body.style.overflow=""}
+function askAIAboutDay(i){
+ const d=itinerary[i];
+ closeDayModal();go("assistant");
+ document.getElementById("aiLocation").value=d.date+"/12/2026 — "+d.title;
+ document.getElementById("aiQuestion").focus();
+}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDayModal()});
 function closeDay(){const box=document.getElementById("dayDetail");box.classList.add("hidden");box.style.display="none"}
 const ORIGINAL_CHECKLIST_ITEMS = JSON.parse(JSON.stringify(checklistItems));
@@ -470,7 +487,7 @@ async function editItineraryWithAI(){
  try{
   const payload={
    model:"gpt-4.1-mini",
-   instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Return valid json only. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary, dayPlans e checklistItems. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. checklistItems deve ser um array de strings com checklist completo e organizado por categorias, usando prefixos como "PRÉ-VIAGEM:", "DOCUMENTOS:", "ROUPAS:", "ELETRÔNICOS:", "SAÚDE:", "CARRO:", "PARQUES:" e "COMPRAS:". Inclua documentos, roupas e itens pessoais quando o pedido tratar do checklist. Preserve itens já existentes que continuem relevantes e acrescente os necessários. Se o pedido não pedir alteração do checklist, mantenha exatamente a lista recebida. Evite afirmar informações atuais não fornecidas como confirmadas."
+   instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Return valid json only. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary, dayPlans e checklistItems. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. checklistItems deve ser um array de strings com checklist completo e organizado por categorias, usando prefixos como \"PRÉ-VIAGEM:\", \"DOCUMENTOS:\", \"ROUPAS:\", \"ELETRÔNICOS:\", \"SAÚDE:\", \"CARRO:\", \"PARQUES:\" e \"COMPRAS:\". Inclua documentos, roupas e itens pessoais quando o pedido tratar do checklist. Preserve itens já existentes que continuem relevantes e acrescente os necessários. Se o pedido não pedir alteração do checklist, mantenha exatamente a lista recebida. Evite afirmar informações atuais não fornecidas como confirmadas."
    ,input:JSON.stringify({instrucao_de_formato:"Retorne o resultado como um objeto JSON válido. A palavra JSON indica o formato obrigatório da resposta.",pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans,checklist_atual:checklistItems}),
    text:{format:{type:"json_object"}}
   };
@@ -489,7 +506,7 @@ async function editItineraryWithAI(){
 function applyAIItineraryEdit(){
  if(!pendingItineraryEdit)return;
  itinerary=pendingItineraryEdit.itinerary;dayPlans=pendingItineraryEdit.dayPlans;
- if(JSON.stringify(checklistItems)!==JSON.stringify(pendingItineraryEdit.checklistItems)){checklistItems=pendingItineraryEdit.checklistItems;Object.keys(state.checks).filter(k=>k.startsWith("c")).forEach(k=>delete state.checks[k]);localStorage.setItem("floridaTripAI_checklistItems_v1",JSON.stringify(checklistItems));save()}
+ if(JSON.stringify(checklistItems)!==JSON.stringify(pendingItineraryEdit.checklistItems)){checklistItems=pendingItineraryEdit.checklistItems;localStorage.setItem("floridaTripAI_checklistItems_v1",JSON.stringify(checklistItems));save()}
  saveItinerary();pendingItineraryEdit=null;
  document.getElementById("aiEditPreview").classList.add("hidden");
  document.getElementById("aiEditStatus").textContent="Roteiro atualizado e salvo neste navegador.";
@@ -500,8 +517,9 @@ function makeAIPrompt(){const loc=document.getElementById("aiLocation").value||"
 async function copyAIPrompt(){const p=makeAIPrompt();const box=document.getElementById("aiPromptPreview");box.textContent=p;box.classList.remove("hidden");try{await navigator.clipboard.writeText(p);toast("Pedido copiado; cole no ChatGPT")}catch(e){toast("Pedido exibido abaixo para copiar manualmente")}}
 
 loadSavedItinerary();
+migrateChecks();
 renderDays();renderUpcoming();renderBudget();renderShopping();renderChecks();
 updateApiKeyStatus();
-if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=8").catch(()=>{});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=9").catch(()=>{});
 </script>
 </body></html>
