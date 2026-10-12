@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#101b2d">
+<meta name="theme-color" content="#123f51">
 <meta name="description" content="Seu guia inteligente para a viagem à Flórida: roteiro, parques, compras, alimentação e orçamento.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Florida Trip AI</title>
+<title>Florida Trip Guide</title>
 <style>
 :root{--bg:#0b1220;--panel:#121d30;--panel2:#17253b;--line:#263750;--text:#f3f6fb;--muted:#a7b5c9;--blue:#83b7ff;--mint:#87e1c1;--gold:#f6cb78;--danger:#ff9b9b;--radius:20px}
 *{box-sizing:border-box}html{background:var(--bg);scroll-behavior:smooth}body{margin:0;background:radial-gradient(1000px 550px at 90% -10%,#203a5c 0%,transparent 60%),var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
@@ -29,20 +29,111 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 .option-box h4{margin:0 0 7px}
 .modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 @media(max-width:650px){.card,.card.third{grid-column:span 12}.hero{padding:20px}.app{padding:15px 12px 25px}.pill{font-size:10px}.two{grid-template-columns:1fr 1fr}.nav button{font-size:10px}.top{margin-bottom:17px}.day{grid-template-columns:63px 1fr}}
+
+/* Premium travel-guide redesign */
+:root{
+ --bg:#f3f6fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dce5ef;
+ --text:#12243a;--muted:#617187;--blue:#2474a6;--mint:#9ce5d0;
+ --gold:#e5b65d;--danger:#b94848;--radius:22px;
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{background:linear-gradient(180deg,#eaf2f8 0,#f7f9fc 330px,#f3f6fa 100%);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.01em}
+.app{max-width:1160px;padding:24px 24px 42px}
+.top{margin:4px 0 28px;padding:0 2px}
+.logo{background:linear-gradient(145deg,#123654,#1d7b93);color:white;border-radius:15px;box-shadow:0 10px 24px #12365428}
+.brand h1{font-size:21px;font-weight:800;letter-spacing:-.7px;color:#102b45}
+.brand p{font-size:12px;color:#718197}
+.pill{border:1px solid #d5e2ed;background:#fff;color:#426078;box-shadow:0 4px 14px #183c5b08;padding:8px 13px}
+.hero{background:linear-gradient(115deg,#0e2b45 0%,#154867 55%,#1d7382 100%);border:0;border-radius:28px;padding:clamp(26px,4vw,44px);box-shadow:0 22px 45px #143c5922;isolation:isolate}
+.hero:before{content:"";position:absolute;z-index:-1;width:340px;height:340px;right:-70px;top:-145px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 36px #ffffff08,0 0 0 76px #ffffff06}
+.hero:after{content:"";position:absolute;right:9%;bottom:-80px;width:230px;height:150px;border-radius:50%;background:#8ddbc522;filter:blur(6px);z-index:-1}
+.eyebrow{color:#168477;font-size:10px;letter-spacing:2px}
+.hero .eyebrow{color:#a9eddd}
+.hero h2{max-width:660px;font-size:clamp(32px,5.2vw,52px);font-weight:800;letter-spacing:-1.8px;line-height:1.04;margin:16px 0}
+.hero p{font-size:15px;line-height:1.7;color:#d6e5ef;max-width:590px}
+.hero-meta{gap:9px;margin-top:24px}
+.chip{background:#ffffff12;border:1px solid #ffffff28;border-radius:999px;padding:8px 12px;font-size:12px;color:#f0f7fb}
+.grid{gap:16px;margin-top:18px}
+.card{background:#fff;border:1px solid #e0e8f0;border-radius:21px;padding:21px;box-shadow:0 7px 22px #1c426108;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.card h3{color:#17324b;font-size:16px;font-weight:750;letter-spacing:-.35px}
+.card:hover{box-shadow:0 12px 30px #1c42610d;border-color:#cbdce9}
+.muted,.small,.brand p{color:var(--muted)}
+.big{color:#143450;font-weight:800}
+.progress{background:#e8eef4;height:8px}
+.progress span{background:linear-gradient(90deg,#1b7892,#70cbb6)}
+.btn{border:1px solid #d1deea;background:#f8fafc;color:#24415b;border-radius:12px;padding:10px 14px;font-weight:700;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 5px 14px #12365413;background:#eef5f9}
+.btn.primary{background:#117a78;border-color:#117a78;color:#fff;box-shadow:0 5px 13px #117a7825}
+.btn.primary:hover{background:#0c6968}
+.btn.ghost{background:transparent;color:#47637b}
+.field{background:#fbfdff;border:1px solid #d4e0eb;color:#17324b;border-radius:12px;padding:12px 13px}
+.field::placeholder{color:#91a0b1}
+.field:focus{border-color:#3d9a9b;box-shadow:0 0 0 3px #3d9a9b1c}
+.fieldlabel{color:#516980;font-weight:650}
+.nav{background:#ffffffed;border-top:1px solid #dce5ed;box-shadow:0 -10px 28px #193a520d;backdrop-filter:blur(20px);gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.nav button{color:#718298;border-radius:14px;min-width:72px;padding:9px 10px;font-weight:650;transition:background .15s ease,color .15s ease}
+.nav button b{font-size:18px}
+.nav button:hover{background:#f0f5f8;color:#24536c}
+.nav button.active{background:#e5f4f1;color:#0e7771}
+.day{padding:19px 0;border-bottom:1px solid #e7edf3;gap:15px}
+.datebox{background:#e8f3f7;color:#174d67;border:1px solid #d7e9ef;border-radius:14px;padding:10px 4px;min-width:62px}
+.datebox strong{font-size:22px;color:#16445f}
+.datebox span{color:#56778a;font-weight:750;font-size:9px}
+.day h4{font-size:16px;color:#183650;letter-spacing:-.25px}
+.day p{color:#64768a;line-height:1.65}
+.tag{background:#e8f5f1;color:#176c65;border:1px solid #d6eee7;border-radius:7px;font-weight:700;padding:4px 7px}
+.listitem{border-color:#e8eef3}
+.listitem input[type=checkbox]{accent-color:#16877d}
+.foodicon{background:#eaf4f5;color:#18576a}
+.moneyline{border-color:#e8eef3}
+.notice{background:#fff8e8;border:1px solid #f0dfb6;color:#765c24;border-radius:13px;line-height:1.55}
+.empty{color:#7b8da1}
+.toast{background:#123f51;color:#fff;box-shadow:0 12px 35px #0e2b4533}
+.footer{color:#8594a5}
+.day-modal{background:#0d2137d9;backdrop-filter:blur(8px)}
+.day-modal-inner{background:#fff;border:1px solid #d8e3ed;color:#17324b;box-shadow:0 24px 80px #061b2b55;border-radius:24px}
+.day-modal-head{background:#fff;border-color:#e1e9f0}
+.day-modal-head h2{color:#15344f}
+.plan-block{border-color:#e5edf3}
+.plan-time{color:#168477}
+.plan-block h4{color:#193953}
+.plan-block p{color:#64768a}
+.option-box{background:#f7fafc;border-color:#dce6ef}
+.option-box h4{color:#183650}
+#apiKeyStatus{background:#eef8f5;border-color:#cbe8df;color:#28675b}
+#aiEditStatus{overflow-wrap:anywhere}
+@media(min-width:900px){
+ .nav{left:50%;right:auto;transform:translateX(-50%);bottom:18px;width:max-content;max-width:calc(100vw - 36px);border:1px solid #dbe5ee;border-radius:20px;padding:8px 10px;box-shadow:0 12px 36px #193a521b}
+ body{padding-bottom:100px}
+}
+@media(max-width:650px){
+ .app{padding:14px 12px 28px}
+ .top{margin-bottom:18px}
+ .hero{border-radius:23px;padding:25px 21px}
+ .hero h2{font-size:35px;letter-spacing:-1.1px}
+ .card{padding:17px;border-radius:18px}
+ .nav{justify-content:flex-start;gap:2px}
+ .nav button{min-width:59px;padding:8px 4px}
+ .day{grid-template-columns:62px 1fr;gap:12px}
+ .day-modal{padding:10px 8px calc(16px + env(safe-area-inset-bottom))}
+ .day-modal-inner{padding:16px;border-radius:20px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
 </style>
 </head>
 <body>
 <div class="app">
 <header class="top">
- <div class="brand"><div class="logo">✦</div><div><h1>Florida Trip <span style="color:var(--mint)">AI</span></h1><p>Seu concierge pessoal na Flórida</p></div></div>
+ <div class="brand"><div class="logo">✦</div><div><h1>Florida Trip <span style="color:var(--mint)">AI</span></h1><p>Seu guia particular na Flórida</p></div></div>
  <div class="pill" id="offlinePill">● Roteiro salvo</div>
 </header>
 <div id="home" class="section active">
  <section class="hero">
-  <div class="eyebrow">Miami → Orlando · 2026</div>
-  <h2>Viajem bem.<br>Comprem melhor.</h2>
-  <p>Um centro de comando para roteiro, parques, restaurantes, compras e orçamento — tudo organizado para vocês dois.</p>
-  <div class="hero-meta"><span class="chip">◷ 4–12 dez 2026</span><span class="chip">♧ 2 viajantes</span><span class="chip">⌖ Carro alugado</span></div>
+  <div class="eyebrow">SEU GUIA PRIVADO · MIAMI + ORLANDO</div>
+  <h2>Sua Flórida,<br>bem planejada.</h2>
+  <p>Um guia de viagem sob medida, com roteiro inteligente, experiências selecionadas e cada detalhe organizado para vocês dois.</p>
+  <div class="hero-meta"><span class="chip">04—12 DEZ 2026</span><span class="chip">2 viajantes</span><span class="chip">Miami → Orlando</span><span class="chip">Carro alugado</span></div>
  </section>
  <div class="grid">
   <article class="card">
