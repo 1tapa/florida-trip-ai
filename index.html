@@ -380,7 +380,7 @@ async function editItineraryWithAI(){
   const payload={
    model:"gpt-4.1-mini",
    instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Return valid json only. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary, dayPlans e checklistItems. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. checklistItems deve ser um array de strings com checklist completo e organizado por categorias, usando prefixos como "PRÉ-VIAGEM:", "DOCUMENTOS:", "ROUPAS:", "ELETRÔNICOS:", "SAÚDE:", "CARRO:", "PARQUES:" e "COMPRAS:". Inclua documentos, roupas e itens pessoais quando o pedido tratar do checklist. Preserve itens já existentes que continuem relevantes e acrescente os necessários. Se o pedido não pedir alteração do checklist, mantenha exatamente a lista recebida. Evite afirmar informações atuais não fornecidas como confirmadas."
-   ,input:JSON.stringify({pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans,checklist_atual:checklistItems}),
+   ,input:JSON.stringify({instrucao_de_formato:"Retorne o resultado como um objeto JSON válido. A palavra JSON indica o formato obrigatório da resposta.",pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans,checklist_atual:checklistItems}),
    text:{format:{type:"json_object"}}
   };
   const response=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(payload)});
@@ -411,6 +411,6 @@ async function copyAIPrompt(){const p=makeAIPrompt();const box=document.getEleme
 loadSavedItinerary();
 renderDays();renderUpcoming();renderBudget();renderShopping();renderChecks();
 updateApiKeyStatus();
-if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=6").catch(()=>{});
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=7").catch(()=>{});
 </script>
 </body></html>
