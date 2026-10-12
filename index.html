@@ -167,7 +167,7 @@ let itinerary=[
  {date:"11",dow:"SEX",title:"International Premium Outlets + malas",where:"Orlando",desc:"Completar roupas, tênis e acessórios, voltar cedo ao hotel e organizar as malas.",tags:["Compras","Organização"]},
  {date:"12",dow:"SÁB",title:"Retorno ao Brasil",where:"Kissimmee → MCO",desc:"Café, checkout, abastecimento e devolução do Mustang. Voo às 18h15; planejar chegada ao aeroporto por volta das 15h.",tags:["Checkout","Aeroporto"]}
 ];
-const checklistItems=[
+let checklistItems=[
  "PRÉ-VIAGEM: Confirmar voo de chegada ao MIA e retorno pelo MCO",
  "PRÉ-VIAGEM: Confirmar aluguel com retirada no MIA e devolução no MCO",
  "PRÉ-VIAGEM: Confirmar check-in antecipado ou guarda de malas no primeiro hotel",
@@ -306,10 +306,13 @@ function showDay(i){
 function closeDayModal(){document.getElementById("dayModal").classList.remove("open");document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDayModal()});
 function closeDay(){const box=document.getElementById("dayDetail");box.classList.add("hidden");box.style.display="none"}
+const ORIGINAL_CHECKLIST_ITEMS = JSON.parse(JSON.stringify(checklistItems));
 const ORIGINAL_ITINERARY = JSON.parse(JSON.stringify(itinerary));
 const ORIGINAL_DAY_PLANS = JSON.parse(JSON.stringify(dayPlans));
 function loadSavedItinerary(){
  try{
+  const savedChecklist=localStorage.getItem("floridaTripAI_checklistItems_v1");
+  if(savedChecklist){const parsed=JSON.parse(savedChecklist);if(Array.isArray(parsed)&&parsed.every(x=>typeof x==="string"))checklistItems=parsed;}
   const savedItinerary=localStorage.getItem("floridaTripAI_itinerary_v1");
   const savedPlans=localStorage.getItem("floridaTripAI_dayPlans_v1");
   if(savedItinerary){const parsed=JSON.parse(savedItinerary);if(Array.isArray(parsed)&&parsed.length===itinerary.length)itinerary=parsed;}
@@ -356,6 +359,8 @@ function resetItinerary(){
  dayPlans=JSON.parse(JSON.stringify(ORIGINAL_DAY_PLANS));
  localStorage.removeItem("floridaTripAI_itinerary_v1");
  localStorage.removeItem("floridaTripAI_dayPlans_v1");
+ checklistItems.splice(0,checklistItems.length,...ORIGINAL_CHECKLIST_ITEMS);
+ localStorage.removeItem("floridaTripAI_checklistItems_v1");
  renderDays();renderUpcoming();toast("Roteiro original restaurado");
 }
 function responseText(data){
@@ -374,17 +379,17 @@ async function editItineraryWithAI(){
  try{
   const payload={
    model:"gpt-4.1-mini",
-   instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary e dayPlans. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. Evite afirmar informações atuais não fornecidas como confirmadas."
-   ,input:JSON.stringify({pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans}),
+   instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Return valid json only. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary, dayPlans e checklistItems. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. checklistItems deve ser um array de strings com checklist completo e organizado por categorias, usando prefixos como "PRÉ-VIAGEM:", "DOCUMENTOS:", "ROUPAS:", "ELETRÔNICOS:", "SAÚDE:", "CARRO:", "PARQUES:" e "COMPRAS:". Inclua documentos, roupas e itens pessoais quando o pedido tratar do checklist. Preserve itens já existentes que continuem relevantes e acrescente os necessários. Se o pedido não pedir alteração do checklist, mantenha exatamente a lista recebida. Evite afirmar informações atuais não fornecidas como confirmadas."
+   ,input:JSON.stringify({pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans,checklist_atual:checklistItems}),
    text:{format:{type:"json_object"}}
   };
   const response=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(payload)});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error?.message||("Erro da API HTTP "+response.status));
   const result=JSON.parse(responseText(data));
-  if(!Array.isArray(result.itinerary)||result.itinerary.length!==9||!Array.isArray(result.dayPlans)||result.dayPlans.length!==9)throw new Error("A IA não retornou os 9 dias e seus planos detalhados no formato esperado. Tente pedir novamente.");
+  if(!Array.isArray(result.itinerary)||result.itinerary.length!==9||!Array.isArray(result.dayPlans)||result.dayPlans.length!==9||!Array.isArray(result.checklistItems)||result.checklistItems.some(x=>typeof x!=="string"))throw new Error("A IA não retornou o roteiro e o checklist no formato esperado. Tente pedir novamente.");
   for(const d of result.itinerary){if(!d.date||!d.title||!d.where||!d.desc||!Array.isArray(d.tags))throw new Error("A resposta da IA tem campos obrigatórios faltando. Nenhuma alteração foi aplicada.")}
-  pendingItineraryEdit={itinerary:result.itinerary,dayPlans:result.dayPlans,summary:result.summary||"Roteiro atualizado pela IA."};
+  pendingItineraryEdit={itinerary:result.itinerary,dayPlans:result.dayPlans,checklistItems:result.checklistItems,summary:result.summary||"Proposta de alteração preparada pela IA."};
   preview.innerHTML="<h3>Proposta de alteração</h3><p>"+escapeHtml(pendingItineraryEdit.summary)+"</p><p class=\"muted\">Confira a proposta antes de aplicar. Ela substituirá o roteiro atual salvo neste navegador.</p><div class=\"actions\"><button class=\"btn primary\" onclick=\"applyAIItineraryEdit()\">Aplicar roteiro</button><button class=\"btn ghost\" onclick=\"discardAIItineraryEdit()\">Descartar</button></div>";
   preview.classList.remove("hidden");status.textContent="A proposta está pronta. O roteiro atual ainda não foi alterado.";
  }catch(e){status.textContent="Não foi possível gerar a alteração: "+e.message+"\nVerifique a chave, o saldo/limite da API e a conexão. Nenhuma alteração foi aplicada."}
@@ -393,6 +398,7 @@ async function editItineraryWithAI(){
 function applyAIItineraryEdit(){
  if(!pendingItineraryEdit)return;
  itinerary=pendingItineraryEdit.itinerary;dayPlans=pendingItineraryEdit.dayPlans;
+ if(JSON.stringify(checklistItems)!==JSON.stringify(pendingItineraryEdit.checklistItems)){checklistItems=pendingItineraryEdit.checklistItems;Object.keys(state.checks).filter(k=>k.startsWith("c")).forEach(k=>delete state.checks[k]);localStorage.setItem("floridaTripAI_checklistItems_v1",JSON.stringify(checklistItems));save()}
  saveItinerary();pendingItineraryEdit=null;
  document.getElementById("aiEditPreview").classList.add("hidden");
  document.getElementById("aiEditStatus").textContent="Roteiro atualizado e salvo neste navegador.";
