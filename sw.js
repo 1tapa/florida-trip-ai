@@ -1,4 +1,4 @@
-const CACHE="florida-trip-ai-v2";
+const CACHE="florida-trip-ai-v3";
 const CORE=["./","./index.html","./manifest.webmanifest","./icon.svg"];
 
 self.addEventListener("install", event => {
@@ -23,6 +23,9 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
+  // Requisições para outros domínios (ex.: Open-Meteo) passam direto para a rede,
+  // senão a resposta ficaria presa no cache e o clima nunca atualizaria.
+  if (url.origin !== self.location.origin) return;
   const isPage = event.request.mode === "navigate" ||
     url.pathname.endsWith("/index.html") ||
     url.pathname.endsWith("/florida-trip-ai/");
