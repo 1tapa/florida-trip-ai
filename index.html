@@ -105,12 +105,30 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
  <div class="notice">Confirme endereços, horário, operação e preços da unidade antes de dirigir até ela. O app não realiza reservas ou pedidos.</div>
 </div>
 <div id="assistant" class="section">
- <div class="eyebrow">CONCIERGE DIGITAL</div><h2 style="margin:6px 0 14px">Assistente de viagem</h2>
- <div class="card full"><h3>O que vocês precisam agora?</h3><p class="muted">Esta versão prepara uma consulta contextual para copiar no ChatGPT. A IA ainda não está integrada diretamente ao aplicativo.</p>
- <label class="fieldlabel">Onde vocês estão / qual dia?</label><input id="aiLocation" class="field" placeholder="Ex.: Ramada em Kissimmee, manhã de 8/12">
- <label class="fieldlabel">O que querem resolver?</label><textarea id="aiQuestion" class="field" rows="4" placeholder="Ex.: chuva, compras de roupas e jantar econômico"></textarea>
- <div class="actions"><button class="btn primary" onclick="copyAIPrompt()">Preparar e copiar pedido</button></div><div id="aiPromptPreview" class="notice hidden" style="white-space:pre-wrap"></div></div>
- <div class="grid"><article class="card"><h3>Contexto da viagem</h3><div class="moneyline"><span>Viajantes</span><strong>2 adultos</strong></div><div class="moneyline"><span>Orçamento total</span><strong>US$ 6.000</strong></div><div class="moneyline"><span>Alimentação diária</span><strong>US$ 110</strong></div></article><article class="card"><h3>Como usar</h3><p class="muted">Copie o pedido e envie ao ChatGPT para pesquisar clima, horários, deslocamentos e opções atuais. Confirme trânsito e horários antes de sair.</p></article></div>
+ <div class="eyebrow">CONCIERGE DIGITAL</div><h2 style="margin:6px 0 14px">Assistente de viagem com IA</h2>
+ <div class="card full">
+  <h3>1. Conectar sua API da OpenAI</h3>
+  <p class="muted">A chave será guardada no armazenamento local deste navegador, não no GitHub. Como a chamada é feita diretamente do navegador, esta opção é menos segura: qualquer pessoa com acesso ao seu navegador ou código malicioso executado nesta página pode tentar acessar a chave.</p>
+  <label class="fieldlabel" for="openaiApiKey">Chave da API</label>
+  <input id="openaiApiKey" class="field" type="password" autocomplete="off" placeholder="Cole sua chave sk-...">
+  <div class="actions"><button class="btn primary" onclick="saveOpenAIKey()">Salvar chave neste navegador</button><button class="btn ghost" onclick="removeOpenAIKey()">Apagar chave salva</button></div>
+  <div id="apiKeyStatus" class="notice">Chave não configurada.</div>
+  <p class="muted small">A API é cobrada separadamente da assinatura do ChatGPT. Defina limites de uso na plataforma da OpenAI. Nunca coloque a chave em arquivos do repositório.</p>
+ </div>
+ <div class="card full">
+  <h3>2. Peça para alterar o roteiro</h3>
+  <label class="fieldlabel" for="aiEditCommand">O que você quer mudar?</label>
+  <textarea id="aiEditCommand" class="field" rows="4" placeholder="Ex.: No dia 8, faça Kennedy Space Center de manhã e Disney Springs à noite. Se chover, sugira uma alternativa coberta. Não altere os outros dias."></textarea>
+  <div class="actions"><button id="aiEditButton" class="btn primary" onclick="editItineraryWithAI()">Analisar e propor alterações</button><button class="btn ghost" onclick="resetItinerary()">Restaurar roteiro original</button></div>
+  <div id="aiEditStatus" class="notice hidden" style="white-space:pre-wrap"></div>
+  <div id="aiEditPreview" class="card full hidden" style="margin-top:12px"></div>
+ </div>
+ <div class="card full"><h3>Consulta rápida</h3><p class="muted">Para perguntas sem alterar o roteiro, escreva abaixo e copie o contexto para consultar o ChatGPT.</p>
+  <label class="fieldlabel">Onde vocês estão / qual dia?</label><input id="aiLocation" class="field" placeholder="Ex.: Ramada em Kissimmee, manhã de 8/12">
+  <label class="fieldlabel">O que querem resolver?</label><textarea id="aiQuestion" class="field" rows="3" placeholder="Ex.: chuva, compras de roupas e jantar econômico"></textarea>
+  <div class="actions"><button class="btn" onclick="copyAIPrompt()">Preparar e copiar pedido</button></div><div id="aiPromptPreview" class="notice hidden" style="white-space:pre-wrap"></div>
+ </div>
+ <div class="grid"><article class="card"><h3>Contexto da viagem</h3><div class="moneyline"><span>Viajantes</span><strong>2 adultos</strong></div><div class="moneyline"><span>Orçamento total</span><strong>US$ 6.000</strong></div><div class="moneyline"><span>Alimentação diária</span><strong>US$ 110</strong></div></article><article class="card"><h3>Como funciona</h3><p class="muted">A IA pode reorganizar dias, atividades, locais, horários e alternativas. Antes de aplicar, você verá um resumo e poderá confirmar. Alterações ficam salvas neste navegador.</p></article></div>
 </div>
 <div id="checklist" class="section">
  <div class="eyebrow">PREPARAÇÃO</div><h2 style="margin:6px 0 14px">Checklist da viagem</h2>
@@ -138,7 +156,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{max-width:1
 </nav>
 <div id="toast" class="toast hidden"></div>
 <script>
-const itinerary=[
+let itinerary=[
  {date:"04",dow:"SEX",title:"Chegada + iPhone + Miami Beach",where:"MIA → Apple Lincoln Road → Lauderdale-by-the-Sea",desc:"Pouso às 06h30, imigração, retirada do Mustang, compra e configuração do iPhone, South Beach e chegada ao hotel.",tags:["Chegada","Apple","Praia"]},
  {date:"05",dow:"SÁB",title:"Little Havana, Wynwood e Brickell",where:"Miami",desc:"Cultura cubana pela manhã, arte urbana à tarde e Brickell/Biscayne Bay no fim do dia.",tags:["Passeio","Arte","Gastronomia"]},
  {date:"06",dow:"DOM",title:"Descanso + Sawgrass + Orlando",where:"Lauderdale-by-the-Sea → Sawgrass Mills → Kissimmee",desc:"Manhã leve, compras de oportunidade no Sawgrass e estrada para o Ramada em Kissimmee.",tags:["Outlet","Estrada"]},
@@ -171,7 +189,7 @@ function save(){localStorage.setItem("floridaTripAI_v1",JSON.stringify(state));r
 function money(n){return "$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function toast(s){const t=document.getElementById("toast");t.textContent=s;t.classList.remove("hidden");setTimeout(()=>t.classList.add("hidden"),2400)}
 function go(id){document.querySelectorAll(".section").forEach(x=>x.classList.toggle("active",x.id===id));document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));window.scrollTo({top:0,behavior:"smooth"});if(id==="itinerary")renderDays()}
-function renderDays(){document.getElementById("days").innerHTML=itinerary.map((d,i)=>`<div class="day" style="display:grid;grid-template-columns:63px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)"><div class="datebox"><strong>${d.date}</strong><span>${d.dow} · DEZ</span></div><div><h4>${d.title}</h4><p><b style="color:#dce8f7">${d.where}</b><br>${d.desc}</p>${d.tags.map(t=>`<span class="tag">${t}</span>`).join("")}<div class="actions"><button class="btn primary" type="button" onclick="showDay(${i})">Abrir página do dia →</button></div></div></div>`).join("")}
+function renderDays(){document.getElementById("days").innerHTML=itinerary.map((d,i)=>`<div class="day" style="display:grid;grid-template-columns:63px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)"><div class="datebox"><strong>${d.date}</strong><span>${d.dow} · DEZ</span></div><div><h4>${escapeHtml(d.title)}</h4><p><b style="color:#dce8f7">${escapeHtml(d.where)}</b><br>${escapeHtml(d.desc)}</p>${d.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}<div class="actions"><button class="btn primary" type="button" onclick="showDay(${i})">Abrir página do dia →</button><button class="btn" type="button" onclick="editDay(${i})">Editar dia</button></div></div></div>`).join("")}
 function renderUpcoming(){document.getElementById("upcoming").innerHTML=itinerary.slice(0,3).map(d=>`<div class="day"><div class="datebox"><strong>${d.date}</strong><span>${d.dow}</span></div><div><h4>${d.title}</h4><p>${d.where}</p></div></div>`).join("")}
 function renderBudget(){const spent=state.expenses.reduce((a,e)=>a+Number(e.amount),0),left=state.budget-spent,p=Math.min(100,spent/state.budget*100);["spent","budgetSpent"].forEach(id=>document.getElementById(id).textContent=money(spent));["remaining","budgetRemaining"].forEach(id=>document.getElementById(id).textContent=money(left));["budgetBar","budgetBar2"].forEach(id=>document.getElementById(id).style.width=p+"%");document.getElementById("expenses").innerHTML=state.expenses.length?state.expenses.map((e,i)=>`<div class="moneyline"><div><strong>${escapeHtml(e.name)}</strong><br><span>${escapeHtml(e.category)}</span></div><div style="text-align:right"><strong>${money(e.amount)}</strong><br><button class="btn smallbtn" onclick="deleteExpense(${i})">Remover</button></div></div>`).join(""):'<div class="empty">Nenhuma despesa registrada ainda.</div>'}
 function deleteExpense(i){state.expenses.splice(i,1);save();toast("Despesa removida")}
@@ -189,7 +207,7 @@ function resetChecklist(){checklistItems.forEach((_,i)=>delete state.checks["c"+
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function loadWeather(){const title=document.getElementById("weatherTitle"),desc=document.getElementById("weatherDesc"),temp=document.getElementById("weatherTemp");title.textContent="Consultando…";try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=28.2920&longitude=-81.4076&current=temperature_2m,apparent_temperature,precipitation,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNew_York&forecast_days=7");if(!r.ok)throw Error("API");const d=await r.json();const w=d.current;temp.textContent=Math.round(w.temperature_2m)+"°C";title.textContent="Kissimmee agora";desc.textContent="Sensação "+Math.round(w.apparent_temperature)+"°C · precipitação "+w.precipitation+" mm. Dados atuais; não é previsão para dezembro.";toast("Clima atualizado")}catch(e){title.textContent="Dados indisponíveis";desc.textContent="Verifique a conexão ou consulte uma fonte meteorológica perto da data.";temp.textContent="—"}}
 function exportData(){const blob=new Blob([JSON.stringify({itinerary,state},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="florida-trip-ai-dados.json";a.click();URL.revokeObjectURL(url)}
-const dayPlans = [
+let dayPlans = [
  {schedule:[
   ["06:30","Chegada ao MIA","Imigração, bagagem e procedimentos de entrada. Conte com variação no tempo de liberação."],
   ["09:00–09:30","Retirar o Mustang","Filme a carroceria em 360°, rodas, vidros, interior, painel, combustível e quilometragem. Pergunte sobre pedágios."],
@@ -288,10 +306,105 @@ function showDay(i){
 function closeDayModal(){document.getElementById("dayModal").classList.remove("open");document.body.style.overflow=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDayModal()});
 function closeDay(){const box=document.getElementById("dayDetail");box.classList.add("hidden");box.style.display="none"}
+const ORIGINAL_ITINERARY = JSON.parse(JSON.stringify(itinerary));
+const ORIGINAL_DAY_PLANS = JSON.parse(JSON.stringify(dayPlans));
+function loadSavedItinerary(){
+ try{
+  const savedItinerary=localStorage.getItem("floridaTripAI_itinerary_v1");
+  const savedPlans=localStorage.getItem("floridaTripAI_dayPlans_v1");
+  if(savedItinerary){const parsed=JSON.parse(savedItinerary);if(Array.isArray(parsed)&&parsed.length===itinerary.length)itinerary=parsed;}
+  if(savedPlans){const parsed=JSON.parse(savedPlans);if(Array.isArray(parsed)&&parsed.length===dayPlans.length)dayPlans=parsed;}
+ }catch(e){console.warn("Não foi possível carregar o roteiro salvo",e)}
+}
+function saveItinerary(){
+ localStorage.setItem("floridaTripAI_itinerary_v1",JSON.stringify(itinerary));
+ localStorage.setItem("floridaTripAI_dayPlans_v1",JSON.stringify(dayPlans));
+ renderDays();renderUpcoming();
+}
+function saveOpenAIKey(){
+ const input=document.getElementById("openaiApiKey"),key=input.value.trim();
+ if(!key){toast("Cole sua chave da API primeiro");return}
+ if(!key.startsWith("sk-")){toast("Confira a chave: o formato não parece uma chave da OpenAI");return}
+ localStorage.setItem("floridaTripAI_openai_key",key);
+ input.value="";
+ updateApiKeyStatus();
+ toast("Chave salva somente neste navegador");
+}
+function removeOpenAIKey(){
+ localStorage.removeItem("floridaTripAI_openai_key");
+ document.getElementById("openaiApiKey").value="";
+ updateApiKeyStatus();
+ toast("Chave local apagada");
+}
+function updateApiKeyStatus(){
+ const el=document.getElementById("apiKeyStatus");
+ if(!el)return;
+ const key=localStorage.getItem("floridaTripAI_openai_key");
+ el.textContent=key?"Chave salva neste navegador. Ela não está incluída no repositório GitHub.":"Chave não configurada.";
+}
+function editDay(i){
+ const d=itinerary[i];
+ const title=prompt("Título do dia:",d.title);if(title===null)return;
+ const where=prompt("Locais / região:",d.where);if(where===null)return;
+ const desc=prompt("Descrição resumida:",d.desc);if(desc===null)return;
+ itinerary[i]={...d,title:title.trim()||d.title,where:where.trim()||d.where,desc:desc.trim()||d.desc};
+ saveItinerary();toast("Dia atualizado");
+}
+function resetItinerary(){
+ if(!confirm("Restaurar o roteiro original? Suas alterações personalizadas serão substituídas."))return;
+ itinerary=JSON.parse(JSON.stringify(ORIGINAL_ITINERARY));
+ dayPlans=JSON.parse(JSON.stringify(ORIGINAL_DAY_PLANS));
+ localStorage.removeItem("floridaTripAI_itinerary_v1");
+ localStorage.removeItem("floridaTripAI_dayPlans_v1");
+ renderDays();renderUpcoming();toast("Roteiro original restaurado");
+}
+function responseText(data){
+ if(data.output_text)return data.output_text;
+ for(const item of (data.output||[]))for(const part of (item.content||[]))if(part.type==="output_text"&&part.text)return part.text;
+ throw new Error("A resposta da API não trouxe texto para o roteiro.");
+}
+let pendingItineraryEdit=null;
+async function editItineraryWithAI(){
+ const key=localStorage.getItem("floridaTripAI_openai_key");
+ const command=document.getElementById("aiEditCommand").value.trim();
+ const status=document.getElementById("aiEditStatus"),preview=document.getElementById("aiEditPreview"),button=document.getElementById("aiEditButton");
+ if(!key){status.textContent="Configure e salve sua chave da API primeiro.";status.classList.remove("hidden");return}
+ if(!command){status.textContent="Escreva o que deseja alterar no roteiro.";status.classList.remove("hidden");return}
+ button.disabled=true;button.textContent="Consultando a IA…";preview.classList.add("hidden");status.textContent="Enviando o roteiro e seu pedido à API da OpenAI…";status.classList.remove("hidden");
+ try{
+  const payload={
+   model:"gpt-4.1-mini",
+   instructions:"Você é o planejador do Florida Trip AI. Edite o roteiro de uma viagem de 2 adultos à Flórida de 4 a 12 de dezembro de 2026. Preserve as informações que o usuário não pediu para mudar. Não invente reservas, ingressos comprados ou horários confirmados. Retorne SOMENTE um objeto JSON válido com as chaves summary, itinerary e dayPlans. summary deve resumir as mudanças em português. itinerary deve ter exatamente 9 objetos, na mesma ordem das datas, cada um com date (string dia do mês), dow (dia da semana abreviado em português), title, where, desc e tags (array de strings). dayPlans deve ter exatamente 9 objetos, um por dia e na mesma ordem, cada um com schedule (array de arrays de 3 strings: horário, título, descrição) e alternatives (array de arrays de 2 strings: nome da alternativa, descrição). Mantenha coerência entre itinerary e dayPlans. Se o pedido alterar um dia, atualize tanto o resumo desse dia quanto seu plano detalhado. Preserve datas e compromissos fixos salvo se o usuário pedir para mudá-los. Evite afirmar informações atuais não fornecidas como confirmadas."
+   ,input:JSON.stringify({pedido_do_usuario:command,roteiro_atual:itinerary,planos_detalhados_atuais:dayPlans}),
+   text:{format:{type:"json_object"}}
+  };
+  const response=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},body:JSON.stringify(payload)});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error?.message||("Erro da API HTTP "+response.status));
+  const result=JSON.parse(responseText(data));
+  if(!Array.isArray(result.itinerary)||result.itinerary.length!==9||!Array.isArray(result.dayPlans)||result.dayPlans.length!==9)throw new Error("A IA não retornou os 9 dias e seus planos detalhados no formato esperado. Tente pedir novamente.");
+  for(const d of result.itinerary){if(!d.date||!d.title||!d.where||!d.desc||!Array.isArray(d.tags))throw new Error("A resposta da IA tem campos obrigatórios faltando. Nenhuma alteração foi aplicada.")}
+  pendingItineraryEdit={itinerary:result.itinerary,dayPlans:result.dayPlans,summary:result.summary||"Roteiro atualizado pela IA."};
+  preview.innerHTML="<h3>Proposta de alteração</h3><p>"+escapeHtml(pendingItineraryEdit.summary)+"</p><p class=\"muted\">Confira a proposta antes de aplicar. Ela substituirá o roteiro atual salvo neste navegador.</p><div class=\"actions\"><button class=\"btn primary\" onclick=\"applyAIItineraryEdit()\">Aplicar roteiro</button><button class=\"btn ghost\" onclick=\"discardAIItineraryEdit()\">Descartar</button></div>";
+  preview.classList.remove("hidden");status.textContent="A proposta está pronta. O roteiro atual ainda não foi alterado.";
+ }catch(e){status.textContent="Não foi possível gerar a alteração: "+e.message+"\nVerifique a chave, o saldo/limite da API e a conexão. Nenhuma alteração foi aplicada."}
+ finally{button.disabled=false;button.textContent="Analisar e propor alterações"}
+}
+function applyAIItineraryEdit(){
+ if(!pendingItineraryEdit)return;
+ itinerary=pendingItineraryEdit.itinerary;dayPlans=pendingItineraryEdit.dayPlans;
+ saveItinerary();pendingItineraryEdit=null;
+ document.getElementById("aiEditPreview").classList.add("hidden");
+ document.getElementById("aiEditStatus").textContent="Roteiro atualizado e salvo neste navegador.";
+ toast("Roteiro da viagem atualizado");
+}
+function discardAIItineraryEdit(){pendingItineraryEdit=null;document.getElementById("aiEditPreview").classList.add("hidden");document.getElementById("aiEditStatus").textContent="Proposta descartada. O roteiro salvo não foi alterado."}
 function makeAIPrompt(){const loc=document.getElementById("aiLocation").value||"localização ainda não informada";const q=document.getElementById("aiQuestion").value||"Sugira o melhor plano para hoje.";return `Atue como concierge da viagem Florida Trip AI. Local/dia: ${loc}. Pedido: ${q}. Contexto: 2 adultos na Flórida de 4 a 12 de dezembro de 2026; orçamento total US$ 6.000; alimentação alvo US$ 110/dia; hotéis, carro e ingressos pagos; foco em roupas, outlets e Denny's, Chick-fil-A, Wendy's, Shake Shack e Five Guys. Roteiro-base do PDF: 4/12 chegada, Apple Lincoln Road e Miami Beach; 5/12 Little Havana, Wynwood e Brickell; 6/12 Sawgrass Mills e estrada para Kissimmee; 7/12 Magic Kingdom; 8/12 Kennedy Space Center + Disney Springs; 9/12 Universal Studios Florida; 10/12 Vineland Premium Outlets + Mickey's Very Merry Christmas Party; 11/12 International Premium Outlets + malas; 12/12 retorno pelo MCO. Considere apenas alternativas realistas e sinalize custos/ingressos extras. Pesquise dados atuais, cite fontes, diferencie previsão de dado confirmado e recomende horários com margem.`}
 async function copyAIPrompt(){const p=makeAIPrompt();const box=document.getElementById("aiPromptPreview");box.textContent=p;box.classList.remove("hidden");try{await navigator.clipboard.writeText(p);toast("Pedido copiado; cole no ChatGPT")}catch(e){toast("Pedido exibido abaixo para copiar manualmente")}}
 
+loadSavedItinerary();
 renderDays();renderUpcoming();renderBudget();renderShopping();renderChecks();
+updateApiKeyStatus();
 if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js?v=4").catch(()=>{});
 </script>
 </body></html>
