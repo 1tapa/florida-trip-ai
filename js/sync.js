@@ -15,7 +15,7 @@
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const CODE_LEN = 20;
 
-  let cfg = null, code = "", db = null, ref = null, sdk = null, unsub = null;
+  let hashId = "", cfg = null, code = "", db = null, ref = null, sdk = null, unsub = null;
   let shadow = null, times = {}, suppress = false, timer = null, first = true, appStarted = false, ready = false;
 
   const sync = (FT.sync = { status: "off", detail: "", onUI: null, sdkOverride: null });
@@ -83,6 +83,13 @@
     if (s.customs.b != null) m["cust:b"] = s.customs.b;
     if (s.contacts.name || s.contacts.phone) m.contact = s.contacts;
     if (s.days && s.plans) m.plan = { days: s.days, plans: s.plans };
+    for (const d of s.docs) m["doc:" + d.id] = d;
+    if (s.parking) m.parking = s.parking;
+    for (const k of Object.keys(s.rides)) m["ride:" + k] = s.rides[k];
+    for (const k of Object.keys(s.rideDone)) m["rdone:" + k] = true;
+    for (const k of Object.keys(s.rideOrder)) m["rorder:" + k] = s.rideOrder[k];
+    for (const k of Object.keys(s.rideAlert)) m["ralert:" + k] = s.rideAlert[k];
+    m.fx = s.fx;
     return m;
   }
 
@@ -100,6 +107,13 @@
       case "catb": if (FT.EXPENSE_CATS.includes(id) && Number(val) >= 0) s.catBudgets[id] = Number(val); break;
       case "cust": if (id === "a" || id === "b") s.customs[id] = val == null ? null : Number(val); break;
       case "contact": if (val && typeof val === "object") s.contacts = val; else s.contacts = { name: "", phone: "" }; break;
+      case "doc": s.docs = swap(s.docs, val); break;
+      case "parking": s.parking = val && typeof val === "object" ? val : null; break;
+      case "ride": if (val) s.rides[id] = val; else delete s.rides[id]; break;
+      case "rdone": if (val) s.rideDone[id] = true; else delete s.rideDone[id]; break;
+      case "rorder": if (Array.isArray(val)) s.rideOrder[id] = val; else delete s.rideOrder[id]; break;
+      case "ralert": if (val) s.rideAlert[id] = val; else delete s.rideAlert[id]; break;
+      case "fx": if (val && typeof val === "object") s.fx = Object.assign({}, s.fx, val); break;
       case "plan": if (val && Array.isArray(val.days) && Array.isArray(val.plans)) { s.days = val.days; s.plans = val.plans; } else { s.days = null; s.plans = null; } break;
     }
   }
@@ -125,17 +139,19 @@
       if (ent.t <= (times[k] || 0)) continue;
       let val; try { val = JSON.parse(ent.v); } catch (e) { continue; }
       times[k] = ent.t;
+      if (k.startsWith("doc:") && !val && FT.files) FT.files.del(k.slice(4));
       applyEntry(s, k, val);
       changed = true;
     }
     if (remote.aikey) handleKey(remote.aikey);
-    if (!changed) return;
+    if (!changed) { if (FT.files) FT.files.ensure(); return; }
     suppress = true;
     store.state = store.normalize(s);
     store.save();
     suppress = false;
     shadow = snapshotOf(store.state);
     persist();
+    if (FT.files) FT.files.ensure();
     const el = document.activeElement;
     const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
     if (FT.app && !typing) FT.app.render({ keepScroll: true });
@@ -174,6 +190,17 @@
     timer = setTimeout(flush, 250);
   };
 
+  /* Anexos: cada arquivo (até ~650 KB) vira um documento próprio, trips/{hash}_{id}. */
+  sync.putFile = function (id, b64) {
+    if (!ready || !hashId) return;
+    Promise.resolve(sdk.setDoc(sdk.doc(db, "trips", hashId + "_" + id), { d: b64, t: Date.now() })).catch(e => setStatus("error", errText(e)));
+  };
+  sync.getFile = async function (id) {
+    if (!ready || !hashId) return "";
+    const snap = await sdk.getDoc(sdk.doc(db, "trips", hashId + "_" + id));
+    return snap.exists() ? String(snap.data().d || "") : "";
+  };
+
   sync.pushKey = async function () {
     if (!ready) return;
     const t = Date.now(), k = store.apiKey();
@@ -205,7 +232,8 @@
         try { db = sdk.initializeFirestore(app, { localCache: sdk.persistentLocalCache({ tabManager: sdk.persistentMultipleTabManager() }) }); }
         catch (e) { db = sdk.getFirestore(app); }
       }
-      ref = sdk.doc(db, "trips", await docId(code));
+      hashId = await docId(code);
+      ref = sdk.doc(db, "trips", hashId);
       unsub = sdk.onSnapshot(ref, onSnap, e => setStatus("error", errText(e)));
     } catch (e) {
       appStarted = false;
@@ -223,6 +251,7 @@
       shadow = snapshotOf(store.state);
       ready = true;
       put(out);
+      if (FT.files) for (const k of Object.keys(out)) if (k.startsWith("doc:")) FT.files.upload(k.slice(4));
       if (remote.aikey) { /* já tratado em applyRemote */ } else if (store.apiKey()) sync.pushKey();
       persist();
     } else applyRemote(remote);

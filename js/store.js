@@ -58,6 +58,13 @@
       contacts: { name: "", phone: "" },
       days: null,
       plans: null,
+      docs: [],
+      parking: null,
+      rides: {},
+      rideDone: {},
+      rideOrder: {},
+      rideAlert: {},
+      fx: { spread: 0.2, tax: 6, manual: null },
       undo: null,
       ai: { messages: [], mode: "ask", model: "gpt-4.1-mini" },
       ui: { status: "pend", pri: "all", view: "cat", open: null, exp: {} }
@@ -100,6 +107,18 @@
     if (Array.isArray(raw.days) && raw.days.length === FT.DAYS_DEFAULT.length) s.days = raw.days;
     if (Array.isArray(raw.plans) && raw.plans.length === FT.PLANS_DEFAULT.length) s.plans = raw.plans;
     if (!s.days || !s.plans) { s.days = null; s.plans = null; }
+    s.docs = arr(raw.docs).filter(x => isObj(x) && x.id && x.name).slice(0, 80).map(x => ({ id: String(x.id), res: String(x.res || ""), name: u.clamp(x.name, 80), type: String(x.type || "").slice(0, 60), size: Number(x.size) || 0, sync: x.sync !== false }));
+    if (isObj(raw.parking) && Number.isFinite(Number(raw.parking.lat)) && Number.isFinite(Number(raw.parking.lon))) s.parking = { lat: Number(raw.parking.lat), lon: Number(raw.parking.lon), t: Number(raw.parking.t) || 0, note: u.clamp(raw.parking.note, 120) };
+    if (isObj(raw.rides)) for (const [k, v] of Object.entries(raw.rides)) if (k.length < 40 && ["must", "maybe", "skip"].includes(v)) s.rides[k] = v;
+    if (isObj(raw.rideDone)) for (const k of Object.keys(raw.rideDone)) if (k.length < 40 && raw.rideDone[k] === true) s.rideDone[k] = true;
+    if (isObj(raw.rideOrder)) for (const [k, v] of Object.entries(raw.rideOrder)) if (k.length < 20 && Array.isArray(v)) s.rideOrder[k] = v.filter(x => typeof x === "string" && x.length < 40).slice(0, 60);
+    if (isObj(raw.rideAlert)) for (const [k, v] of Object.entries(raw.rideAlert)) if (k.length < 40 && [30, 45, 60].includes(Number(v))) s.rideAlert[k] = Number(v);
+    if (isObj(raw.fx)) {
+      const sp = Number(raw.fx.spread), tx = Number(raw.fx.tax), mn = Number(raw.fx.manual);
+      if (Number.isFinite(sp) && sp >= 0 && sp <= 10) s.fx.spread = sp;
+      if (Number.isFinite(tx) && tx >= 0 && tx <= 50) s.fx.tax = tx;
+      s.fx.manual = Number.isFinite(mn) && mn > 0 && mn < 100 ? mn : null;
+    }
     if (isObj(raw.undo) && Array.isArray(raw.undo.custom)) s.undo = raw.undo;
     if (isObj(raw.ai)) {
       s.ai.mode = raw.ai.mode === "edit" ? "edit" : "ask";

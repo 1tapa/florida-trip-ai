@@ -11,6 +11,7 @@
     { id: "inicio", label: "Início", icon: "home" },
     { id: "roteiro", label: "Roteiro", icon: "route" },
     { id: "checklist", label: "Checklist", icon: "checklist" },
+    { id: "cambio", label: "Câmbio", icon: "dollar" },
     { id: "concierge", label: "Concierge", icon: "bell" },
     { id: "mais", label: "Mais", icon: "more" }
   ];
@@ -22,6 +23,8 @@
     { id: "contatos", label: "Contatos e emergência", icon: "shield", text: "911, contato no Brasil e o que fazer se perder algo" },
     { id: "ajustes", label: "Ajustes e backup", icon: "sliders", text: "Salvar, restaurar, instalar no iPhone" }
   ];
+  const EX = FT.extra || { routes: {}, more: [], rail: [] };
+  MORE.splice(1, 0, ...EX.more);
   const FOOD_ICON = { pancake: "coffee", chicken: "utensils", burger: "utensils", fries: "utensils", shake: "coffee", cart: "cart" };
   const PRI = { e: ["Essencial", "chip--e"], i: ["Importante", "chip--i"], o: ["Opcional", "chip--o"] };
   const PRI_ORDER = { e: 0, i: 1, o: 2 };
@@ -262,6 +265,7 @@
         <a class="pass__stub" href="#/checklist"><div><div class="pass__count">${count}</div><div class="pass__count-label">${label}</div></div><div class="pass__stub-note"><strong>${stubNote}</strong>Abrir o checklist</div></a>
       </section>
       ${dayBlock}
+      ${inTrip ? `<a class="btn btn--primary" href="#/hoje" style="margin-bottom:8px">${icon("clock")} Abrir a tela Hoje</a>` : ""}
       <section class="section">
         <div class="section__head"><h2 class="h-section">Para fazer agora</h2><a class="btn btn--quiet btn--sm" href="#/checklist">Checklist completo ${icon("chev-r")}</a></div>
         ${upcoming.length ? `<div class="sheet" style="padding:0 16px"><ul>${upcoming.map(i => itemHTML(i, true)).join("")}</ul></div>` : `<div class="sheet empty">Tudo em dia por enquanto.</div>`}
@@ -316,6 +320,7 @@
         <ol class="tl">${p.schedule.map(b => `<li class="tl__item"><div class="tl__time">${esc(b[0])}</div><div class="tl__body"><div class="tl__title">${esc(b[1])}</div>${b[2] ? `<p class="tl__desc">${esc(b[2])}</p>` : ""}${b[3] ? `<a class="tl__place" href="${esc(mapsUrl(b[3]))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Abrir no mapa</a>` : ""}</div></li>`).join("")}</ol></section>
       ${reminders.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Não esqueça neste dia</h2></div><div class="sheet" style="padding:0 16px"><ul>${reminders.map(it => itemHTML(it, true)).join("")}</ul></div></section>` : ""}
       ${p.alternatives && p.alternatives.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Planos B e detalhes</h2></div>${p.alternatives.map(a => `<details class="alt"><summary>${esc(a[0])}${icon("chev-d")}</summary><p>${esc(a[1])}</p></details>`).join("")}</section>` : ""}
+      ${(Number(d.date) === 7 || Number(d.date) === 9) ? `<section class="section"><a class="btn btn--primary" href="#/parques/${Number(d.date) === 7 ? "mk" : "usf"}">${icon("sun")} Guia do parque com filas ao vivo</a></section>` : ""}
       <section class="section"><button class="btn" type="button" data-act="ask-day" data-day="${Number(d.date)}">${icon("bell")} Pedir ajuste deste dia ao concierge</button></section>`;
   }
 
@@ -338,7 +343,7 @@
         return `<article class="voucher${done ? " voucher--ok" : ""}">
           <div class="voucher__main"><span class="voucher__icon">${icon(r.icon)}</span><div><div class="voucher__title">${esc(r.title)}</div><div class="voucher__when">${esc(r.when)}</div></div><span class="chip ${done ? "chip--ok" : "chip--plain"}">${esc(v.status)}</span></div>
           <div class="voucher__stub"><div class="status" role="group" aria-label="Situação: ${esc(r.title)}">${FT.RESERVA_STATUS.map(s => `<button type="button" data-act="res-status" data-id="${r.id}" data-v="${s}" aria-pressed="${v.status === s}">${s}</button>`).join("")}</div>
-          <label class="label" for="rn-${r.id}">Código e detalhes</label><input class="field" id="rn-${r.id}" data-act="res-note" data-id="${r.id}" value="${esc(v.note)}" placeholder="${esc(r.hint)}" maxlength="300" autocomplete="off"></div></article>`;
+          <label class="label" for="rn-${r.id}">Código e detalhes</label><input class="field" id="rn-${r.id}" data-act="res-note" data-id="${r.id}" value="${esc(v.note)}" placeholder="${esc(r.hint)}" maxlength="300" autocomplete="off">${FT.extra ? FT.extra.attachHTML(r.id) : ""}</div></article>`;
       }).join("")}`;
   }
 
@@ -478,6 +483,7 @@
     contatos: { title: "Contatos e emergência", tab: "mais", fn: viewContatos },
     ajustes: { title: "Ajustes e backup", tab: "mais", fn: viewAjustes }
   };
+  Object.assign(ROUTES, EX.routes);
 
   function parseRoute() {
     const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
@@ -489,7 +495,7 @@
     $("#tabs").innerHTML = NAV.map(n => `<a class="tab" href="#/${n.id}"${n.id === tab ? ' aria-current="page"' : ""}>${icon(n.icon)}<span>${n.label}</span></a>`).join("");
     const link = (n, cur) => `<a class="rail__link" href="#/${n.id}"${n.id === cur ? ' aria-current="page"' : ""}>${icon(n.icon)}${n.label}</a>`;
     const r = parseRoute();
-    $("#railNav").innerHTML = NAV.slice(0, 4).map(n => link(n, r.id)).join("") + '<div class="rail__sep"></div>' + MORE.map(n => link(n, r.id)).join("");
+    $("#railNav").innerHTML = [NAV[0]].concat(EX.rail, NAV.slice(1, 5)).map(n => link(n, r.id)).join("") + '<div class="rail__sep"></div>' + MORE.map(n => link(n, r.id)).join("");
     const left = diffDays(today(), FT.TRIP.start);
     $("#railFoot").textContent = left > 0 ? `Faltam ${left} ${left === 1 ? "dia" : "dias"} para a viagem.` : "Boa viagem!";
   }
@@ -531,6 +537,7 @@
   async function onAct(act, el, ev) {
     const st = S();
     if (FT.ai && await FT.ai.act(act, el, ev)) return;
+    if (FT.extra && await FT.extra.act(act, el, ev)) return;
     switch (act) {
       case "toggle-check": {
         const id = el.dataset.id; recent.add(id);
@@ -586,6 +593,7 @@
   }
 
   function onChangeValue(act, el) {
+    if (FT.extra && FT.extra.change(act, el)) return;
     const val = el.value;
     switch (act) {
       case "total-budget": { const n = num(val); if (n > 0) { store.update(s => { s.budget = n; }); render({ keepScroll: true }); } else toast("Digite um valor maior que zero."); break; }
@@ -597,6 +605,7 @@
 
   async function onSubmit(name, form) {
     if (FT.ai && await FT.ai.submit(name, form)) return;
+    if (FT.extra && await FT.extra.submit(name, form)) return;
     const d = new FormData(form);
     switch (name) {
       case "add-item": {
@@ -645,6 +654,7 @@
   });
   document.addEventListener("input", ev => {
     const el = ev.target;
+    if (FT.extra && FT.extra.input(el)) return;
     if (el.id === "aiq") { FT.ai.setDraft(el.value); el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 140) + "px"; }
     else if (el.dataset && el.dataset.act === "res-note") onChangeValue("res-note", el);
   });
@@ -660,8 +670,8 @@
   window.addEventListener("hashchange", onRoute);
   FT.sync.onUI = () => { if (location.hash === "#/ajustes") render({ keepScroll: true }); };
 
-  FT.app = { render, toast, dialog, stats, itemHTML };
-  if (!location.hash) history.replaceState(null, "", "#/inicio");
+  FT.app = { render, toast, dialog, stats, itemHTML, wxHTML };
+  if (!location.hash) history.replaceState(null, "", FT.u.today() >= FT.TRIP.start && FT.u.today() <= FT.TRIP.end ? "#/hoje" : "#/inicio");
   onRoute();
 
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {

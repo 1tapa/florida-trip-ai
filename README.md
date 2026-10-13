@@ -62,3 +62,12 @@ GitHub Pages a partir da raiz da branch `main`. Ao mudar arquivos, aumente `CACH
 ## Aviso
 
 Regras de alfândega, preços e horários de parques mudam. Os itens trazem links de fonte; confirme perto da viagem.
+
+
+## Novidades (hoje, câmbio, parques)
+
+- **Hoje**: durante a viagem mostra o que está acontecendo agora, o que vem a seguir e a linha do tempo do dia.
+- **Câmbio**: converte dólar em real com a conta (cotação + R$ 0,20) × 1,06. Acréscimo, imposto e cotação manual são ajustáveis. A cotação vem de open.er-api.com (com AwesomeAPI de reserva) e é a de mercado, sem taxas do banco. Dá para registrar a compra como gasto.
+- **Guia do parque** (Magic Kingdom e Universal Studios Florida): marque imperdíveis, monte a ordem do dia (do fundo para a entrada, da entrada para o fundo ou menor fila agora), acompanhe filas ao vivo (ThemeParks.wiki), tendência medida neste aparelho e aviso de fila baixa com a tela aberta. As distâncias são aproximadas.
+- **Anexos** em Reservas (print ou PDF, até ~650 KB cada), disponíveis offline e sincronizados.
+- **Onde estacionei**, **Frases úteis em inglês** e **IA que também altera orçamento e lista de compras**.
