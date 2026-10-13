@@ -1,28 +1,35 @@
-# Florida Trip AI — primeira versão instalável
+# Florida · Caderno de viagem
 
-## O que já funciona
-- Interface responsiva com visual próprio para iPhone.
-- Roteiro de 4 a 12 de dezembro de 2026, com Magic Kingdom em 7/12 e Universal Studios + Islands of Adventure em 9/12.
-- Controle de despesas em USD, orçamento de US$ 6.000.
-- Lista de compras e checklist persistentes no dispositivo.
-- Exportação dos dados em JSON.
-- Consulta de condições meteorológicas atuais de Kissimmee via Open-Meteo quando há conexão.
-- Estrutura PWA com modo standalone e cache offline.
+Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens, reservas, orçamento, compras com simulador de imposto e um concierge com IA.
 
-## Limites importantes
-- Não é um app nativo nem está publicado na App Store.
-- A primeira versão não tem IA conversacional ligada a um modelo, trânsito ao vivo, sincronização entre dois celulares, alertas automáticos nem reservas. Essas funções precisam de backend/integrações e podem ter custos.
-- A consulta meteorológica mostra condições atuais; não afirma prever o tempo em dezembro com meses de antecedência.
-- Preços, horários e endereços devem ser reconfirmados.
+App estático (PWA): abre sem internet depois da primeira visita e guarda tudo no próprio aparelho (`localStorage`).
 
-## Como colocar no iPhone sem barra do Safari
-Um PWA precisa ser servido por HTTPS para ter comportamento instalável confiável. Uma opção é publicar os arquivos num serviço de hospedagem estática HTTPS (por exemplo, GitHub Pages ou Cloudflare Pages), depois abrir a URL no Safari do iPhone → Compartilhar → Adicionar à Tela de Início. Depois, o ícone abre em modo standalone. O primeiro acesso precisa de internet.
+## Estrutura
 
-## Arquivos
-- `index.html`: aplicação
-- `manifest.webmanifest`: metadados PWA
-- `sw.js`: cache offline básico
-- `icon.svg`: ícone
+| Arquivo | O que tem |
+| --- | --- |
+| `index.html` | Estrutura da página e ícones |
+| `css/app.css` | Visual (Marcellus + Hanken Grotesk, hospedadas em `fonts/`) |
+| `js/data.js` | Viagem, roteiro, programação por dia, reservas, comida, outlets |
+| `js/checklist-data.js` | 12 áreas e 137 itens, com prioridade, prazo e fonte |
+| `js/store.js` | Estado, migração da versão anterior e utilitários |
+| `js/app.js` | Telas, navegação e eventos |
+| `js/ai.js` | Concierge (conversa e alteração do roteiro) |
+| `sw.js` | Cache para uso offline |
 
-## Privacidade
-As despesas e checklists ficam no armazenamento local do navegador/dispositivo. Não insira dados de pagamento ou documentos pessoais.
+Para mudar conteúdo, edite `js/data.js` e `js/checklist-data.js`. Não use aspas duplas retas dentro dos textos.
+
+## Concierge de IA
+
+- **Conversar**: responde dúvidas usando o seu roteiro. Não altera nada.
+- **Alterar roteiro**: a IA devolve só os dias e itens que mudam; você vê o antes e o depois, aplica e pode desfazer.
+- Usa a API da OpenAI direto do navegador, com a sua chave, guardada apenas neste navegador. Use uma chave exclusiva com limite de gasto.
+- Sem chave, dá para copiar um texto pronto e colar no ChatGPT.
+
+## Publicar
+
+GitHub Pages a partir da raiz da branch `main`. Ao mudar arquivos, aumente `CACHE` em `sw.js`.
+
+## Aviso
+
+Regras de alfândega, preços e horários de parques mudam. Os itens trazem links de fonte; confirme perto da viagem.
