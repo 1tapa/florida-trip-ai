@@ -426,8 +426,9 @@
 
   function viewAjustes() {
     return `${backTo()}
-      <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam só neste aparelho. Faça backup antes de trocar de celular.</p></header>
-      <section><div class="section__head"><h2 class="h-section">Backup</h2></div>
+      <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam neste aparelho e, se você ligar a sincronização, também no seu projeto Firebase. Faça backup antes de trocar de celular.</p></header>
+      ${syncSection()}
+      <section class="section"><div class="section__head"><h2 class="h-section">Backup</h2></div>
         <div class="btn-row"><button class="btn" type="button" data-act="export">${icon("download")} Salvar backup</button><button class="btn" type="button" data-act="import">${icon("upload")} Restaurar backup</button></div>
         <input type="file" id="importFile" accept="application/json,.json" hidden></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Instalar no iPhone</h2></div>
@@ -435,6 +436,28 @@
       <section class="section"><div class="section__head"><h2 class="h-section">Restaurar</h2></div>
         <div class="stack"><button class="btn" type="button" data-act="reset-plan">${icon("refresh")} Restaurar o roteiro original</button><button class="btn btn--danger" type="button" data-act="reset-all">${icon("trash")} Apagar todos os dados deste aparelho</button></div></section>
       <p class="small muted" style="margin-top:32px">Versão ${VERSION}. Regras, preços e prazos pesquisados em outubro de 2026: confirme sempre na fonte oficial perto da viagem.</p>`;
+  }
+
+  const SYNC_LABEL = { off: "Desligada", connecting: "Conectando…", ok: "Sincronizado", pending: "Enviando alterações…", offline: "Sem internet: salvo, envia quando voltar", error: "Com problema" };
+
+  function syncSection() {
+    const y = FT.sync;
+    let body;
+    if (y.connected) {
+      const ok = y.status === "ok" || y.status === "pending";
+      body = `<div class="sheet sheet--pad stack">
+        <div class="row row--between row--wrap"><strong>Sincronização ligada</strong><span class="chip ${ok ? "chip--ok" : y.status === "error" ? "chip--late" : "chip--plain"}">${esc(SYNC_LABEL[y.status] || "")}</span></div>
+        ${y.detail ? `<div class="callout callout--alert">${icon("alert")}<div>${esc(y.detail)}</div></div>` : ""}
+        <p class="small muted">Tudo que vocês marcarem, registrarem ou mudarem no roteiro aparece nos dois aparelhos. A chave da IA vai criptografada.</p>
+        <div class="btn-row"><button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite para ela</button><button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
+        <p class="hint">O convite contém o código secreto. Mande só para ela, de preferência por mensagem direta.</p></div>`;
+    } else {
+      body = `<div class="stack">
+        ${y.hasConfig() ? `<div class="sheet sheet--pad stack"><strong>Criar a conta compartilhada</strong><p class="small muted">Gera um código secreto. Depois você copia o convite e manda para ela.</p><button class="btn btn--primary" type="button" data-act="sync-create">Criar código do casal</button></div>`
+        : `<form class="sheet sheet--pad" data-form="sync-config"><strong>1. Configurar o Firebase (uma vez)</strong><p class="small muted" style="margin-top:6px">Cole aqui a configuração do app web do seu projeto Firebase.</p><label class="label" for="fbCfg">Configuração do Firebase</label><textarea class="field" id="fbCfg" name="cfg" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }" required></textarea><div style="margin-top:12px"><button class="btn btn--primary" type="submit">Salvar configuração</button></div></form>`}
+        <form class="sheet sheet--pad" data-form="sync-join"><strong>Já recebeu um convite?</strong><p class="small muted" style="margin-top:6px">Cole o convite que a outra pessoa mandou. Os dados dela passam a aparecer aqui.</p><label class="label" for="inv">Convite ou código</label><input class="field" id="inv" name="invite" autocomplete="off" autocapitalize="off" spellcheck="false" required><div style="margin-top:12px"><button class="btn" type="submit">Entrar</button></div></form></div>`;
+    }
+    return `<section><div class="section__head"><h2 class="h-section">Sincronizar com a namorada</h2></div>${body}</section>`;
   }
 
   function notFound() {
@@ -529,6 +552,19 @@
       case "toggle-shop": store.update(s => { const x = s.shopping.find(i => i.id === el.dataset.id); if (x) x.done = el.checked; }); render({ keepScroll: true }); break;
       case "del-shop": store.update(s => { s.shopping = s.shopping.filter(x => x.id !== el.dataset.id); }); render({ keepScroll: true }); break;
       case "ask-day": FT.ai.prefill("No dia " + el.dataset.day + ", ", "edit"); location.hash = "#/concierge"; setTimeout(() => $("#aiq") && $("#aiq").focus(), 50); break;
+      case "sync-create": { const ok = await FT.sync.create(); toast(ok ? "Código criado. Copie o convite e mande para ela." : "Configure o Firebase primeiro."); render({ keepScroll: true }); break; }
+      case "sync-copy-invite": {
+        const inv = FT.sync.invite();
+        try { await navigator.clipboard.writeText(inv); toast("Convite copiado. Mande para ela por mensagem direta."); }
+        catch (e) { await dialog({ title: "Copie o convite", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
+        break;
+      }
+      case "sync-show-code": await dialog({ title: "Código do casal", text: "Quem tiver este código vê e edita tudo. Trate como senha.", html: `<p class="tnum" style="font-size:1.3rem;font-weight:700;letter-spacing:0.04em;margin-top:12px">${esc(FT.sync.code)}</p>`, ok: "Fechar", cancel: null }); break;
+      case "sync-disconnect": {
+        const r = await dialog({ title: "Desligar a sincronização?", text: "Este aparelho mantém os dados que tem agora, mas para de enviar e receber mudanças.", ok: "Desligar", danger: true });
+        if (r.value === "ok") { FT.sync.disconnect(); toast("Sincronização desligada neste aparelho."); render({ keepScroll: true }); }
+        break;
+      }
       case "export": {
         const blob = new Blob([JSON.stringify(st, null, 2)], { type: "application/json" });
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "florida-backup-" + today() + ".json";
@@ -542,8 +578,8 @@
         break;
       }
       case "reset-all": {
-        const r = await dialog({ title: "Apagar todos os dados?", text: "Checklist, gastos, reservas e conversas deste aparelho serão apagados. Faça um backup antes, se quiser guardar.", ok: "Apagar tudo", danger: true });
-        if (r.value === "ok") { store.reset(); recent = new Set(); toast("Dados apagados."); render(); }
+        const r = await dialog({ title: "Apagar todos os dados?", text: "Checklist, gastos, reservas e conversas deste aparelho serão apagados e a sincronização será desligada aqui (o outro aparelho não é afetado). Faça um backup antes, se quiser guardar.", ok: "Apagar tudo", danger: true });
+        if (r.value === "ok") { FT.sync.disconnect(); store.reset(); recent = new Set(); toast("Dados apagados."); render(); }
         break;
       }
     }
@@ -577,6 +613,8 @@
         toast("Gasto registrado."); render({ keepScroll: true }); break;
       }
       case "shop": { const nm = clamp(d.get("name"), 80); if (!nm) return; store.update(s => { s.shopping.push({ id: uid(), name: nm, done: false }); }); render({ keepScroll: true }); $("#shopName") && $("#shopName").focus(); break; }
+      case "sync-config": { const ok = FT.sync.configure(String(d.get("cfg"))); toast(ok ? "Configuração salva." : "Não encontrei apiKey, projectId e appId nesse texto."); render({ keepScroll: true }); break; }
+      case "sync-join": { const ok = await FT.sync.join(String(d.get("invite"))); toast(ok ? "Conectado. Os dados do casal vão aparecer aqui." : "Convite ou código inválido. Se for só o código, configure o Firebase antes."); render({ keepScroll: true }); break; }
       case "contact": store.update(s => { s.contacts = { name: clamp(d.get("name"), 60), phone: clamp(d.get("phone"), 30) }; }); toast("Contato salvo."); render({ keepScroll: true }); break;
     }
   }
@@ -586,8 +624,8 @@
     try {
       const raw = JSON.parse(await file.text());
       if (!raw || typeof raw !== "object" || raw.v !== 2) throw new Error("formato");
-      const r = await dialog({ title: "Restaurar este backup?", text: "Os dados atuais deste aparelho serão substituídos.", ok: "Restaurar", danger: true });
-      if (r.value === "ok") { store.replace(raw); toast("Backup restaurado."); render(); }
+      const r = await dialog({ title: "Restaurar este backup?", text: "Os dados atuais deste aparelho serão substituídos e a sincronização será desligada aqui.", ok: "Restaurar", danger: true });
+      if (r.value === "ok") { FT.sync.disconnect(); store.replace(raw); toast("Backup restaurado."); render(); }
     } catch (e) { toast("Esse arquivo não é um backup válido deste guia."); }
     $("#importFile").value = "";
   }
@@ -620,6 +658,7 @@
     onSubmit(form.dataset.form, form);
   });
   window.addEventListener("hashchange", onRoute);
+  FT.sync.onUI = () => { if (location.hash === "#/ajustes") render({ keepScroll: true }); };
 
   FT.app = { render, toast, dialog, stats, itemHTML };
   if (!location.hash) history.replaceState(null, "", "#/inicio");

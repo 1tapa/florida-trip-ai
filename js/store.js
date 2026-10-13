@@ -52,7 +52,7 @@
       expenses: [],
       budget: FT.TRIP.budget,
       catBudgets: Object.assign({}, DEFAULT_CAT_BUDGETS),
-      shopping: FT.COMPRAS_PADRAO.map(name => ({ id: u.uid(), name, done: false })),
+      shopping: FT.COMPRAS_PADRAO.map((name, i) => ({ id: "s" + i, name, done: false })),
       reservas: {},
       customs: { a: null, b: null },
       contacts: { name: "", phone: "" },
@@ -153,11 +153,15 @@
 
   const store = (FT.store = {
     state: load(),
-    save() { try { ls.set(KEY, JSON.stringify(store.state)); } catch (e) { /* sem espaço: segue só em memória */ } },
+    save() {
+      try { ls.set(KEY, JSON.stringify(store.state)); } catch (e) { /* sem espaço: segue só em memória */ }
+      if (FT.sync) FT.sync.changed();
+    },
     update(fn) { fn(store.state); store.save(); },
     replace(raw) { store.state = normalize(raw); store.save(); },
     reset() { store.state = defaults(); store.save(); },
     normalize,
+    defaults,
     days() { return store.state.days || FT.DAYS_DEFAULT; },
     plans() { return store.state.plans || FT.PLANS_DEFAULT; },
     items() { return FT.CHECKLIST.concat(store.state.custom); },
