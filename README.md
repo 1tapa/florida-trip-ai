@@ -26,6 +26,35 @@ Para mudar conteúdo, edite `js/data.js` e `js/checklist-data.js`. Não use aspa
 - Usa a API da OpenAI direto do navegador, com a sua chave, guardada apenas neste navegador. Use uma chave exclusiva com limite de gasto.
 - Sem chave, dá para copiar um texto pronto e colar no ChatGPT.
 
+## Sincronizar com a namorada (Firebase)
+
+Os dois aparelhos compartilham os mesmos dados (checklist, gastos, compras, reservas, orçamento, mudanças de roteiro e a chave da IA, criptografada). Sem login: vocês usam um código secreto.
+
+**Configuração (uma vez, ~5 min)**
+1. Em [console.firebase.google.com](https://console.firebase.google.com), crie um projeto (Analytics desligado).
+2. Em *Criação > Firestore Database*, clique em *Criar banco de dados* (modo produção, qualquer região).
+3. Na aba *Regras*, cole o texto abaixo e clique em *Publicar*:
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /trips/{tripId} {
+         allow get, create, update: if true;
+         allow list, delete: if false;
+       }
+     }
+   }
+   ```
+4. Em *Configurações do projeto > Seus apps*, adicione um app Web (`</>`, sem Hosting) e copie o trecho `firebaseConfig`.
+5. No app, abra *Mais > Ajustes e backup*, cole a configuração, toque em *Criar código do casal* e depois em *Copiar convite*. Mande o convite para ela e peça para colar em *Já recebeu um convite?*.
+
+**Como funciona**
+- Cada item é salvo separadamente e vale a alteração mais recente. Editar coisas diferentes ao mesmo tempo nunca sobrescreve.
+- Funciona sem internet: as mudanças são enviadas quando o sinal volta.
+- O documento fica em `trips/{SHA-256 do código}`. As regras não permitem listar documentos, então só quem tem o código chega aos dados. Trate o código e o convite como senha.
+- A chave da OpenAI é criptografada (AES-GCM) com uma chave derivada do código antes de ir para a nuvem.
+- Apagar todos os dados ou restaurar um backup desliga a sincronização naquele aparelho, para não apagar os dados do outro.
+
 ## Publicar
 
 GitHub Pages a partir da raiz da branch `main`. Ao mudar arquivos, aumente `CACHE` em `sw.js`.

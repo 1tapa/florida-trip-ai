@@ -467,7 +467,7 @@
           html: `<label class="label" for="aiModel">Modelo</label><input class="field" id="aiModel" name="model" value="${esc(S.ai.model)}" autocapitalize="off" spellcheck="false"><p class="hint">Use o nome de um modelo disponível na sua conta OpenAI.</p>`,
           ok: "Salvar", extra: [{ label: "Remover chave", value: "remove", danger: true }]
         });
-        if (r.value === "remove") { FT.ls.del(FT.KEYS.apiKey); FT.app.toast("Chave removida deste aparelho."); FT.app.render({ keepScroll: true }); }
+        if (r.value === "remove") { FT.ls.del(FT.KEYS.apiKey); if (FT.sync) FT.sync.pushKey(); FT.app.toast("Chave removida" + (FT.sync && FT.sync.connected ? " de todos os aparelhos." : " deste aparelho.")); FT.app.render({ keepScroll: true }); }
         else if (r.value === "ok") {
           const model = clamp(r.form.get("model"), 60);
           if (model) FT.store.update(s => { s.ai.model = model; });
@@ -486,6 +486,7 @@
       const key = String(data.get("key") || "").trim();
       if (!/^[\w-]{20,}$/.test(key)) { FT.app.toast("Essa chave parece incompleta. Copie a chave inteira."); return true; }
       FT.ls.set(FT.KEYS.apiKey, key);
+      if (FT.sync) FT.sync.pushKey();
       FT.app.toast("Chave conectada neste aparelho.");
       FT.app.render({ keepScroll: true });
       return true;
