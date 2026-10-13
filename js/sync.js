@@ -104,6 +104,13 @@
     }
   }
 
+  /* O espelho guarda texto (JSON), não os objetos: o app altera objetos no lugar e, com referências, a mudança passaria despercebida. */
+  function snapshotOf(state) {
+    const m = {}, f = flatten(state);
+    for (const k of Object.keys(f)) m[k] = JSON.stringify(f[k]);
+    return m;
+  }
+
   function setStatus(status, detail) {
     sync.status = status; sync.detail = detail || "";
     if (sync.onUI) sync.onUI();
@@ -127,7 +134,7 @@
     store.state = store.normalize(s);
     store.save();
     suppress = false;
-    shadow = flatten(store.state);
+    shadow = snapshotOf(store.state);
     persist();
     const el = document.activeElement;
     const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
@@ -154,8 +161,8 @@
 
   function flush() {
     if (!ready || !shadow) return;
-    const cur = flatten(store.state), out = {}, now = Date.now();
-    for (const k of Object.keys(cur)) if (JSON.stringify(cur[k]) !== JSON.stringify(shadow[k])) { out[k] = { v: JSON.stringify(cur[k]), t: now }; times[k] = now; }
+    const cur = snapshotOf(store.state), out = {}, now = Date.now();
+    for (const k of Object.keys(cur)) if (cur[k] !== shadow[k]) { out[k] = { v: cur[k], t: now }; times[k] = now; }
     for (const k of Object.keys(shadow)) if (!(k in cur)) { out[k] = { v: "null", t: now }; times[k] = now; }
     shadow = cur;
     if (Object.keys(out).length) { persist(); put(out); }
@@ -213,7 +220,7 @@
       const local = flatten(store.state), def = flatten(store.defaults()), out = {}, now = Date.now();
       for (const k of Object.keys(local)) if (!(k in remote) && JSON.stringify(local[k]) !== JSON.stringify(def[k])) { out[k] = { v: JSON.stringify(local[k]), t: now }; times[k] = now; }
       applyRemote(remote);
-      shadow = flatten(store.state);
+      shadow = snapshotOf(store.state);
       ready = true;
       put(out);
       if (remote.aikey) { /* já tratado em applyRemote */ } else if (store.apiKey()) sync.pushKey();
@@ -230,8 +237,6 @@
 
   /* ---------- ações da tela ---------- */
   Object.assign(sync, {
-    get code() { return code ? fmtCode(code) : ""; },
-    get connected() { return !!code && !!cfg; },
     hasConfig: () => !!cfg,
     configure(text) {
       const c = parseConfig(text);
@@ -267,6 +272,11 @@
     invite() { return code && cfg ? "FTRIP1." + b64url(JSON.stringify({ c: cfg, k: code })) : ""; },
     disconnect() { stop(); code = ""; times = {}; persist(); setStatus("off"); },
     flatten, applyEntry, parseConfig, normCode, genCode
+  });
+
+  Object.defineProperties(sync, {
+    code: { get: () => (code ? fmtCode(code) : "") },
+    connected: { get: () => !!code && !!cfg }
   });
 
   load();
