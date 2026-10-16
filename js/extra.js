@@ -283,13 +283,35 @@
   const STOP = new Set(["the", "of", "a", "and", "to", "in"]);
   const tokens = s => norm(s).split(" ").filter(w => w && !STOP.has(w));
 
+  const aliasesOf = ride => (ride[6] ? String(ride[6]).split("|").map(norm).filter(Boolean) : []);
+
+  /* Lê o roteiro do dia e devolve as atrações do guia citadas nos títulos, na ordem em que aparecem. */
+  function ridesFromDay(park) {
+    const plan = FT.store.plans()[park.day - 4];
+    if (!plan) return [];
+    const found = [];
+    for (const b of plan.schedule) {
+      const title = norm(b[1]), tt = title.split(" ");
+      const hits = [];
+      for (const r of park.rides) {
+        if (found.includes(r)) continue;
+        let pos = -1;
+        for (const al of aliasesOf(r)) { const i = title.indexOf(al); if (i >= 0 && (pos < 0 || i < pos)) pos = i; }
+        if (pos < 0) { const mine = tokens(r[1]); if (mine.length && mine.every(w => tt.includes(w))) pos = title.indexOf(mine[0]); }
+        if (pos >= 0) hits.push([pos, r]);
+      }
+      hits.sort((x, y) => x[0] - y[0]).forEach(h => found.push(h[1]));
+    }
+    return found;
+  }
+
   /* Casa uma atração do guia com uma entrada da fila ao vivo, pelo nome. */
   function matchLive(ride, rides) {
-    const mine = tokens(ride[1]), alias = ride[6] ? norm(ride[6]) : "";
+    const mine = tokens(ride[1]), aliases = aliasesOf(ride);
     let best = null;
     for (const l of rides) {
       const ln = norm(l.name), lt = tokens(l.name);
-      if ((alias && ln.includes(alias)) || mine.every(w => lt.includes(w))) { if (!best || lt.length < tokens(best.name).length) best = l; }
+      if (aliases.some(al => ln.includes(al)) || mine.every(w => lt.includes(w))) { if (!best || lt.length < tokens(best.name).length) best = l; }
     }
     return best;
   }
@@ -492,6 +514,7 @@
     return head + `
       <section class="sheet sheet--pad mineBox">
         <div class="row row--between"><h2 class="h-section" style="margin:0">Meu roteiro</h2><span class="small muted">${must.length} ${must.length === 1 ? "atração" : "atrações"}</span></div>
+        <button class="btn btn--sm" type="button" data-act="plan-from-day" data-id="${park.id}" style="margin-top:10px">${icon("route")} Usar o roteiro do dia ${park.day}</button>
         <div style="margin-top:10px">${mine}</div>
         ${must.length > 1 ? `<div class="mineBox__order"><div class="segmented seg-wrap" role="group" aria-label="Ordenar por">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
           <p class="small muted" style="margin:8px 0 10px">${esc(STRATEGY[live.strategy][1])}</p>
@@ -614,6 +637,16 @@
       case "ride-skip": store.update(st => { st.rides[el.dataset.id] = "skip"; }); FT.app.render({ keepScroll: true }); return true;
       case "ride-go": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rides[id] = "must"; st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); live.mode = "hoje"; toast("Passou para o começo do roteiro."); FT.app.render({ keepScroll: false }); window.scrollTo(0, 0); return true; }
       case "ride-first": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); FT.app.render({ keepScroll: true }); return true; }
+      case "plan-from-day": {
+        const park = FT.PARQUES.find(p => p.id === el.dataset.id); if (!park) return true;
+        const list = ridesFromDay(park);
+        if (!list.length) { toast(`Não achei atrações do guia no roteiro do dia ${park.day}.`); return true; }
+        const old = orderedMusts(park).filter(r => !list.includes(r));
+        const r = await FT.app.dialog({ title: `Usar o roteiro do dia ${park.day}?`, html: `<p class="dialog__text">O plano do guia fica na mesma ordem do roteiro do dia:</p><ol style="padding-left:20px;margin:8px 0">${list.map(x => `<li>${esc(x[1])}</li>`).join("")}</ol>${old.length ? `<p class="dialog__text">Ficam em “Se der tempo”: ${old.map(x => esc(x[1])).join(", ")}.</p>` : ""}`, ok: "Usar este roteiro" });
+        if (r.value !== "ok") return true;
+        store.update(st => { for (const x of old) st.rides[x[0]] = "maybe"; for (const x of list) { st.rides[x[0]] = "must"; delete st.rideDone[x[0]]; } st.rideOrder[park.id] = list.map(x => x[0]); });
+        live.mode = "montar"; toast("Plano atualizado com o roteiro do dia."); FT.app.render({ keepScroll: true }); return true;
+      }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
       case "plan-suggest": { const park = FT.PARQUES.find(p => p.id === el.dataset.id); suggestOrder(park); toast("Ordem sugerida: " + STRATEGY[live.strategy][0].toLowerCase() + "."); FT.app.render({ keepScroll: true }); return true; }
       case "live-refresh": fetchLive(el.dataset.id, true); return true;
