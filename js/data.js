@@ -237,7 +237,7 @@
 
   FT.ESTRATEGIA_COMPRAS = [
     ["Primeiro dia: eletrônicos", "Confirme estoque, preço, imposto e trade-in na loja escolhida."],
-    ["Dias de outlet", "Faça uma lista por prioridade e registre preços para comparar entre os outlets."],
-    ["Último dia de compras", "Compre apenas o que falta e proteja a reserva do orçamento, inclusive o imposto na volta."]
+    ["Dias de outlet", "Cada um usa a sua lista, por prioridade, e anota os preços para comparar entre os outlets."],
+    ["Último dia de compras", "Compre apenas o que falta e proteja a reserva para o imposto na volta."]
   ];
 })();

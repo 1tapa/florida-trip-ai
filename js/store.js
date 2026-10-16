@@ -52,7 +52,7 @@
       expenses: [],
       budget: FT.TRIP.budget,
       catBudgets: Object.assign({}, DEFAULT_CAT_BUDGETS),
-      shopping: FT.COMPRAS_PADRAO.map((name, i) => ({ id: "s" + i, name, done: false })),
+      shopping: [].concat(FT.COMPRAS_PADRAO.map((name, i) => ({ id: "s" + i, name, who: "leo", done: false })), FT.COMPRAS_PADRAO.map((name, i) => ({ id: "c-s" + i, name, who: "camily", done: false }))),
       reservas: {},
       customs: { a: null, b: null },
       contacts: { name: "", phone: "" },
@@ -91,7 +91,10 @@
     if (Number.isFinite(Number(raw.budget)) && Number(raw.budget) > 0) s.budget = Number(raw.budget);
     if (isObj(raw.catBudgets)) for (const c of FT.EXPENSE_CATS) if (Number.isFinite(Number(raw.catBudgets[c])) && Number(raw.catBudgets[c]) >= 0) s.catBudgets[c] = Number(raw.catBudgets[c]);
     if (Array.isArray(raw.shopping)) {
-      s.shopping = raw.shopping.filter(x => isObj(x) && x.name).slice(0, 200).map(x => ({ id: String(x.id || u.uid()), name: u.clamp(x.name, 80), done: !!x.done }));
+      const legacy = raw.shopping.some(x => isObj(x) && x.name && !x.who);
+      s.shopping = raw.shopping.filter(x => isObj(x) && x.name).slice(0, 200).map(x => ({ id: String(x.id || u.uid()), name: u.clamp(x.name, 80), who: x.who === "camily" ? "camily" : "leo", done: !!x.done }));
+      /* Lista antiga (uma só): vira a do Leo e a Camily ganha uma cópia, com ids previsíveis para dois aparelhos não duplicarem. */
+      if (legacy) for (const x of s.shopping.slice()) if (x.who === "leo" && !s.shopping.some(y => y.id === "c-" + x.id)) s.shopping.push({ id: "c-" + x.id, name: x.name, who: "camily", done: false });
     }
     if (isObj(raw.reservas)) {
       for (const r of FT.RESERVAS) {

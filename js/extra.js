@@ -1,4 +1,4 @@
-/* Telas extras: Hoje, Câmbio, Prioridades por parque, Frases, Onde estacionei e anexos de reservas. */
+/* Telas extras: Hoje, Câmbio, Guia do parque e anexos de reservas. */
 (function () {
   const FT = window.FT;
   const { esc, icon, money, today, short, diffDays, mapsUrl, clamp, num, uid, safeUrl } = FT.u;
@@ -154,9 +154,6 @@
       ${!live ? `<div class="callout callout--info">${icon("info")}<div><strong>Esta tela fica ao vivo durante a viagem</strong>Nos dias 4 a 12 de dezembro ela mostra o que está acontecendo agora e o que vem a seguir. Por enquanto, é uma prévia do dia.</div></div>` : ""}
       ${live ? `<div class="nowgrid">${block("Agora", cur) || `<div class="nowcard"><div class="nowcard__label">Agora</div><div class="nowcard__title">Ainda não começou</div></div>`}${block("A seguir", nxt) || `<div class="nowcard"><div class="nowcard__label">A seguir</div><div class="nowcard__title">Fim da programação de hoje</div></div>`}</div>` : ""}
       <div class="btn-row" style="margin-top:16px">
-        <a class="btn" href="#/carro">${icon("car")} Onde estacionei</a>
-        <a class="btn" href="#/orcamento">${icon("wallet")} Registrar gasto</a>
-        <a class="btn" href="#/frases">${icon("note")} Frases úteis</a>
         ${park ? `<a class="btn" href="#/parques/${park}">${icon("sun")} Guia do parque</a>` : ""}
       </div>
       <section class="section"><div class="section__head"><h2 class="h-section">Programação</h2></div>
@@ -246,11 +243,6 @@
         <input class="field fx__input" id="fxAmt" data-act="fx-amt" inputmode="decimal" autocomplete="off" placeholder="0,00" value="${esc(fxs.amount)}">
         <div id="fxResult">${fxResultHTML()}</div>
       </section>
-      <form class="sheet sheet--pad" data-form="fx-expense" style="margin-top:12px">
-        <strong>Registrar esta compra como gasto</strong><p class="small muted" style="margin-top:4px">O gasto entra no orçamento em dólar, com o valor digitado acima.</p>
-        <div class="two"><div><label class="label" for="fxName">Descrição</label><input class="field" id="fxName" name="name" maxlength="80" placeholder="Ex.: Tênis no outlet"></div>
-        <div><label class="label" for="fxCat">Categoria</label><select class="field" id="fxCat" name="category">${FT.EXPENSE_CATS.map(c => `<option>${esc(c)}</option>`).join("")}</select></div></div>
-        <div style="margin-top:14px"><button class="btn btn--primary" type="submit">${icon("plus")} Registrar gasto</button></div></form>
       <section class="section"><div class="section__head"><h2 class="h-section">Tabela rápida</h2></div><div class="sheet" style="padding:4px 16px" id="fxQuick">${fxQuickHTML()}</div></section>
       <section class="section"><details class="alt" ${fx.manual || fx.spread !== 0.2 || fx.tax !== 6 ? "open" : ""}><summary>Ajustar acréscimo, imposto e cotação${icon("chev-d")}</summary>
         <div style="padding-bottom:14px">
@@ -574,46 +566,6 @@
   }, 120000);
 
   /* ======================================================================
-     Frases úteis
-     ====================================================================== */
-  function viewFrases() {
-    return `<a class="back" href="#/mais">${icon("chev-l")} Mais</a>
-      <header class="page-head"><h1 class="h-page">Frases úteis</h1><p class="lede">Toque em Mostrar para exibir a frase em letras grandes e entregar o celular para a pessoa ler.</p></header>
-      ${FT.FRASES.map((g, gi) => `<section class="section"><div class="section__head"><h2 class="h-section">${esc(g.name)}</h2></div>
-        <div class="sheet" style="padding:0 16px">${g.list.map((f, fi) => `<div class="phrase"><div class="phrase__text"><div class="phrase__en">${esc(f[1])}</div><div class="phrase__pt">${esc(f[0])}</div></div><button class="btn btn--sm" type="button" data-act="phrase-show" data-g="${gi}" data-i="${fi}">Mostrar</button></div>`).join("")}</div></section>`).join("")}`;
-  }
-
-  /* ======================================================================
-     Onde estacionei
-     ====================================================================== */
-  function viewCarro() {
-    const p = S().parking;
-    const ago = p ? Math.max(0, Math.round((FT.now().getTime() - p.t) / 60000)) : 0;
-    const agoTxt = ago < 1 ? "agora há pouco" : ago < 60 ? `há ${ago} min` : ago < 1440 ? `há ${Math.floor(ago / 60)} h` : "há mais de um dia";
-    return `<a class="back" href="#/mais">${icon("chev-l")} Mais</a>
-      <header class="page-head"><h1 class="h-page">Onde estacionei</h1><p class="lede">Salve a localização do carro quando estacionar. Vocês dois enxergam o mesmo local.</p></header>
-      ${p ? `<section class="sheet sheet--pad stack">
-          <div class="row row--between row--wrap"><strong>Carro salvo ${agoTxt}</strong><span class="chip chip--ok">${icon("pin")} Localização salva</span></div>
-          <a class="btn btn--primary" href="${esc("https://www.google.com/maps/dir/?api=1&destination=" + p.lat + "," + p.lon + "&travelmode=walking")}" target="_blank" rel="noopener noreferrer">${icon("route")} Rota a pé até o carro</a>
-          <a class="btn" href="${esc("https://www.google.com/maps/search/?api=1&query=" + p.lat + "," + p.lon)}" target="_blank" rel="noopener noreferrer">${icon("pin")} Ver no mapa</a>
-          <label class="label" for="parkNote">Anotação (andar, fileira, referência)</label><input class="field" id="parkNote" data-act="park-note" maxlength="120" value="${esc(p.note)}" placeholder="Ex.: Pateta, fileira 12">
-          <div class="btn-row"><button class="btn" type="button" data-act="park-save">${icon("refresh")} Salvar de novo (mudei de lugar)</button><button class="btn btn--quiet btn--danger" type="button" data-act="park-clear">Apagar</button></div></section>`
-      : `<section class="sheet sheet--pad stack"><p>Ainda não há carro salvo. Quando estacionar, toque no botão abaixo e permita o acesso à localização.</p><button class="btn btn--primary" type="button" data-act="park-save">${icon("pin")} Salvar local do carro agora</button></section>`}
-      <div class="callout" style="margin-top:20px">${icon("info")}<div><strong>Dica</strong>Dentro de estacionamentos cobertos o GPS pode errar. Anote também o andar ou a fileira.</div></div>`;
-  }
-
-  function saveParking() {
-    if (!navigator.geolocation) { toast("Este aparelho não oferece localização."); return; }
-    toast("Buscando a localização…");
-    navigator.geolocation.getCurrentPosition(pos => {
-      store.update(s => { s.parking = { lat: pos.coords.latitude, lon: pos.coords.longitude, t: Date.now(), note: s.parking ? s.parking.note : "" }; });
-      toast("Local do carro salvo."); FT.app.render({ keepScroll: true });
-    }, err => {
-      toast(err && err.code === 1 ? "Localização bloqueada. Permita para este site nas configurações do navegador." : "Não consegui pegar a localização. Tente de novo em campo aberto.");
-    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-  }
-
-  /* ======================================================================
      Ações, formulários e eventos
      ====================================================================== */
   ex.act = async function (act, el) {
@@ -656,14 +608,7 @@
         if (r.value === "ok") { const id = el.dataset.id; store.update(s => { s.docs = s.docs.filter(d => d.id !== id); }); await files.remove(id); FT.app.render({ keepScroll: true }); }
         return true;
       }
-      case "park-save": saveParking(); return true;
-      case "park-clear": store.update(s => { s.parking = null; }); FT.app.render({ keepScroll: true }); return true;
       case "fx-refresh": fetchRate(true); return true;
-      case "phrase-show": {
-        const f = FT.FRASES[Number(el.dataset.g)].list[Number(el.dataset.i)];
-        await FT.app.dialog({ title: "Show this to them", html: `<p class="phrase__big">${esc(f[1])}</p><p class="small muted" style="margin-top:12px">${esc(f[0])}</p>`, ok: "Fechar", cancel: null });
-        return true;
-      }
     }
     return false;
   };
@@ -672,7 +617,6 @@
     const v = el.value;
     switch (act) {
       case "doc-add": addFiles(el.dataset.res, el.files); el.value = ""; return true;
-      case "park-note": store.update(s => { if (s.parking) s.parking.note = clamp(v, 120); }); return true;
       case "fx-spread": { const n = num(v); if (n >= 0 && n <= 10) store.update(s => { s.fx.spread = n; }); else toast("Digite um acréscimo entre 0 e 10."); FT.app.render({ keepScroll: true }); return true; }
       case "fx-tax": { const n = num(v); if (n >= 0 && n <= 50) store.update(s => { s.fx.tax = n; }); else toast("Digite um percentual entre 0 e 50."); FT.app.render({ keepScroll: true }); return true; }
       case "fx-manual": { const n = v.trim() === "" ? null : num(v); store.update(s => { s.fx.manual = n > 0 ? n : null; }); FT.app.render({ keepScroll: true }); return true; }
@@ -682,35 +626,19 @@
 
   ex.input = function (el) {
     if (el.dataset && el.dataset.act === "fx-amt") { fxs.amount = el.value; updateFx(); return true; }
-    if (el.dataset && el.dataset.act === "park-note") { store.update(s => { if (s.parking) s.parking.note = clamp(el.value, 120); }); return true; }
     return false;
   };
 
-  ex.submit = async function (name, form) {
-    if (name === "fx-expense") {
-      const usd = num(fxs.amount);
-      if (!(usd > 0)) { toast("Digite o valor da compra em dólar primeiro."); return true; }
-      const d = new FormData(form);
-      const category = FT.EXPENSE_CATS.includes(d.get("category")) ? d.get("category") : "Outros";
-      store.update(s => { s.expenses.push({ id: uid(), name: clamp(d.get("name"), 80) || "Compra", amount: usd, category, date: today() }); });
-      fxs.amount = ""; toast("Gasto registrado no orçamento."); FT.app.render({ keepScroll: true });
-      return true;
-    }
-    return false;
-  };
+  ex.submit = async function () { return false; };
 
   /* ---------- rotas e menus ---------- */
   Object.assign(ex.routes, {
     hoje: { title: "Hoje", tab: "inicio", fn: viewHoje },
     cambio: { title: "Câmbio", tab: "cambio", fn: viewCambio },
-    parques: { title: "Guia do parque", tab: "mais", fn: viewParques },
-    frases: { title: "Frases úteis", tab: "mais", fn: viewFrases },
-    carro: { title: "Onde estacionei", tab: "mais", fn: viewCarro }
+    parques: { title: "Guia do parque", tab: "mais", fn: viewParques }
   });
   ex.more = [
-    { id: "parques", label: "Guia do parque", icon: "sun", text: "Plano do dia, ordem sugerida e filas ao vivo" },
-    { id: "frases", label: "Frases úteis em inglês", icon: "note", text: "Aeroporto, hotel, restaurante, loja da Apple e emergência" },
-    { id: "carro", label: "Onde estacionei", icon: "car", text: "Salve a localização do carro e volte a pé até ele" }
+    { id: "parques", label: "Guia do parque", icon: "sun", text: "Plano do dia, ordem sugerida e filas ao vivo" }
   ];
   ex.rail = [{ id: "hoje", label: "Hoje", icon: "clock" }];
 

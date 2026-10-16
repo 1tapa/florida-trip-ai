@@ -17,9 +17,8 @@
   ];
   const MORE = [
     { id: "reservas", label: "Reservas", icon: "ticket", text: "Voos, hotéis, carro e ingressos com código e situação" },
-    { id: "orcamento", label: "Orçamento", icon: "wallet", text: "Quanto já gastou e quanto sobra, por categoria" },
-    { id: "compras", label: "Compras e alfândega", icon: "bag", text: "Lista, outlets e simulador do imposto na volta" },
-    { id: "comida", label: "Onde comer", icon: "utensils", text: "Opções práticas e o orçamento de alimentação" },
+    { id: "compras", label: "Compras", icon: "bag", text: "Uma lista para o Leo, outra para a Camily, e os outlets" },
+    { id: "comida", label: "Onde comer", icon: "utensils", text: "Opções práticas para o dia a dia" },
     { id: "contatos", label: "Contatos e emergência", icon: "shield", text: "911, contato no Brasil e o que fazer se perder algo" },
     { id: "ajustes", label: "Ajustes e backup", icon: "sliders", text: "Salvar, restaurar, instalar no iPhone" }
   ];
@@ -243,8 +242,6 @@
       .filter(i => !(i.day >= 4 && i.day <= 13 && diffDays(t, i.due || T.start) > 14));
     upcoming = upcoming.sort((a, b) => (isLate(b) - isLate(a)) || sortItems(a, b)).slice(0, 5);
 
-    const spent = S().expenses.reduce((a, e) => a + e.amount, 0), left = S().budget - spent;
-    const pctSpent = Math.min(100, spent / S().budget * 100);
     const res = FT.RESERVAS.filter(r => (S().reservas[r.id] || {}).status && S().reservas[r.id].status !== "Pendente").length;
 
     let dayBlock = "";
@@ -260,7 +257,7 @@
             <div class="pass__line">${icon("plane", "pass__plane")}</div>
             <div class="pass__stop pass__stop--end"><span class="pass__code">${T.depart.code}</span><span class="pass__city">${T.depart.city}</span><span class="pass__when">sáb, 12/12 · 18h15</span></div>
           </div>
-          <dl class="pass__fields"><div><dt>Noites</dt><dd>8</dd></div><div><dt>Hotéis</dt><dd>2</dd></div><div><dt>Parques</dt><dd>4 dias</dd></div><div><dt>Orçamento</dt><dd>${money(S().budget)}</dd></div></dl>
+          <dl class="pass__fields"><div><dt>Noites</dt><dd>8</dd></div><div><dt>Hotéis</dt><dd>2</dd></div><div><dt>Parques</dt><dd>4 dias</dd></div><div><dt>Dias</dt><dd>9</dd></div></dl>
         </div>
         <a class="pass__stub" href="#/checklist"><div><div class="pass__count">${count}</div><div class="pass__count-label">${label}</div></div><div class="pass__stub-note"><strong>${stubNote}</strong>Abrir o checklist</div></a>
       </section>
@@ -274,10 +271,6 @@
         <section class="section"><div class="section__head"><h2 class="h-section">Preparação</h2></div>
           <div class="meter" role="img" aria-label="${st.done} de ${st.total} itens concluídos"><span class="meter__fill" style="width:${st.total ? st.done / st.total * 100 : 0}%"></span></div>
           <dl style="margin-top:8px"><div class="stat"><dt>Itens concluídos</dt><dd>${st.done} de ${st.total}</dd></div><div class="stat"><dt>Essenciais concluídos</dt><dd>${st.eDone} de ${st.eTotal}</dd></div><div class="stat"><dt>Atrasados</dt><dd>${st.late}</dd></div><div class="stat"><dt>Reservas confirmadas</dt><dd><a href="#/reservas">${res} de ${FT.RESERVAS.length}</a></dd></div></dl>
-        </section>
-        <section class="section"><div class="section__head"><h2 class="h-section">Dinheiro</h2><a class="btn btn--quiet btn--sm" href="#/orcamento">Orçamento ${icon("chev-r")}</a></div>
-          <div class="bignum">${money(left)}</div><div class="small muted" style="margin:4px 0 10px">restante de ${money(S().budget)}</div>
-          <div class="meter" role="img" aria-label="${Math.round(pctSpent)}% do orçamento gasto"><span class="meter__fill${pctSpent > 100 ? " meter__fill--over" : pctSpent > 85 ? " meter__fill--warn" : ""}" style="width:${pctSpent}%"></span></div>
         </section>
       </div>
       <section class="section"><a class="menu__item" href="#/concierge"><span class="menu__icon">${icon("bell")}</span><span><span class="menu__title">Concierge</span><span class="menu__text">Pergunte algo ou peça uma mudança no roteiro</span></span>${icon("chev-r", "i-chev")}</a></section>`;
@@ -293,7 +286,7 @@
     return `
       <header class="page-head"><h1 class="h-page">Roteiro</h1>
         <p class="lede">Nove dias de Miami a Orlando. Abra um dia para ver a programação hora a hora.</p></header>
-      ${S().days ? `<div class="callout callout--info" style="margin-bottom:20px">${icon("info")}<div><strong>Roteiro personalizado</strong>Este roteiro foi alterado pelo concierge. Você pode restaurar o original em <a href="#/ajustes">Ajustes</a>.</div></div>` : ""}
+      ${S().days ? `<div class="callout callout--info" style="margin-bottom:20px">${icon("info")}<div><strong>Roteiro personalizado</strong>Este roteiro foi alterado por vocês ou pelo concierge. Você pode restaurar o original em <a href="#/ajustes">Ajustes</a>.</div></div>` : ""}
       ${legs}
       <div class="callout" style="margin-top:28px">${icon("alert")}<div><strong>Confirme perto da data</strong>Horários de parques, shows, abertura de lojas e trânsito mudam. Este roteiro é uma base, não uma reserva.</div></div>`;
   }
@@ -302,6 +295,7 @@
     const days = store.days(), plans = store.plans();
     const i = Number(n) - 4;
     if (!(i >= 0 && i < days.length)) return notFound();
+    if (editor && editor.n === Number(n)) return viewEditDay(i);
     const d = days[i], p = plans[i], date = FT.u.dayDate(Number(d.date));
     const reminders = store.items().filter(it => it.day === Number(d.date) && !(isDone(it) && !recent.has(it.id)));
     const prev = i > 0 ? `<a class="btn btn--quiet btn--icon" href="#/roteiro/${Number(days[i - 1].date)}" aria-label="Dia anterior">${icon("chev-l")}</a>` : "";
@@ -321,7 +315,59 @@
       ${reminders.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Não esqueça neste dia</h2></div><div class="sheet" style="padding:0 16px"><ul>${reminders.map(it => itemHTML(it, true)).join("")}</ul></div></section>` : ""}
       ${p.alternatives && p.alternatives.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Planos B e detalhes</h2></div>${p.alternatives.map(a => `<details class="alt"><summary>${esc(a[0])}${icon("chev-d")}</summary><p>${esc(a[1])}</p></details>`).join("")}</section>` : ""}
       ${(Number(d.date) === 7 || Number(d.date) === 9) ? `<section class="section"><a class="btn btn--primary" href="#/parques/${Number(d.date) === 7 ? "mk" : "usf"}">${icon("sun")} Guia do parque com filas ao vivo</a></section>` : ""}
-      <section class="section"><button class="btn" type="button" data-act="ask-day" data-day="${Number(d.date)}">${icon("bell")} Pedir ajuste deste dia ao concierge</button></section>`;
+      <section class="section btn-row"><button class="btn" type="button" data-act="ed-open" data-day="${Number(d.date)}">${icon("edit")} Editar este dia</button><button class="btn" type="button" data-act="ask-day" data-day="${Number(d.date)}">${icon("bell")} Pedir ajuste ao concierge</button></section>`;
+  }
+
+  /* ---------- edição manual de um dia ---------- */
+  let editor = null;
+  function openEditor(n) {
+    const i = n - 4, d = store.days()[i], p = store.plans()[i];
+    editor = { n, draft: { title: d.title, where: d.where || "", desc: d.desc || "", tip: d.tip || "", tags: (d.tags || []).join(", "), note: "", schedule: p.schedule.map(b => [b[0] || "", b[1] || "", b[2] || "", b[3] || ""]) } };
+  }
+  function collectEditor() {
+    const f = $("#editDay"); if (!f || !editor) return;
+    const v = name => (f.querySelector(`[name="${name}"]`) || {}).value || "";
+    const dr = editor.draft;
+    dr.title = v("title"); dr.where = v("where"); dr.desc = v("desc"); dr.tip = v("tip"); dr.tags = v("tags"); dr.note = v("note");
+    dr.schedule = [...f.querySelectorAll(".edrow")].map(r => ["t", "n", "d", "p"].map(k => (r.querySelector(`[data-f="${k}"]`) || {}).value || ""));
+  }
+  function viewEditDay(i) {
+    const dr = editor.draft, d = store.days()[i], date = FT.u.dayDate(editor.n);
+    const rows = dr.schedule.map((b, k) => `<fieldset class="edrow"><legend class="sr">Bloco ${k + 1}</legend>
+      <div><div><label class="label" style="margin-top:0">Horário</label><input class="field" data-f="t" maxlength="30" value="${esc(b[0])}" placeholder="09:00–11:00"></div>
+      <div><label class="label">Título</label><input class="field" data-f="n" maxlength="120" value="${esc(b[1])}" placeholder="O que fazer"></div></div>
+      <label class="label">Detalhes</label><textarea class="field" data-f="d" rows="2" maxlength="500">${esc(b[2])}</textarea>
+      <label class="label">Local para o mapa (opcional)</label><input class="field" data-f="p" maxlength="120" value="${esc(b[3])}">
+      <button class="btn btn--quiet btn--sm btn--danger" type="button" data-act="ed-del" data-i="${k}" style="margin-top:10px">${icon("trash")} Remover bloco</button></fieldset>`).join("");
+    return `<div class="daynav"><a class="back" href="#/roteiro/${editor.n}" data-act="ed-cancel">${icon("chev-l")} Cancelar edição</a></div>
+      <header class="page-head"><h1 class="h-page">Editar o dia ${editor.n}</h1><p class="lede">${esc(FT.u.weekday(date))}, ${esc(FT.u.dateLong(date))}. Mude o que quiser e, se desejar, peça para a IA completar o resto.</p></header>
+      <div id="editDay">
+        <section class="sheet sheet--pad">
+          <label class="label" style="margin-top:0" for="edTitle">Título do dia</label><input class="field" id="edTitle" name="title" maxlength="120" value="${esc(dr.title)}">
+          <label class="label" for="edWhere">Onde</label><input class="field" id="edWhere" name="where" maxlength="160" value="${esc(dr.where)}">
+          <label class="label" for="edDesc">Resumo</label><textarea class="field" id="edDesc" name="desc" rows="3" maxlength="600">${esc(dr.desc)}</textarea>
+          <label class="label" for="edTags">Etiquetas (separe por vírgula)</label><input class="field" id="edTags" name="tags" maxlength="120" value="${esc(dr.tags)}">
+          <label class="label" for="edTip">Dica do dia</label><textarea class="field" id="edTip" name="tip" rows="2" maxlength="400">${esc(dr.tip)}</textarea>
+        </section>
+        <section class="section"><div class="section__head"><h2 class="h-section">Programação</h2></div>${rows || '<div class="sheet empty">Nenhum bloco ainda.</div>'}
+          <button class="btn" type="button" data-act="ed-add" style="margin-top:12px">${icon("plus")} Adicionar bloco</button></section>
+        <section class="section sheet sheet--pad"><strong>Complementar com a IA</strong>
+          <p class="small muted" style="margin-top:4px">A IA mantém o que você escreveu e completa o que faltar neste dia: deslocamentos, refeições, plano B e dica.</p>
+          <label class="label" for="edNote">Algo que ela deva considerar? (opcional)</label><textarea class="field" id="edNote" name="note" rows="2" maxlength="300" placeholder="Ex.: queremos sair do parque às 15h">${esc(dr.note)}</textarea></section>
+        <div class="btn-row" style="margin-top:16px"><button class="btn btn--primary" type="button" data-act="ed-save">${icon("check")} Salvar</button><button class="btn" type="button" data-act="ed-save-ai">${icon("bell")} Salvar e pedir à IA para completar</button></div>
+      </div>`;
+  }
+  function saveEditor() {
+    collectEditor();
+    const dr = editor.draft, n = editor.n, i = n - 4;
+    const title = clamp(dr.title, 120);
+    if (!title) { toast("Dê um título ao dia."); return false; }
+    const schedule = dr.schedule.map(b => [clamp(b[0], 30), clamp(b[1], 120), clamp(b[2], 500), clamp(b[3], 120)]).filter(b => b[1]).map(b => (b[3] ? b : b.slice(0, 3)));
+    const days = JSON.parse(JSON.stringify(store.days())), plans = JSON.parse(JSON.stringify(store.plans()));
+    Object.assign(days[i], { title, where: clamp(dr.where, 160), desc: clamp(dr.desc, 600), tip: clamp(dr.tip, 400), tags: dr.tags.split(",").map(x => clamp(x, 30)).filter(Boolean).slice(0, 6) });
+    plans[i].schedule = schedule;
+    store.update(s => { s.days = days; s.plans = plans; });
+    return true;
   }
 
   /* ---------- mais e subpáginas ---------- */
@@ -347,67 +393,27 @@
       }).join("")}`;
   }
 
-  function spentBy(cat) { return S().expenses.filter(e => e.category === cat).reduce((a, e) => a + e.amount, 0); }
 
-  function viewOrcamento() {
-    const st = S(), spent = st.expenses.reduce((a, e) => a + e.amount, 0), left = st.budget - spent;
-    const pct = spent / st.budget * 100, goals = FT.EXPENSE_CATS.reduce((a, c) => a + st.catBudgets[c], 0);
-    const cls = p => p > 100 ? " meter__fill--over" : p > 85 ? " meter__fill--warn" : "";
-    return `${backTo()}
-      <header class="page-head"><h1 class="h-page">Orçamento</h1><p class="lede">Registre cada gasto e veja o que sobra. Valores em dólares.</p></header>
-      <section class="sheet sheet--pad">
-        <div class="bignum">${money(left)}</div><div class="small muted" style="margin:4px 0 12px">${left < 0 ? "acima do orçamento" : "restante"} de ${money(st.budget)}</div>
-        <div class="meter" role="img" aria-label="${Math.round(pct)}% gasto"><span class="meter__fill${cls(pct)}" style="width:${Math.min(100, pct)}%"></span></div>
-        <dl style="margin-top:10px"><div class="stat"><dt>Gasto até agora</dt><dd>${money(spent)}</dd></div><div class="stat"><dt>Gasto por dia de viagem (média)</dt><dd>${money(spent / 9)}</dd></div></dl>
-        <label class="label" for="totalBudget">Orçamento total (US$)</label><input class="field" id="totalBudget" data-act="total-budget" inputmode="decimal" value="${st.budget}">
-      </section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Por categoria</h2></div>
-        <div class="sheet sheet--pad"><div class="cat-row cat-row--head"><span>Categoria</span><span style="text-align:right">Meta (US$)</span><span style="text-align:right">Gasto</span></div>
-        ${FT.EXPENSE_CATS.map(c => { const sp = spentBy(c), g = st.catBudgets[c], p = g ? sp / g * 100 : (sp ? 101 : 0);
-          return `<div class="cat-row"><label for="cb-${esc(c)}">${esc(c)}</label><input class="field" id="cb-${esc(c)}" data-act="cat-budget" data-cat="${esc(c)}" inputmode="decimal" value="${g}"><span class="cat-row__spent">${money(sp)}</span><div class="meter cat-row__bar"><span class="meter__fill${cls(p)}" style="width:${Math.min(100, p)}%"></span></div></div>`; }).join("")}
-        </div>
-        <p class="hint">As metas somam ${money(goals)}${Math.round(goals) !== Math.round(st.budget) ? `, diferente do total de ${money(st.budget)}` : ""}. São sugestões: ajuste como preferir.</p></section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Registrar gasto</h2></div>
-        <form class="sheet sheet--pad" data-form="expense">
-          <label class="label" for="exName" style="margin-top:0">Descrição</label><input class="field" id="exName" name="name" maxlength="80" required placeholder="Ex.: Almoço no Denny’s">
-          <div class="two"><div><label class="label" for="exAmt">Valor (US$)</label><input class="field" id="exAmt" name="amount" inputmode="decimal" required placeholder="0,00"></div>
-          <div><label class="label" for="exCat">Categoria</label><select class="field" id="exCat" name="category">${FT.EXPENSE_CATS.map(c => `<option>${esc(c)}</option>`).join("")}</select></div></div>
-          <div style="margin-top:14px"><button class="btn btn--primary" type="submit">${icon("plus")} Registrar</button></div></form></section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Gastos registrados</h2></div>
-        ${st.expenses.length ? `<div class="sheet" style="padding:0 16px">${st.expenses.slice().reverse().map(e => `<div class="expense"><div><div class="expense__name">${esc(e.name)}</div><div class="small muted">${esc(e.category)}${e.date ? " · " + short(e.date) : ""}</div></div><div class="row"><span class="expense__amount">${money(e.amount)}</span><button class="btn btn--quiet btn--icon btn--danger" type="button" data-act="del-expense" data-id="${esc(e.id)}" aria-label="Remover ${esc(e.name)}">${icon("trash")}</button></div></div>`).join("")}</div>` : `<div class="sheet empty">Nenhum gasto ainda. Registre o primeiro acima.</div>`}</section>`;
-  }
-
+  let shopWho = "leo";
   function viewCompras() {
-    const st = S(), T = FT.TRIP;
-    const auto = FT.CUSTOMS_CATS.reduce((a, c) => a + spentBy(c), 0) / T.travelers;
-    const a = st.customs.a != null ? st.customs.a : auto, b = st.customs.b != null ? st.customs.b : auto;
-    const exA = Math.max(0, a - T.quota), exB = Math.max(0, b - T.quota), tax = (exA + exB) * T.customsRate;
-    const receita = FT.CHECKLIST.map(i => i.link).find(l => l && /receita/i.test(l[1]));
-    const left = st.shopping.filter(x => !x.done).length;
+    const st = S(), who = shopWho === "camily" ? "camily" : "leo", name = who === "camily" ? "Camily" : "Leo";
+    const of = w => st.shopping.filter(x => (x.who || "leo") === w);
+    const list = of(who), left = list.filter(x => !x.done).length;
+    const tab = (w, label) => `<button type="button" data-act="shop-who" data-v="${w}" aria-pressed="${who === w}">${label} <span class="small muted">${of(w).filter(x => !x.done).length}</span></button>`;
     return `${backTo()}
-      <header class="page-head"><h1 class="h-page">Compras e alfândega</h1><p class="lede">O que comprar, onde, e quanto pode custar de imposto na volta.</p></header>
-      <section><div class="section__head"><h2 class="h-section">Lista de compras</h2><span class="small muted">${left} por comprar</span></div>
-        <div class="sheet" style="padding:0 16px">${st.shopping.length ? st.shopping.map(x => `<div class="shop-item${x.done ? " shop-item--done" : ""}"><label class="check"><input type="checkbox" data-act="toggle-shop" data-id="${esc(x.id)}"${x.done ? " checked" : ""} aria-label="Comprado: ${esc(x.name)}"><span class="check__box">${icon("check")}</span></label><span class="shop-item__name">${esc(x.name)}</span><button class="btn btn--quiet btn--icon btn--danger" type="button" data-act="del-shop" data-id="${esc(x.id)}" aria-label="Remover ${esc(x.name)}">${icon("trash")}</button></div>`).join("") : '<div class="empty">Lista vazia.</div>'}</div>
-        <form class="row" data-form="shop" style="margin-top:12px"><label class="sr" for="shopName">Novo item</label><input class="field" id="shopName" name="name" maxlength="80" placeholder="Adicionar item" required><button class="btn btn--primary" type="submit">Adicionar</button></form></section>
+      <header class="page-head"><h1 class="h-page">Compras</h1><p class="lede">Uma lista para cada um. O que está marcado já foi comprado.</p></header>
+      <div class="segmented" role="group" aria-label="Lista de quem" style="margin-bottom:14px">${tab("leo", "Leo")}${tab("camily", "Camily")}</div>
+      <section><div class="section__head"><h2 class="h-section">Lista ${who === "leo" ? "do" : "da"} ${esc(name)}</h2><span class="small muted">${left} por comprar</span></div>
+        <div class="sheet" style="padding:0 16px">${list.length ? list.map(x => `<div class="shop-item${x.done ? " shop-item--done" : ""}"><label class="check"><input type="checkbox" data-act="toggle-shop" data-id="${esc(x.id)}"${x.done ? " checked" : ""} aria-label="Comprado: ${esc(x.name)}"><span class="check__box">${icon("check")}</span></label><span class="shop-item__name">${esc(x.name)}</span><button class="btn btn--quiet btn--icon btn--danger" type="button" data-act="del-shop" data-id="${esc(x.id)}" aria-label="Remover ${esc(x.name)}">${icon("trash")}</button></div>`).join("") : `<div class="empty">A lista da ${esc(name)} está vazia.</div>`}</div>
+        <form class="row" data-form="shop" style="margin-top:12px"><label class="sr" for="shopName">Novo item para ${esc(name)}</label><input class="field" id="shopName" name="name" maxlength="80" placeholder="Adicionar item para ${esc(name)}" required><button class="btn btn--primary" type="submit">Adicionar</button></form></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Outlets no roteiro</h2></div>
         <div class="sheet" style="padding:0 16px">${FT.OUTLETS.map(o => `<div class="place"><span class="place__icon">${icon("bag")}</span><div><div class="place__name">${esc(o.name)} <span class="chip chip--plain">${esc(o.day)}</span></div><p class="place__note">${esc(o.note)}</p><div class="place__links"><a href="${esc(mapsUrl(o.q))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Abrir no mapa</a></div></div></div>`).join("")}</div></section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Estratégia</h2></div><ol class="steps">${FT.ESTRATEGIA_COMPRAS.map(s => `<li><strong>${esc(s[0])}</strong><span>${esc(s[1])}</span></li>`).join("")}</ol></section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Simulador do imposto na volta</h2></div>
-        <div class="callout callout--info">${icon("info")}<div><strong>Estimativa, não é cálculo oficial</strong>A cota é de ${money(T.quota)} por pessoa em compras no exterior (viagem aérea). O que passar disso paga cerca de ${Math.round(T.customsRate * 100)}% de imposto. Confirme as regras vigentes na Receita Federal e declare na e-DBV.${receita && safeUrl(receita[1]) ? ` <a href="${esc(safeUrl(receita[1]))}" target="_blank" rel="noopener noreferrer">${esc(receita[0])}</a>` : ""}</div></div>
-        <div class="sheet sheet--pad" style="margin-top:12px"><div class="two"><div><label class="label" for="custA" style="margin-top:0">Pessoa 1, total em compras (US$)</label><input class="field" id="custA" data-act="cust" data-k="a" inputmode="decimal" value="${st.customs.a != null ? st.customs.a : ""}" placeholder="${Math.round(auto)}"></div>
-        <div><label class="label" for="custB" style="margin-top:0">Pessoa 2, total em compras (US$)</label><input class="field" id="custB" data-act="cust" data-k="b" inputmode="decimal" value="${st.customs.b != null ? st.customs.b : ""}" placeholder="${Math.round(auto)}"></div></div>
-        <p class="hint">Em branco, usa metade dos gastos registrados em ${FT.CUSTOMS_CATS.join(" e ")}.</p>
-        <div class="sim__result"><div class="stat"><dt>Excedente da pessoa 1</dt><dd>${money(exA)}</dd></div><div class="stat"><dt>Excedente da pessoa 2</dt><dd>${money(exB)}</dd></div>
-        <div class="sim__total"><span>Imposto estimado</span><strong>${money(tax)}</strong></div></div></div></section>`;
+      <section class="section"><div class="section__head"><h2 class="h-section">Estratégia</h2></div><ol class="steps">${FT.ESTRATEGIA_COMPRAS.map(s => `<li><strong>${esc(s[0])}</strong><span>${esc(s[1])}</span></li>`).join("")}</ol></section>`;
   }
 
   function viewComida() {
-    const days = 9, goal = FT.TRIP.foodPerDay * days, sp = spentBy("Alimentação"), p = sp / goal * 100;
     return `${backTo()}
       <header class="page-head"><h1 class="h-page">Onde comer</h1><p class="lede">Opções práticas para o dia a dia. Confirme horário e unidade antes de ir.</p></header>
-      <section class="sheet sheet--pad"><div class="row row--between"><strong>Alimentação</strong><span class="small muted">meta de ${money(FT.TRIP.foodPerDay)} por dia</span></div>
-        <div class="bignum" style="margin-top:8px">${money(sp)}</div><div class="small muted" style="margin:4px 0 10px">de ${money(goal)} em ${days} dias</div>
-        <div class="meter"><span class="meter__fill${p > 100 ? " meter__fill--over" : p > 85 ? " meter__fill--warn" : ""}" style="width:${Math.min(100, p)}%"></span></div></section>
       <section class="section"><div class="sheet" style="padding:0 16px">${FT.COMIDA.map(c => `<div class="place"><span class="place__icon">${icon(FOOD_ICON[c.icon] || "utensils")}</span><div><div class="place__name">${esc(c.name)} <span class="chip chip--plain">${esc(c.kind)}</span></div><p class="place__note">${esc(c.note)}</p><div class="place__links"><a href="${esc(mapsUrl(c.q))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Procurar perto de mim</a></div></div></div>`).join("")}</div></section>`;
   }
 
@@ -477,8 +483,7 @@
     concierge: { title: "Concierge", tab: "concierge", fn: () => FT.ai.view() },
     mais: { title: "Mais", tab: "mais", fn: viewMais },
     reservas: { title: "Reservas", tab: "mais", fn: viewReservas },
-    orcamento: { title: "Orçamento", tab: "mais", fn: viewOrcamento },
-    compras: { title: "Compras e alfândega", tab: "mais", fn: viewCompras },
+    compras: { title: "Compras", tab: "mais", fn: viewCompras },
     comida: { title: "Onde comer", tab: "mais", fn: viewComida },
     contatos: { title: "Contatos e emergência", tab: "mais", fn: viewContatos },
     ajustes: { title: "Ajustes e backup", tab: "mais", fn: viewAjustes }
@@ -508,6 +513,7 @@
 
   function render(opts) {
     opts = opts || {};
+    if (editor) collectEditor();
     const route = parseRoute();
     const r = route.id ? ROUTES[route.id] : null;
     const y = window.scrollY;
@@ -555,7 +561,21 @@
       case "view-mode": recent = new Set(); saveUI(ui => { ui.view = el.dataset.v; }); render({ keepScroll: true }); break;
       case "goto-late": recent = new Set(); saveUI(ui => { ui.view = "prazo"; ui.status = "pend"; ui.pri = "all"; }); render(); $("#view").querySelector(".group-title--late")?.scrollIntoView({ block: "start" }); break;
       case "res-status": store.update(s => { const r = s.reservas[el.dataset.id] || { status: "Pendente", note: "" }; r.status = el.dataset.v; s.reservas[el.dataset.id] = r; }); render({ keepScroll: true }); break;
-      case "del-expense": store.update(s => { s.expenses = s.expenses.filter(x => x.id !== el.dataset.id); }); toast("Gasto removido."); render({ keepScroll: true }); break;
+      case "ed-open": openEditor(Number(el.dataset.day)); render({ keepScroll: false }); window.scrollTo(0, 0); break;
+      case "ed-cancel": editor = null; render({ keepScroll: false }); break;
+      case "ed-add": collectEditor(); editor.draft.schedule.push(["", "", "", ""]); render({ keepScroll: true }); break;
+      case "ed-del": collectEditor(); editor.draft.schedule.splice(Number(el.dataset.i), 1); render({ keepScroll: true }); break;
+      case "ed-save": { if (saveEditor()) { const n = editor.n; editor = null; toast("Dia salvo."); render({ keepScroll: false }); window.scrollTo(0, 0); } break; }
+      case "ed-save-ai": {
+        collectEditor(); const note = clamp(editor.draft.note, 300), n = editor.n;
+        if (!saveEditor()) break;
+        editor = null;
+        store.update(s => { s.ai.mode = "edit"; });
+        location.hash = "#/concierge";
+        FT.ai.send("Editei o dia " + n + " manualmente; o roteiro atual já traz as minhas alterações. Mantenha o que escrevi e complete só o que faltar nesse dia (deslocamentos, refeições, tempos de espera, plano B e dica)." + (note ? " Considere: " + note : ""));
+        break;
+      }
+      case "shop-who": shopWho = el.dataset.v === "camily" ? "camily" : "leo"; render({ keepScroll: true }); break;
       case "toggle-shop": store.update(s => { const x = s.shopping.find(i => i.id === el.dataset.id); if (x) x.done = el.checked; }); render({ keepScroll: true }); break;
       case "del-shop": store.update(s => { s.shopping = s.shopping.filter(x => x.id !== el.dataset.id); }); render({ keepScroll: true }); break;
       case "ask-day": FT.ai.prefill("No dia " + el.dataset.day + ", ", "edit"); location.hash = "#/concierge"; setTimeout(() => $("#aiq") && $("#aiq").focus(), 50); break;
@@ -596,9 +616,6 @@
     if (FT.extra && FT.extra.change(act, el)) return;
     const val = el.value;
     switch (act) {
-      case "total-budget": { const n = num(val); if (n > 0) { store.update(s => { s.budget = n; }); render({ keepScroll: true }); } else toast("Digite um valor maior que zero."); break; }
-      case "cat-budget": { const n = num(val); if (n >= 0) { store.update(s => { s.catBudgets[el.dataset.cat] = n; }); render({ keepScroll: true }); } break; }
-      case "cust": { const n = val.trim() === "" ? null : num(val); store.update(s => { s.customs[el.dataset.k] = n != null && n >= 0 ? n : null; }); render({ keepScroll: true }); break; }
       case "res-note": store.update(s => { const r = s.reservas[el.dataset.id] || { status: "Pendente", note: "" }; r.note = clamp(val, 300); s.reservas[el.dataset.id] = r; }); break;
     }
   }
@@ -614,14 +631,7 @@
         store.update(s => { s.custom.push({ id: "u-" + uid(), cat: form.dataset.cat, pri: ["e", "i", "o"].includes(d.get("pri")) ? d.get("pri") : "i", title, detail: "", due, day: 0, custom: true }); });
         toast("Item adicionado."); render({ keepScroll: true }); break;
       }
-      case "expense": {
-        const amount = num(d.get("amount")); const nm = clamp(d.get("name"), 80);
-        if (!(amount > 0) || !nm) { toast("Informe a descrição e um valor maior que zero."); return; }
-        const category = FT.EXPENSE_CATS.includes(d.get("category")) ? d.get("category") : "Outros";
-        store.update(s => { s.expenses.push({ id: uid(), name: nm, amount, category, date: today() }); });
-        toast("Gasto registrado."); render({ keepScroll: true }); break;
-      }
-      case "shop": { const nm = clamp(d.get("name"), 80); if (!nm) return; store.update(s => { s.shopping.push({ id: uid(), name: nm, done: false }); }); render({ keepScroll: true }); $("#shopName") && $("#shopName").focus(); break; }
+      case "shop": { const nm = clamp(d.get("name"), 80); if (!nm) return; store.update(s => { s.shopping.push({ id: uid(), name: nm, who: shopWho === "camily" ? "camily" : "leo", done: false }); }); render({ keepScroll: true }); $("#shopName") && $("#shopName").focus(); break; }
       case "sync-config": { const ok = FT.sync.configure(String(d.get("cfg"))); toast(ok ? "Configuração salva." : "Não encontrei apiKey, projectId e appId nesse texto."); render({ keepScroll: true }); break; }
       case "sync-join": { const ok = await FT.sync.join(String(d.get("invite"))); toast(ok ? "Conectado. Os dados do casal vão aparecer aqui." : "Convite ou código inválido. Se for só o código, configure o Firebase antes."); render({ keepScroll: true }); break; }
       case "contact": store.update(s => { s.contacts = { name: clamp(d.get("name"), 60), phone: clamp(d.get("phone"), 30) }; }); toast("Contato salvo."); render({ keepScroll: true }); break;
@@ -667,6 +677,7 @@
     ev.preventDefault();
     onSubmit(form.dataset.form, form);
   });
+  window.addEventListener("hashchange", () => { if (editor && location.hash !== "#/roteiro/" + editor.n) editor = null; });
   window.addEventListener("hashchange", onRoute);
   FT.sync.onUI = () => { if (location.hash === "#/ajustes") render({ keepScroll: true }); };
 

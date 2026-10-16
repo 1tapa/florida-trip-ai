@@ -684,3 +684,6 @@ textarea.field { min-height: 88px; resize: vertical; }
 .mine li { min-width: 0; gap: 8px; }
 .mine li .wait { font-size: var(--t-xs); padding: 2px 8px; }
 .mine li .wait strong { font-size: var(--t-sm); }
+
+.edrow { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; margin: 0 0 10px; background: var(--paper); min-width: 0; }
+.edrow textarea.field { min-height: 60px; }
