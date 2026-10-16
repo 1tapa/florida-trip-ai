@@ -15,17 +15,17 @@
         ["mk-7d", "Seven Dwarfs Mine Train", "Emoção leve", 1, "Montanha-russa leve em vagonetes que balançam pela mina da Branca de Neve. Boa para a família; fila grande o dia todo.", 5, "seven dwarfs|sete anoes", "Seven Dwarfs Mine Train"],
         ["mk-tiana", "Tiana’s Bayou Adventure", "Aquática", 1, "Passeio de barco pelo pântano de A Princesa e o Sapo, com músicas e uma descida final. Pode molhar.", 3, "", "Tiana’s Bayou Adventure"],
         ["mk-space", "Space Mountain", "Emoção", 1, "Montanha-russa no escuro, com curvas rápidas e efeito de viagem pelo espaço.", 2, "", "Space Mountain"],
-        ["mk-btmr", "Big Thunder Mountain", "Emoção leve", 0, "Montanha-russa em tema de mineração no Velho Oeste, com curvas e descidas moderadas. Boa para a tarde.", 3, "big thunder", "Big Thunder Mountain Railroad"],
+        ["mk-btmr", "Big Thunder Mountain Railroad", "Emoção leve", 0, "Montanha-russa em tema de mineração no Velho Oeste, com curvas e descidas moderadas. Boa para a tarde.", 3, "big thunder", "Big Thunder Mountain Railroad"],
         ["mk-jungle", "Jungle Cruise", "Clássico", 0, "Passeio de barco com guia piadista por rios de selva com animais mecânicos.", 2, "", "Jungle Cruise"],
-        ["mk-peter", "Voo do Peter Pan", "Clássico", 1, "Voo em galeões sobre Londres e a Terra do Nunca. Fila longa para um passeio curto.", 4, "", "Peter Pan’s Flight"],
-        ["mk-pirates", "Piratas do Caribe", "Clássico", 0, "Passeio de barco coberto por cenas de piratas, com cenários grandes. Costuma andar rápido.", 2, "", "Pirates of the Caribbean"],
-        ["mk-haunted", "Mansão Assombrada", "Clássico", 0, "Passeio por uma mansão cheia de fantasmas e humor sombrio, sem susto forte. A fila é coberta e anda bem.", 3, "", "Haunted Mansion"],
+        ["mk-peter", "Peter Pan’s Flight", "Clássico", 1, "Voo em galeões sobre Londres e a Terra do Nunca. Fila longa para um passeio curto.", 4, "", "Peter Pan’s Flight"],
+        ["mk-pirates", "Pirates of the Caribbean", "Clássico", 0, "Passeio de barco coberto por cenas de piratas, com cenários grandes. Costuma andar rápido.", 2, "", "Pirates of the Caribbean"],
+        ["mk-haunted", "Haunted Mansion", "Clássico", 0, "Passeio por uma mansão cheia de fantasmas e humor sombrio, sem susto forte. A fila é coberta e anda bem.", 3, "", "Haunted Mansion"],
         ["mk-buzz", "Buzz Lightyear’s Space Ranger Spin", "Família", 0, "Passeio interativo em que você atira laser em alvos e soma pontos.", 2, "", "Buzz Lightyear’s Space Ranger Spin"],
         ["mk-philhar", "Mickey’s PhilharMagic", "Show 3D", 0, "Cinema 3D com personagens Disney e efeitos de vento e cheiro. Tem ar-condicionado: bom para descansar.", 4, "", "Mickey’s PhilharMagic"],
-        ["mk-small", "It’s a Small World", "Clássico", 0, "Passeio calmo de barco, com bonecos cantando pelo mundo. Coberto e refrescante.", 4, "", "it’s a small world"],
-        ["mk-under", "Jornada da Pequena Sereia", "Família", 0, "Passeio em conchas pelo filme A Pequena Sereia, com as músicas famosas.", 5, "little mermaid", "Under the Sea: Journey of the Little Mermaid"],
-        ["mk-dumbo", "Dumbo", "Família", 0, "Carrossel de elefantes que sobem e descem. É para crianças e a fila costuma ser longa.", 4, "", "Dumbo the Flying Elephant"],
-        ["mk-tiki", "Enchanted Tiki Room", "Show", 0, "Show curto de pássaros e flores animatrônicos, com ar-condicionado.", 2, "", "Walt Disney’s Enchanted Tiki Room"],
+        ["mk-small", "it’s a small world", "Clássico", 0, "Passeio calmo de barco, com bonecos cantando pelo mundo. Coberto e refrescante.", 4, "", "it’s a small world"],
+        ["mk-under", "Under the Sea: Journey of the Little Mermaid", "Família", 0, "Passeio em conchas pelo filme A Pequena Sereia, com as músicas famosas.", 5, "little mermaid", "Under the Sea: Journey of the Little Mermaid"],
+        ["mk-dumbo", "Dumbo the Flying Elephant", "Família", 0, "Carrossel de elefantes que sobem e descem. É para crianças e a fila costuma ser longa.", 4, "", "Dumbo the Flying Elephant"],
+        ["mk-tiki", "Walt Disney’s Enchanted Tiki Room", "Show", 0, "Show curto de pássaros e flores animatrônicos, com ar-condicionado.", 2, "", "Walt Disney’s Enchanted Tiki Room"],
         ["mk-tea", "Mad Tea Party", "Giratória", 0, "Xícaras giratórias que você controla. Evite logo depois de comer.", 4, "", "Mad Tea Party"]
       ],
       eat: [
@@ -43,17 +43,17 @@
       id: "usf", name: "Universal Studios Florida", short: "Universal Studios", day: 9,
       note: "Dia de Park-to-Park: os dois parques no mesmo dia. O Hogwarts Express (King’s Cross) liga este parque ao Islands of Adventure e só funciona com o ingresso Park-to-Park. Confira restrições de altura e itens soltos no app oficial.",
       rides: [
-        ["usf-gring", "Harry Potter e a Fuga de Gringotts", "Emoção", 1, "Montanha-russa coberta no banco dos bruxos de Harry Potter, com telas 3D, fogo e dragão. A mais disputada do parque: vá cedo.", 5, "", "Harry Potter and the Escape from Gringotts"],
-        ["usf-express", "Expresso de Hogwarts (King’s Cross)", "Passeio", 0, "Trem com cenas de Harry Potter nas janelas que liga ao Islands of Adventure. Só com ingresso Park-to-Park.", 5, "hogwarts express", "Hogwarts Express (King’s Cross)"],
+        ["usf-gring", "Harry Potter and the Escape from Gringotts", "Emoção", 1, "Montanha-russa coberta no banco dos bruxos de Harry Potter, com telas 3D, fogo e dragão. A mais disputada do parque: vá cedo.", 5, "", "Harry Potter and the Escape from Gringotts"],
+        ["usf-express", "Hogwarts Express (King’s Cross)", "Passeio", 0, "Trem com cenas de Harry Potter nas janelas que liga ao Islands of Adventure. Só com ingresso Park-to-Park.", 5, "hogwarts express", "Hogwarts Express (King’s Cross)"],
         ["usf-mummy", "Revenge of the Mummy", "Emoção", 1, "Montanha-russa coberta no escuro, com lançamento e efeitos de fogo.", 3, "", "Revenge of the Mummy"],
         ["usf-rip", "Hollywood Rip Ride Rockit", "Emoção", 1, "Montanha-russa com subida vertical e música escolhida por você. Guarde tudo no armário.", 1, "", "Hollywood Rip Ride Rockit"],
-        ["usf-mib", "Men in Black: Alien Attack", "Família", 0, "Passeio em que você atira em alienígenas e compete por pontos.", 4, "men in black", "Men in Black Alien Attack"],
+        ["usf-mib", "Men in Black Alien Attack", "Família", 0, "Passeio em que você atira em alienígenas e compete por pontos.", 4, "men in black", "Men in Black Alien Attack"],
         ["usf-trans", "Transformers: The Ride 3-D", "Simulador", 1, "Simulador com telas 3D e cenários reais, no meio da batalha dos robôs.", 2, "transformers", "Transformers: The Ride 3-D"],
-        ["usf-minion", "Meu Malvado Favorito: Minion Mayhem", "Simulador", 0, "Simulador leve e divertido em que você vira um minion.", 1, "", "Despicable Me Minion Mayhem"],
+        ["usf-minion", "Despicable Me Minion Mayhem", "Simulador", 0, "Simulador leve e divertido em que você vira um minion.", 1, "", "Despicable Me Minion Mayhem"],
         ["usf-jimmy", "Race Through New York Starring Jimmy Fallon", "Simulador", 0, "Simulador de corrida com cenas bobas do apresentador. Boa para a tarde.", 2, "", "Race Through New York Starring Jimmy Fallon"],
         ["usf-et", "E.T. Adventure", "Clássico", 0, "Passeio clássico em bicicleta voadora até o planeta do E.T.", 4, "", "E.T. Adventure"],
         ["usf-simpsons", "The Simpsons Ride", "Simulador", 0, "Simulador com movimentos fortes, dentro de um parque de diversões dos Simpsons.", 4, "", "The Simpsons Ride"],
-        ["usf-ffs", "Velozes e Furiosos: Supercharged", "Simulador", 0, "Passeio com telas e carros em perseguições em alta velocidade.", 3, "fast furious|supercharged", "Fast & Furious: Supercharged"]
+        ["usf-ffs", "Fast & Furious: Supercharged", "Simulador", 0, "Passeio com telas e carros em perseguições em alta velocidade.", 3, "fast furious|supercharged", "Fast & Furious: Supercharged"]
       ],
       eat: [
         ["The Leaky Cauldron","Rápido","Diagon Alley","Comida britânica, como fish and chips e torta do pastor, no ambiente do filme."],
@@ -73,15 +73,15 @@
       rides: [
         ["ioa-velo", "Jurassic World VelociCoaster", "Emoção", 1, "Montanha-russa de velocidade, com inversões e passagem perto de raptors. Intensa; guarde tudo no armário.", 5, "velocicoaster", "Jurassic World VelociCoaster"],
         ["ioa-hagrid", "Hagrid’s Magical Creatures Motorbike Adventure", "Emoção", 1, "Montanha-russa de moto com lançamentos e cenários da Floresta Proibida. A fila mais disputada: vá na abertura.", 5, "hagrid", "Hagrid’s Magical Creatures Motorbike Adventure"],
-        ["ioa-fj", "Harry Potter e a Viagem Proibida", "Simulador", 1, "Simulador pelo castelo de Hogwarts, com voo, dragão e aranhas. A fila interna já é um espetáculo.", 5, "forbidden journey", "Harry Potter and the Forbidden Journey"],
+        ["ioa-fj", "Harry Potter and the Forbidden Journey", "Simulador", 1, "Simulador pelo castelo de Hogwarts, com voo, dragão e aranhas. A fila interna já é um espetáculo.", 5, "forbidden journey", "Harry Potter and the Forbidden Journey"],
         ["ioa-hulk", "The Incredible Hulk Coaster", "Emoção", 1, "Largada em lançamento e várias inversões. Guarde tudo no armário.", 3, "incredible hulk|hulk", "The Incredible Hulk Coaster"],
         ["ioa-kong", "Skull Island: Reign of Kong", "Passeio", 1, "Veículo grande com telas 3D e um King Kong gigante, em tamanho real.", 2, "kong", "Skull Island: Reign of Kong"],
-        ["ioa-spidey", "Aventuras do Homem-Aranha", "Simulador", 0, "Passeio 3D pela cidade com os vilões da Marvel. Clássico, com fila que anda bem.", 3, "spider man|spiderman", "The Amazing Adventures of Spider-Man"],
+        ["ioa-spidey", "The Amazing Adventures of Spider-Man", "Simulador", 0, "Passeio 3D pela cidade com os vilões da Marvel. Clássico, com fila que anda bem.", 3, "spider man|spiderman", "The Amazing Adventures of Spider-Man"],
         ["ioa-jp", "Jurassic Park River Adventure", "Aquática", 0, "Passeio de barco entre dinossauros, com descida final que molha. Veja o clima antes.", 2, "jurassic park river", "Jurassic Park River Adventure"],
         ["ioa-rapids", "Popeye & Bluto’s Bilge-Rat Barges", "Aquática", 0, "Rafting em corredeiras em que quase todos se molham. Boa para a tarde quente.", 4, "popeye|bilge rat", "Popeye & Bluto’s Bilge-Rat Barges"],
         ["ioa-ripsaw", "Dudley Do-Right’s Ripsaw Falls", "Aquática", 0, "Descida em tronco com mergulho final. Molha bastante.", 4, "ripsaw|dudley", "Dudley Do-Right’s Ripsaw Falls"],
         ["ioa-flight", "Flight of the Hippogriff", "Família", 0, "Montanha-russa curta e leve em Hogsmeade. Boa para quem não curte emoção forte.", 5, "hippogriff", "Flight of the Hippogriff"],
-        ["ioa-express", "Expresso de Hogwarts (Hogsmeade)", "Passeio", 0, "Trem com cenas de Harry Potter nas janelas que leva ao Universal Studios. Só com ingresso Park-to-Park.", 5, "hogwarts express", "Hogwarts Express (Hogsmeade)"]
+        ["ioa-express", "Hogwarts Express (Hogsmeade)", "Passeio", 0, "Trem com cenas de Harry Potter nas janelas que leva ao Universal Studios. Só com ingresso Park-to-Park.", 5, "hogwarts express", "Hogwarts Express (Hogsmeade)"]
       ],
       eat: [
         ["Three Broomsticks","Rápido","Hogsmeade","Frango assado, costelas e fish and chips, em balcão grande e com ambiente de Harry Potter."],
