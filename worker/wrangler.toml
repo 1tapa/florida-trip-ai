@@ -5,8 +5,7 @@ compatibility_date = "2025-01-01"
 [triggers]
 crons = ["* * * * *"]
 
-# Antes de publicar: npx wrangler kv namespace create FILAS
-# e cole o id que aparecer abaixo.
+# Espaço de armazenamento "florida-filas" já criado na conta Cloudflare.
 [[kv_namespaces]]
 binding = "FILAS"
-id = "COLE_O_ID_AQUI"
+id = "e8b88b2178544968a43575a60293d13e"

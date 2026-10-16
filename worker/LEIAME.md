@@ -10,9 +10,8 @@ Você faz isto **uma vez** (uns 10 minutos). Precisa de um computador com Node.j
 2. No terminal, dentro da pasta `worker` deste repositório:
    ```
    npx wrangler login
-   npx wrangler kv namespace create FILAS
    ```
-3. O segundo comando mostra um `id`. Abra `wrangler.toml` e troque `COLE_O_ID_AQUI` por ele.
+3. O espaço de armazenamento (KV) já está configurado em `wrangler.toml`. Se você usar outra conta da Cloudflare, rode `npx wrangler kv namespace create FILAS` e troque o `id` no arquivo.
 4. Publique:
    ```
    npx wrangler deploy
