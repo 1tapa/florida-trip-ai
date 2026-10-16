@@ -152,67 +152,133 @@
     return [3, "Mais adiante"];
   }
 
+  /* ---------- fases do checklist ---------- */
+  const PHASES = [
+    { id: "pre", name: "Pré-viagem", intro: "Tudo o que resolver antes de embarcar. Dá para ver por prazo ou por área." },
+    { id: "magic", name: "Magic Kingdom", intro: "Ingresso, app e Lightning Lane antes de ir, e o que levar e conferir no dia 7." },
+    { id: "uni", name: "Universal", intro: "Ingresso Park-to-Park, app e Express Pass antes de ir, e o que conferir no dia 9." },
+    { id: "trip", name: "Na viagem", intro: "Chegada a Miami, rota para Kissimmee, Kennedy Space Center, festa de Natal e outros dias." },
+    { id: "volta", name: "Pré-volta", intro: "Imposto e declaração, malas, carro e MCO, e o que fazer depois de chegar." }
+  ];
+  const PH_MAGIC0 = ["par-md-ingresso", "par-md-app", "par-md-ll", "par-md-restaurante"];
+  const PH_UNI0 = ["par-uni-ingresso", "par-uni-app", "par-uni-express"];
+  const PH_VOLTA0 = ["com-cota", "com-govbr"];
+  function phaseOf(it) {
+    if (it.phase && PHASES.some(p => p.id === it.phase)) return it.phase;
+    if (PH_MAGIC0.includes(it.id) || it.day === 7) return "magic";
+    if (PH_UNI0.includes(it.id) || it.day === 9) return "uni";
+    if (PH_VOLTA0.includes(it.id) || it.day >= 11) return "volta";
+    if (it.day > 0) return "trip";
+    return "pre";
+  }
+  function defaultPhase() {
+    const t = today(), T = FT.TRIP;
+    if (t >= T.start && t <= T.end) { const n = Number(t.slice(8)); return n === 7 ? "magic" : n === 9 ? "uni" : n >= 11 ? "volta" : "trip"; }
+    return "pre";
+  }
+  const curPhase = () => (PHASES.some(p => p.id === S().ui.phase) ? S().ui.phase : defaultPhase());
+
+  /* Grupos de uma fase: [rótulo, itens, é-atrasado]. */
+  function phaseGroups(ph, items) {
+    const groups = [], dayTitle = n => { const d = FT.DAYS_DEFAULT[n - 4]; return d ? d.title : ""; };
+    const late = items.filter(i => !isDone(i) && isLate(i));
+    const rest = items.filter(i => !late.includes(i));
+    if (late.length) groups.push(["Atrasados", late, true]);
+    const by = (label, fn) => { const l = rest.filter(fn); if (l.length) groups.push([label, l, false]); };
+    if (ph === "magic") { by("Antes de ir", i => i.day !== 7); by("No dia 7, Magic Kingdom", i => i.day === 7); }
+    else if (ph === "uni") { by("Antes de ir", i => i.day !== 9); by("No dia 9, Universal", i => i.day === 9); }
+    else if (ph === "volta") {
+      by("Planejar antes de voltar", i => !i.day);
+      by("Dia 11, última noite", i => i.day === 11);
+      by("Dia 12, dia da volta", i => i.day === 12);
+      by("Depois da viagem", i => i.day === 13);
+    } else if (ph === "trip") {
+      for (const n of [4, 5, 6, 7, 8, 9, 10]) by(`Dia ${n}, ${dayTitle(n)}`, i => i.day === n);
+      by("Outros", i => !(i.day >= 4 && i.day <= 10));
+    }
+    return groups;
+  }
+
+  function addFormHTML(ph) {
+    const sel = (name, opts) => `<label class="label" for="ai-${name}-${ph}">${name === "cat" ? "Área" : name === "day" ? "Dia" : "Quando"}</label><select class="field" id="ai-${name}-${ph}" name="${name}">${opts.map(o => `<option value="${o[0]}">${esc(o[1])}</option>`).join("")}</select>`;
+    let extra = "";
+    if (ph === "pre") extra = sel("cat", FT.CATS.map(c => [c.id, c.short]));
+    else if (ph === "magic" || ph === "uni") extra = sel("when", [["0", "Antes de ir"], ["day", "No dia do parque"]]);
+    else if (ph === "volta") extra = sel("when", [["0", "Planejar antes de voltar"], ["11", "Dia 11"], ["12", "Dia 12"], ["13", "Depois da viagem"]]);
+    else extra = sel("day", [4, 5, 6, 7, 8, 9, 10].map(n => [String(n), "Dia " + n]));
+    return `<details class="addrow"><summary>${icon("plus")} Adicionar item nesta fase</summary>
+      <form data-form="add-item" data-phase="${ph}">
+        <label class="label" for="ai-t-${ph}">O que precisa fazer?</label>
+        <input class="field" id="ai-t-${ph}" name="title" maxlength="140" required>
+        <div class="two"><div><label class="label" for="ai-p-${ph}">Prioridade</label><select class="field" id="ai-p-${ph}" name="pri"><option value="e">Essencial</option><option value="i" selected>Importante</option><option value="o">Opcional</option></select></div>
+        <div>${extra}</div></div>
+        <label class="label" for="ai-d-${ph}">Prazo (opcional)</label><input class="field" id="ai-d-${ph}" name="due" type="date">
+        <div style="margin-top:12px"><button class="btn btn--primary" type="submit">Adicionar</button></div>
+      </form></details>`;
+  }
+
   function checklistBody() {
-    const ui = S().ui, items = store.items().filter(passes);
+    const ui = S().ui, ph = curPhase(), phase = PHASES.find(p => p.id === ph);
+    const all = store.items().filter(i => phaseOf(i) === ph), items = all.filter(passes);
+    const done = all.filter(isDone).length;
+    const head = `<div class="phasehead"><div><div class="phasehead__name">${esc(phase.name)}</div><p class="small muted">${esc(phase.intro)}</p></div><div class="phasehead__count"><b>${done}</b>/${all.length}</div></div>`;
+    const add = `<section class="section">${addFormHTML(ph)}</section>`;
     if (!items.length) {
-      return `<div class="sheet empty">${ui.status === "pend" ? "Nada pendente com esses filtros. Bom trabalho." : "Nenhum item com esses filtros."}</div>`;
+      return head + `<div class="sheet empty">${ui.status === "pend" ? (all.length ? "Nada pendente nesta fase. Bom trabalho." : "Nenhum item nesta fase ainda.") : "Nenhum item com esses filtros."}</div>` + add;
     }
-    if (ui.view === "prazo") {
-      const groups = new Map();
-      for (const it of items) { const [k, label] = bucket(it); if (!groups.has(k)) groups.set(k, { label, list: [] }); groups.get(k).list.push(it); }
-      return [...groups.entries()].sort((a, b) => a[0] - b[0]).map(([k, g]) => `
-        <h3 class="group-title${k === 0 ? " group-title--late" : ""}">${k === 0 ? icon("alert") : ""}${esc(g.label)} <span class="chip chip--plain">${g.list.length}</span></h3>
-        <div class="sheet" style="padding:0 16px"><ul>${g.list.sort(sortItems).map(it => itemHTML(it, true)).join("")}</ul></div>`).join("");
-    }
-    const open = ui.open || { docs: true };
-    return FT.CATS.map(c => {
-      const all = store.items().filter(i => i.cat === c.id);
-      const list = items.filter(i => i.cat === c.id).sort(sortItems);
-      const done = all.filter(isDone).length;
-      if (!list.length && ui.status !== "all") return "";
-      const isOpen = !!open[c.id];
-      const pct = all.length ? Math.round(done / all.length * 100) : 0;
-      return `<section class="sheet cat">
+    if (ph === "pre" && ui.view === "cat") {
+      const open = ui.open || { docs: true };
+      return head + FT.CATS.map(c => {
+        const allc = all.filter(i => i.cat === c.id);
+        const list = items.filter(i => i.cat === c.id).sort(sortItems);
+        const d = allc.filter(isDone).length;
+        if (!list.length && ui.status !== "all") return "";
+        if (!allc.length) return "";
+        const isOpen = !!open[c.id];
+        const pct = allc.length ? Math.round(d / allc.length * 100) : 0;
+        return `<section class="sheet cat">
         <h3><button type="button" class="cat__head" data-act="cat-toggle" data-id="${c.id}" aria-expanded="${isOpen}" aria-controls="cat-${c.id}">
           <span class="cat__icon">${icon(c.icon)}</span>
           <span class="cat__titles"><span class="cat__name">${esc(c.name)}</span><span class="cat__intro">${esc(c.intro)}</span></span>
-          <span class="cat__count${done === all.length && all.length ? " cat__count--done" : ""}">${done}/${all.length}</span>${icon("chev-d", "cat__chev")}
+          <span class="cat__count${d === allc.length && allc.length ? " cat__count--done" : ""}">${d}/${allc.length}</span>${icon("chev-d", "cat__chev")}
         </button></h3>
         <div class="cat__bar" aria-hidden="true"><span style="width:${pct}%"></span></div>
         <div class="cat__body" id="cat-${c.id}"${isOpen ? "" : " hidden"}>
           <ul>${list.map(i => itemHTML(i, false)).join("") || '<li class="empty small">Nada neste filtro.</li>'}</ul>
-          <details class="addrow"><summary>${icon("plus")} Adicionar item nesta categoria</summary>
-            <form data-form="add-item" data-cat="${c.id}">
-              <label class="label" for="ai-t-${c.id}">O que precisa fazer?</label>
-              <input class="field" id="ai-t-${c.id}" name="title" maxlength="140" required>
-              <div class="two"><div><label class="label" for="ai-p-${c.id}">Prioridade</label><select class="field" id="ai-p-${c.id}" name="pri"><option value="e">Essencial</option><option value="i" selected>Importante</option><option value="o">Opcional</option></select></div>
-              <div><label class="label" for="ai-d-${c.id}">Prazo (opcional)</label><input class="field" id="ai-d-${c.id}" name="due" type="date"></div></div>
-              <div style="margin-top:12px"><button class="btn btn--primary" type="submit">Adicionar</button></div>
-            </form></details>
         </div></section>`;
-    }).join("");
+      }).join("") + add;
+    }
+    let groups;
+    if (ph === "pre") {
+      const g = new Map();
+      for (const it of items) { const [k, label] = bucket(it); if (!g.has(k)) g.set(k, { label, list: [] }); g.get(k).list.push(it); }
+      groups = [...g.entries()].sort((a, b) => a[0] - b[0]).map(([k, x]) => [x.label, x.list.sort(sortItems), k === 0]);
+    } else groups = phaseGroups(ph, items);
+    return head + groups.map(([label, list, isLateG]) => `
+        <h3 class="group-title${isLateG ? " group-title--late" : ""}">${isLateG ? icon("alert") : ""}${esc(label)} <span class="chip chip--plain">${list.length}</span></h3>
+        <div class="sheet" style="padding:0 16px"><ul>${list.sort(sortItems).map(it => itemHTML(it, ph === "pre")).join("")}</ul></div>`).join("") + add;
   }
 
   function viewChecklist() {
-    const st = stats(), ui = S().ui, items = store.items();
-    const segs = FT.CATS.map(c => {
-      const all = items.filter(i => i.cat === c.id); const d = all.filter(isDone).length;
-      return `<span class="segbar__seg" title="${esc(c.short)}"><span style="width:${all.length ? d / all.length * 100 : 0}%"></span></span>`;
-    }).join("");
+    const st = stats(), ui = S().ui, items = store.items(), ph = curPhase();
     const f = (k, v, label) => `<button type="button" class="filter-chip" data-act="filter" data-k="${k}" data-v="${v}" aria-pressed="${ui[k] === v}">${label}</button>`;
+    const tabs = PHASES.map(p => {
+      const all = items.filter(i => phaseOf(i) === p.id), d = all.filter(isDone).length, lt = all.filter(i => !isDone(i) && isLate(i)).length;
+      return `<button type="button" class="phase" data-act="phase" data-v="${p.id}" aria-pressed="${p.id === ph}"><span class="phase__name">${esc(p.name)}</span><span class="phase__n${lt ? " phase__n--late" : ""}">${d}/${all.length}</span><span class="phase__bar" aria-hidden="true"><span style="width:${all.length ? d / all.length * 100 : 0}%"></span></span></button>`;
+    }).join("");
     return `
       <header class="page-head">
         <h1 class="h-page">Checklist</h1>
-        <p class="lede">${st.total} itens em 12 áreas, com prazo e prioridade. Toque no item para ver o passo a passo.</p>
+        <p class="lede">${st.total} itens separados por momento da viagem. Toque no item para ver o passo a passo.</p>
       </header>
       <section class="sheet sheet--pad cl__summary" aria-label="Progresso">
         <div class="cl__numbers"><div class="cl__big">${st.done}<small>de ${st.total} concluídos</small></div>
-          <div class="chips"><span class="chip chip--e">${st.eDone}/${st.eTotal} essenciais</span>${st.late ? `<button type="button" class="chip chip--late" data-act="goto-late">${icon("alert")} ${st.late} ${st.late === 1 ? "atrasado" : "atrasados"}</button>` : `<span class="chip chip--ok">${icon("check")} Nada atrasado</span>`}</div></div>
-        <div class="segbar" aria-hidden="true">${segs}</div>
+          <div class="chips"><span class="chip chip--e">${st.eDone}/${st.eTotal} essenciais</span>${st.late ? `<button type="button" class="chip chip--late" data-act="goto-late">${icon("alert")} ${st.late} ${st.late === 1 ? "atrasado" : "atrasados"}</button>` : ""}</div></div>
         ${st.next ? `<p class="small muted">Próximo prazo: ${short(st.next)}${diffDays(today(), st.next) >= 0 ? ` (${diffDays(today(), st.next) === 0 ? "hoje" : "em " + diffDays(today(), st.next) + " dias"})` : ""}.</p>` : ""}
       </section>
+      <div class="phasebar" role="group" aria-label="Fase da viagem">${tabs}</div>
       <div class="cl__controls">
-        <div class="segmented" role="group" aria-label="Organizar por"><button type="button" data-act="view-mode" data-v="cat" aria-pressed="${ui.view === "cat"}">Por área</button><button type="button" data-act="view-mode" data-v="prazo" aria-pressed="${ui.view === "prazo"}">Por prazo</button></div>
+        ${ph === "pre" ? `<div class="segmented" role="group" aria-label="Organizar por"><button type="button" data-act="view-mode" data-v="cat" aria-pressed="${ui.view === "cat"}">Por área</button><button type="button" data-act="view-mode" data-v="prazo" aria-pressed="${ui.view === "prazo"}">Por prazo</button></div>` : ""}
         <div class="filters" role="group" aria-label="Filtros">${f("status", "pend", "Pendentes")}${f("status", "done", "Concluídos")}${f("status", "all", "Todos")}<button type="button" class="filter-chip" data-act="filter" data-k="pri" data-v="${ui.pri === "e" ? "all" : "e"}" aria-pressed="${ui.pri === "e"}">Só essenciais</button></div>
       </div>
       ${checklistBody()}`;
@@ -559,7 +625,8 @@
       case "cat-toggle": saveUI(ui => { ui.open = Object.assign({}, ui.open || { docs: true }); ui.open[el.dataset.id] = !ui.open[el.dataset.id]; }); render({ keepScroll: true }); break;
       case "filter": recent = new Set(); saveUI(ui => { ui[el.dataset.k] = el.dataset.v; }); render({ keepScroll: true }); break;
       case "view-mode": recent = new Set(); saveUI(ui => { ui.view = el.dataset.v; }); render({ keepScroll: true }); break;
-      case "goto-late": recent = new Set(); saveUI(ui => { ui.view = "prazo"; ui.status = "pend"; ui.pri = "all"; }); render(); $("#view").querySelector(".group-title--late")?.scrollIntoView({ block: "start" }); break;
+      case "phase": recent = new Set(); saveUI(ui => { ui.phase = el.dataset.v; }); render({ keepScroll: false }); window.scrollTo(0, 0); break;
+      case "goto-late": recent = new Set(); { const first = store.items().filter(i => !isDone(i) && isLate(i)).map(phaseOf); const order = PHASES.map(p => p.id); const target = order.find(id => first.includes(id)); saveUI(ui => { ui.view = "prazo"; ui.status = "pend"; ui.pri = "all"; if (target) ui.phase = target; }); } render(); $("#view").querySelector(".group-title--late")?.scrollIntoView({ block: "start" }); break;
       case "res-status": store.update(s => { const r = s.reservas[el.dataset.id] || { status: "Pendente", note: "" }; r.status = el.dataset.v; s.reservas[el.dataset.id] = r; }); render({ keepScroll: true }); break;
       case "ed-open": openEditor(Number(el.dataset.day)); render({ keepScroll: false }); window.scrollTo(0, 0); break;
       case "ed-cancel": editor = null; render({ keepScroll: false }); break;
@@ -627,8 +694,15 @@
     switch (name) {
       case "add-item": {
         const title = clamp(d.get("title"), 140); if (!title) return;
-        const due = /^\d{4}-\d{2}-\d{2}$/.test(d.get("due") || "") ? d.get("due") : "";
-        store.update(s => { s.custom.push({ id: "u-" + uid(), cat: form.dataset.cat, pri: ["e", "i", "o"].includes(d.get("pri")) ? d.get("pri") : "i", title, detail: "", due, day: 0, custom: true }); });
+        const ph = PHASES.some(x => x.id === form.dataset.phase) ? form.dataset.phase : "pre";
+        let cat = "dias", day = 0;
+        if (ph === "pre") cat = FT.CATS.some(c => c.id === d.get("cat")) ? d.get("cat") : "dias";
+        else if (ph === "magic" || ph === "uni") { cat = "parques"; day = d.get("when") === "day" ? (ph === "magic" ? 7 : 9) : 0; }
+        else if (ph === "volta") { const w = Number(d.get("when")); day = [11, 12, 13].includes(w) ? w : 0; }
+        else { const n = Number(d.get("day")); day = n >= 4 && n <= 10 ? n : 4; }
+        let due = /^\d{4}-\d{2}-\d{2}$/.test(d.get("due") || "") ? d.get("due") : "";
+        if (!due && day >= 4 && day <= 12) due = FT.u.dayDate(day);
+        store.update(s => { s.custom.push({ id: "u-" + uid(), cat, pri: ["e", "i", "o"].includes(d.get("pri")) ? d.get("pri") : "i", title, detail: "", due, day, phase: ph, custom: true }); });
         toast("Item adicionado."); render({ keepScroll: true }); break;
       }
       case "shop": { const nm = clamp(d.get("name"), 80); if (!nm) return; store.update(s => { s.shopping.push({ id: uid(), name: nm, who: shopWho === "camily" ? "camily" : "leo", done: false }); }); render({ keepScroll: true }); $("#shopName") && $("#shopName").focus(); break; }

@@ -66,7 +66,7 @@
       fx: { spread: 0.2, tax: 6, manual: null },
       undo: null,
       ai: { messages: [], mode: "ask", model: "gpt-4.1-mini" },
-      ui: { status: "pend", pri: "all", view: "cat", open: null, exp: {} }
+      ui: { status: "pend", pri: "all", view: "cat", phase: "", open: null, exp: {} }
     };
   }
 
@@ -82,7 +82,7 @@
     s.custom = arr(raw.custom).filter(x => isObj(x) && x.id && x.title && FT.CATS.some(c => c.id === x.cat)).slice(0, 300).map(x => ({
       id: String(x.id), cat: x.cat, pri: ["e", "i", "o"].includes(x.pri) ? x.pri : "i", title: u.clamp(x.title, 160),
       detail: u.clamp(x.detail, 800), due: /^\d{4}-\d{2}-\d{2}$/.test(x.due || "") ? x.due : "",
-      day: Number.isInteger(x.day) && x.day >= 0 && x.day <= 13 ? x.day : 0, custom: true, ai: !!x.ai
+      day: Number.isInteger(x.day) && x.day >= 0 && x.day <= 13 ? x.day : 0, phase: ["pre", "magic", "uni", "trip", "volta"].includes(x.phase) ? x.phase : "", custom: true, ai: !!x.ai
     }));
     s.expenses = arr(raw.expenses).filter(x => isObj(x) && Number.isFinite(Number(x.amount))).slice(0, 1000).map(x => ({
       id: String(x.id || u.uid()), name: u.clamp(x.name, 80) || "Despesa", amount: Number(x.amount),
@@ -131,6 +131,7 @@
       if (["pend", "all", "done"].includes(raw.ui.status)) s.ui.status = raw.ui.status;
       if (["all", "e"].includes(raw.ui.pri)) s.ui.pri = raw.ui.pri;
       if (["cat", "prazo"].includes(raw.ui.view)) s.ui.view = raw.ui.view;
+      if (["pre", "magic", "uni", "trip", "volta"].includes(raw.ui.phase)) s.ui.phase = raw.ui.phase;
       if (isObj(raw.ui.open)) s.ui.open = raw.ui.open;
       if (isObj(raw.ui.exp)) s.ui.exp = {};
     }
