@@ -55,13 +55,11 @@
   function summaryContext() {
     const S = FT.store.state, T = FT.TRIP;
     const days = FT.store.days(), plans = FT.store.plans();
-    const spent = S.expenses.reduce((a, e) => a + e.amount, 0);
     const st = checklistStats();
     const lines = [
       "Hoje: " + FT.u.today() + ".",
       "Viagem: 2 adultos, de 04/12/2026 a 12/12/2026. Chegada em MIA (Miami) 04/12 às 06h30; saída de MCO (Orlando) 12/12 às 18h15.",
       "Hotéis: Lauderdale-by-the-Sea (04 a 06/12) e Ramada em Kissimmee (06 a 12/12). Carro alugado: retirada no MIA, devolução no MCO.",
-      "Orçamento: US$ " + S.budget + " no total; gasto registrado até agora: US$ " + Math.round(spent) + ".",
       "Checklist: " + st.pending + " itens pendentes, " + st.essentialPending + " essenciais pendentes, " + st.late + " atrasados.",
       "ROTEIRO ATUAL:"
     ];
@@ -84,12 +82,6 @@
     return { pending, essentialPending, late };
   }
 
-  function budgetContext() {
-    const S = FT.store.state, spent = {};
-    for (const c of FT.EXPENSE_CATS) spent[c] = Math.round(S.expenses.filter(e => e.category === c).reduce((a, e) => a + e.amount, 0));
-    return { total_usd: S.budget, metas_por_categoria_usd: S.catBudgets, gasto_ate_agora_usd: spent };
-  }
-
   function fullPlan() {
     const days = FT.store.days(), plans = FT.store.plans();
     return days.map((d, i) => ({
@@ -102,19 +94,20 @@
     "Você é o concierge do caderno de viagem de um casal brasileiro que vai à Flórida em dezembro de 2026.",
     "Responda em português do Brasil, de forma direta e prática, em até 180 palavras. Use listas curtas só quando ajudarem.",
     "Baseie-se no roteiro abaixo. Para preços, horários, regras de parques, pedágio, alfândega e qualquer dado que muda, diga que a pessoa deve confirmar na fonte oficial e não invente números.",
-    "Se a pessoa pedir para mudar o roteiro ou o checklist, explique que deve usar o modo Fazer alterações (ele muda roteiro, checklist, orçamento e lista de compras).",
+    "Se a pessoa pedir para mudar o roteiro ou o checklist, explique que deve usar o modo Fazer alterações (ele muda roteiro, checklist e as listas de compras do Leo e da Camily).",
     "Você não reserva, compra nem confirma nada."
   ].join("\n");
 
   const EDIT_INSTRUCTIONS = [
     "Você edita o roteiro de uma viagem de 2 adultos à Flórida (04 a 12 de dezembro de 2026) a pedido do usuário.",
     "Responda SOMENTE com um objeto JSON válido, sem texto fora dele, neste formato:",
-    '{"summary": "1 a 3 frases em português dizendo o que mudou e por quê", "notes": ["no máximo 3 avisos curtos, ex.: confirmar horário"], "days": [ {"day": 7, "title": "...", "where": "...", "desc": "...", "tags": ["..."], "tip": "...", "schedule": [["09:00", "Título", "Descrição", "Local para o mapa (opcional)"]], "alternatives": [["Nome", "Texto"]]} ], "checklist_add": [ {"cat": "mala", "pri": "i", "title": "...", "detail": "...", "due": "AAAA-MM-DD ou vazio", "day": 0} ], "budget": {"total": 6000, "categories": {"Alimentação": 990}}, "shopping_add": ["item"], "shopping_remove": ["nome exato de um item da lista"]}',
+    '{"summary": "1 a 3 frases em português dizendo o que mudou e por quê", "notes": ["no máximo 3 avisos curtos, ex.: confirmar horário"], "days": [ {"day": 7, "title": "...", "where": "...", "desc": "...", "tags": ["..."], "tip": "...", "schedule": [["09:00", "Título", "Descrição", "Local para o mapa (opcional)"]], "alternatives": [["Nome", "Texto"]]} ], "checklist_add": [ {"cat": "mala", "pri": "i", "title": "...", "detail": "...", "due": "AAAA-MM-DD ou vazio", "day": 0} ], "shopping_add": [{"name": "item", "who": "leo"}], "shopping_remove": ["nome exato de um item da lista"]}',
     "Regras:",
     "- Em days, inclua APENAS os dias que mudam, e dentro de cada dia APENAS os campos que mudam, mais o campo day (4 a 12). Se mudar schedule, envie a programação completa daquele dia, em ordem de horário.",
     "- Cada bloco de schedule é [horário, título, descrição] e, opcionalmente, um quarto item com um local pesquisável no mapa.",
-    "- budget, shopping_add e shopping_remove são opcionais. budget.total é o orçamento total em dólares; budget.categories só traz as categorias que mudam, entre: " + FT.EXPENSE_CATS.join(", ") + ". Use o orcamento e as compras que vêm junto com o roteiro. Nunca invente gastos já feitos.",
+    "- shopping_add e shopping_remove são opcionais. A lista de compras é dividida em duas: who \"leo\" ou who \"camily\" (se não souber de quem é, use leo). Use as compras que vêm junto com o roteiro e não repita itens que já existem.",
     "- checklist_add é opcional (até 8 itens). cat deve ser um destes: " + FT.CATS.map(c => c.id).join(", ") + ". pri: e (essencial), i (importante) ou o (opcional). day: 0 se não for um dia específico.",
+    "- Se o usuário disser que editou um dia manualmente, o roteiro enviado já traz as alterações dele: preserve os blocos que ele escreveu (horário e título) e apenas complemente o que faltar, sem reescrever o dia.",
     "- Preserve tudo que o usuário não pediu para mudar. Mantenha chegada ao MIA às 06h30 no dia 4 e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia e a festa de Natal na noite do dia 10, a menos que o usuário peça outra coisa.",
     "- Não invente reservas, preços, ingressos comprados nem horários oficiais. Quando um horário depender de confirmação, diga isso em notes.",
     "- Se o pedido estiver vago ou não exigir mudança, devolva days vazio e explique em summary o que você precisa saber."
@@ -197,21 +190,14 @@
         detail: clamp(it.detail, 600), due: /^\d{4}-\d{2}-\d{2}$/.test(it.due || "") ? it.due : "", day, custom: true, ai: true
       });
     }
-    const budget = {};
-    if (raw.budget && typeof raw.budget === "object") {
-      const tot = Number(raw.budget.total);
-      if (Number.isFinite(tot) && tot > 0 && tot <= 1000000) budget.total = Math.round(tot * 100) / 100;
-      if (raw.budget.categories && typeof raw.budget.categories === "object") {
-        const cats = {};
-        for (const c of FT.EXPENSE_CATS) { const v = Number(raw.budget.categories[c]); if (raw.budget.categories[c] != null && Number.isFinite(v) && v >= 0 && v <= 1000000) cats[c] = Math.round(v * 100) / 100; }
-        if (Object.keys(cats).length) budget.categories = cats;
-      }
-    }
     const names = v => (Array.isArray(v) ? v : []).filter(x => typeof x === "string").map(x => clamp(x, 80)).filter(Boolean).slice(0, 10);
     const existing = FT.store.state.shopping;
-    const shopAdd = names(raw.shopping_add).filter((n, i, a) => a.findIndex(m => m.toLowerCase() === n.toLowerCase()) === i && !existing.some(x => x.name.toLowerCase() === n.toLowerCase()));
+    const who = v => (String(v || "").toLowerCase().startsWith("c") ? "camily" : "leo");
+    const shopAdd = (Array.isArray(raw.shopping_add) ? raw.shopping_add : []).map(x => typeof x === "string" ? { name: clamp(x, 80), who: "leo" } : x && typeof x === "object" && typeof x.name === "string" ? { name: clamp(x.name, 80), who: who(x.who) } : null)
+      .filter(x => x && x.name).slice(0, 10)
+      .filter((x, i, a) => a.findIndex(m => m.name.toLowerCase() === x.name.toLowerCase() && m.who === x.who) === i && !existing.some(e => e.name.toLowerCase() === x.name.toLowerCase() && (e.who || "leo") === x.who));
     const shopRemove = names(raw.shopping_remove).map(n => existing.find(x => x.name.toLowerCase() === n.toLowerCase())).filter(Boolean).map(x => x.id);
-    return { summary, notes, days, add, budget: Object.keys(budget).length ? budget : null, shopAdd, shopRemove };
+    return { summary, notes, days, add, shopAdd, shopRemove };
   }
 
   function parseJson(text) {
@@ -224,7 +210,7 @@
   /* ---------- aplicar e desfazer ---------- */
   function apply(proposal) {
     const S = FT.store.state;
-    const snapshot = { days: S.days, plans: S.plans, custom: S.custom.slice(), budget: S.budget, catBudgets: Object.assign({}, S.catBudgets), shopping: S.shopping.map(x => Object.assign({}, x)), at: Date.now(), label: proposal.summary };
+    const snapshot = { days: S.days, plans: S.plans, custom: S.custom.slice(), shopping: S.shopping.map(x => Object.assign({}, x)), at: Date.now(), label: proposal.summary };
     const days = JSON.parse(JSON.stringify(FT.store.days()));
     const plans = JSON.parse(JSON.stringify(FT.store.plans()));
     for (const { day, changes } of proposal.days) {
@@ -237,19 +223,15 @@
       s.undo = snapshot;
       if (proposal.days.length) { s.days = days; s.plans = plans; }
       s.custom = s.custom.concat(proposal.add);
-      if (proposal.budget) {
-        if (proposal.budget.total) s.budget = proposal.budget.total;
-        if (proposal.budget.categories) Object.assign(s.catBudgets, proposal.budget.categories);
-      }
       if (proposal.shopRemove.length) s.shopping = s.shopping.filter(x => !proposal.shopRemove.includes(x.id));
-      for (const name of proposal.shopAdd) s.shopping.push({ id: uid(), name, done: false });
+      for (const x of proposal.shopAdd) s.shopping.push({ id: uid(), name: x.name, who: x.who, done: false });
     });
   }
 
   function undo() {
     const U = FT.store.state.undo;
     if (!U) return false;
-    FT.store.update(s => { s.days = U.days || null; s.plans = U.plans || null; s.custom = U.custom; if (U.budget) s.budget = U.budget; if (U.catBudgets) s.catBudgets = U.catBudgets; if (U.shopping) s.shopping = U.shopping; s.undo = null; });
+    FT.store.update(s => { s.days = U.days || null; s.plans = U.plans || null; s.custom = U.custom; if (U.shopping) s.shopping = U.shopping; s.undo = null; });
     return true;
   }
 
@@ -271,11 +253,11 @@
     scrollThreadEnd();
     try {
       if (S.ai.mode === "edit") {
-        const input = hist.concat([{ role: "user", content: "ROTEIRO ATUAL (JSON):\n" + JSON.stringify({ roteiro: fullPlan(), orcamento: budgetContext(), compras: FT.store.state.shopping.map(x => x.name) }) + "\n\nHoje: " + FT.u.today() + "\n\nPEDIDO (responda em JSON):\n" + text }]);
+        const input = hist.concat([{ role: "user", content: "ROTEIRO ATUAL (JSON):\n" + JSON.stringify({ roteiro: fullPlan(), compras: { leo: FT.store.state.shopping.filter(x => (x.who || "leo") === "leo").map(x => x.name), camily: FT.store.state.shopping.filter(x => x.who === "camily").map(x => x.name) } }) + "\n\nHoje: " + FT.u.today() + "\n\nPEDIDO (responda em JSON):\n" + text }]);
         const out = await call({ instructions: EDIT_INSTRUCTIONS, input, json: true, maxTokens: 9000, timeout: 90000 });
         const proposal = sanitizeProposal(parseJson(out));
         const m = push("bot", proposal.summary);
-        if (proposal.days.length || proposal.add.length || proposal.budget || proposal.shopAdd.length || proposal.shopRemove.length) live[m.id] = proposal;
+        if (proposal.days.length || proposal.add.length || proposal.shopAdd.length || proposal.shopRemove.length) live[m.id] = proposal;
       } else {
         const input = hist.concat([{ role: "user", content: text }]);
         const out = await call({ instructions: ASK_INSTRUCTIONS + "\n\n" + summaryContext(), input, json: false, maxTokens: 900, timeout: 45000 });
@@ -350,15 +332,9 @@
         return `<div class="proposal__diff">${esc(a.title)} <span class="muted">· ${esc(cat ? cat.short : "")}</span></div>`;
       }).join("")}</div></div>`);
     }
-    if (p.budget) {
-      const S = FT.store.state, bits = [];
-      if (p.budget.total && p.budget.total !== S.budget) bits.push(`Orçamento total: <s>${esc(FT.u.money(S.budget))}</s> → ${esc(FT.u.money(p.budget.total))}`);
-      for (const [c, v] of Object.entries(p.budget.categories || {})) if (v !== S.catBudgets[c]) bits.push(`${esc(c)}: <s>${esc(FT.u.money(S.catBudgets[c]))}</s> → ${esc(FT.u.money(v))}`);
-      if (bits.length) rows.push(`<div class="proposal__day">${icon("wallet")}<div><div class="proposal__label">Orçamento</div>${bits.map(b => `<div class="proposal__diff">${b}</div>`).join("")}</div></div>`);
-    }
     if (p.shopAdd.length || p.shopRemove.length) {
       const S = FT.store.state;
-      rows.push(`<div class="proposal__day">${icon("bag")}<div><div class="proposal__label">Lista de compras</div>${p.shopAdd.map(n => `<div class="proposal__diff">Entra: ${esc(n)}</div>`).join("")}${p.shopRemove.map(id => `<div class="proposal__diff">Sai: <s>${esc((S.shopping.find(x => x.id === id) || {}).name || "")}</s></div>`).join("")}</div></div>`);
+      rows.push(`<div class="proposal__day">${icon("bag")}<div><div class="proposal__label">Listas de compras</div>${p.shopAdd.map(x => `<div class="proposal__diff">Entra (${x.who === "camily" ? "Camily" : "Leo"}): ${esc(x.name)}</div>`).join("")}${p.shopRemove.map(id => `<div class="proposal__diff">Sai: <s>${esc((S.shopping.find(x => x.id === id) || {}).name || "")}</s></div>`).join("")}</div></div>`);
     }
     const notes = p.notes.length ? `<div class="proposal__day">${icon("info")}<div><div class="proposal__label">Para conferir</div>${p.notes.map(n => `<div class="proposal__diff">${esc(n)}</div>`).join("")}</div></div>` : "";
     return `<div class="proposal">${rows.join("")}${notes}<div class="proposal__foot"><button class="btn btn--primary btn--sm" data-act="ai-apply" data-id="${esc(m.id)}">${icon("check")} Aplicar mudanças</button><button class="btn btn--sm" data-act="ai-discard" data-id="${esc(m.id)}">Descartar</button></div></div>`;
@@ -373,15 +349,15 @@
   }
 
   const CHIPS = {
-    ask: ["O que levar na mochila dos parques?", "Como funcionam os pedágios do carro?", "Plano B se chover no dia 7", "Como declarar compras na volta?"],
-    edit: ["Deixe o dia 5 mais leve", "Troque o Sawgrass por descanso no dia 6", "Inclua jantar no Disney Springs no dia 8", "Adicione ao checklist itens para dias de chuva", "Aumente o orçamento para US$ 6.500"]
+    ask: ["O que levar na mochila dos parques?", "Como funcionam os pedágios do carro?", "Plano B se chover no dia 7", "O que não pode trazer na bagagem?"],
+    edit: ["Deixe o dia 5 mais leve", "Troque o Sawgrass por descanso no dia 6", "Inclua jantar no Disney Springs no dia 8", "Adicione ao checklist itens para dias de chuva"]
   };
 
   function view() {
     const S = FT.store.state, mode = S.ai.mode, hasKey = !!FT.store.apiKey();
     const hint = mode === "edit"
-      ? "A IA propõe mudanças no roteiro, no checklist, no orçamento e na lista de compras. Você vê o antes e o depois e decide se aplica. Dá para desfazer."
-      : "Tire dúvidas sobre o roteiro, parques, carro, compras e imposto. Aqui nada é alterado.";
+      ? "A IA propõe mudanças no roteiro, no checklist e nas listas de compras. Você vê o antes e o depois e decide se aplica. Dá para desfazer."
+      : "Tire dúvidas sobre o roteiro, parques, carro e compras. Aqui nada é alterado.";
     const setup = hasKey ? "" : `
       <section class="sheet sheet--pad cc__setup" aria-labelledby="ccSetup">
         <h2 class="h-section" id="ccSetup">Conecte sua chave da OpenAI</h2>
@@ -401,7 +377,7 @@
     const msgs = S.ai.messages;
     const thread = msgs.length
       ? msgs.map(messageHTML).join("")
-      : `<div class="msg msg--bot"><div class="msg__who">Concierge</div><div class="msg__body"><p>Olá! Eu conheço o seu roteiro dia a dia, o checklist, o orçamento e a lista de compras.</p><p>${mode === "edit" ? "Diga o que quer mudar, por exemplo: deixar um dia mais leve, trocar um passeio ou incluir uma refeição." : "Pergunte o que quiser sobre a viagem. Para mudar o roteiro, use a aba Fazer alterações."}</p></div></div>`;
+      : `<div class="msg msg--bot"><div class="msg__who">Concierge</div><div class="msg__body"><p>Olá! Eu conheço o seu roteiro dia a dia, o checklist e as listas de compras do Leo e da Camily.</p><p>${mode === "edit" ? "Diga o que quer mudar, por exemplo: deixar um dia mais leve, trocar um passeio ou incluir uma refeição." : "Pergunte o que quiser sobre a viagem. Para mudar o roteiro, use a aba Fazer alterações."}</p></div></div>`;
     const typing = busy ? `<div class="msg msg--bot msg--typing" role="status"><div class="msg__who">Concierge</div><div class="msg__body"><span class="dots" aria-hidden="true"><span></span><span></span><span></span></span> <span>${mode === "edit" ? "Montando a proposta…" : "Pensando…"}</span></div></div>` : "";
 
     const undoBar = S.undo ? `<div class="callout callout--info" style="margin-top:16px">${icon("undo")}<div style="flex:1"><strong>Última alteração aplicada</strong>${esc(S.undo.label || "")}<div style="margin-top:8px"><button class="btn btn--sm" data-act="ai-undo">${icon("undo")} Desfazer</button></div></div></div>` : "";

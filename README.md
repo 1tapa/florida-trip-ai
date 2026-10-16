@@ -1,6 +1,6 @@
 # Florida · Caderno de viagem
 
-Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens, reservas, orçamento, compras com simulador de imposto e um concierge com IA.
+Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens, reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
 
 App estático (PWA): abre sem internet depois da primeira visita e guarda tudo no próprio aparelho (`localStorage`).
 
@@ -70,4 +70,4 @@ Regras de alfândega, preços e horários de parques mudam. Os itens trazem link
 - **Câmbio**: converte dólar em real com a conta (cotação + R$ 0,20) × 1,06. Acréscimo, imposto e cotação manual são ajustáveis. A cotação vem de open.er-api.com (com AwesomeAPI de reserva) e é a de mercado, sem taxas do banco. Dá para registrar a compra como gasto.
 - **Guia do parque** (Magic Kingdom, Universal Studios Florida e Islands of Adventure no dia Park-to-Park): marque imperdíveis, monte a ordem do dia (do fundo para a entrada, da entrada para o fundo ou menor fila agora) e acompanhe as filas ao vivo (ThemeParks.wiki), com tendência medida neste aparelho. As distâncias são aproximadas.
 - **Anexos** em Reservas (print ou PDF, até ~650 KB cada), disponíveis offline e sincronizados.
-- **Onde estacionei**, **Frases úteis em inglês** e **IA que também altera orçamento e lista de compras**.
+- **Compras** em duas listas (Leo e Camily) e **edição manual de cada dia do roteiro**, com a opção de a IA complementar.
