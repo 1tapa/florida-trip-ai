@@ -566,9 +566,9 @@ textarea.field { min-height: 88px; resize: vertical; }
 .plan { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
 .plan--done { opacity: 0.55; }
 .plan--done .plan__name { text-decoration: line-through; }
-.plan--low { border-color: var(--ok); box-shadow: inset 3px 0 0 var(--ok); }
+
 .plan__name, .ride__name { font-weight: 700; min-width: 0; }
-.plan__ctrl { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; margin-top: 8px; }
+.plan__ctrl { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 .plan__move { display: inline-flex; gap: 4px; }
 .ride { padding: 12px 0; border-bottom: 1px solid var(--line); }
 .ride:last-child { border-bottom: 0; }

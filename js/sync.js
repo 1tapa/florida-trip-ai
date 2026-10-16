@@ -88,7 +88,6 @@
     for (const k of Object.keys(s.rides)) m["ride:" + k] = s.rides[k];
     for (const k of Object.keys(s.rideDone)) m["rdone:" + k] = true;
     for (const k of Object.keys(s.rideOrder)) m["rorder:" + k] = s.rideOrder[k];
-    for (const k of Object.keys(s.rideAlert)) m["ralert:" + k] = s.rideAlert[k];
     m.fx = s.fx;
     return m;
   }
@@ -112,7 +111,6 @@
       case "ride": if (val) s.rides[id] = val; else delete s.rides[id]; break;
       case "rdone": if (val) s.rideDone[id] = true; else delete s.rideDone[id]; break;
       case "rorder": if (Array.isArray(val)) s.rideOrder[id] = val; else delete s.rideOrder[id]; break;
-      case "ralert": if (val) s.rideAlert[id] = val; else delete s.rideAlert[id]; break;
       case "fx": if (val && typeof val === "object") s.fx = Object.assign({}, s.fx, val); break;
       case "plan": if (val && Array.isArray(val.days) && Array.isArray(val.plans)) { s.days = val.days; s.plans = val.plans; } else { s.days = null; s.plans = null; } break;
     }

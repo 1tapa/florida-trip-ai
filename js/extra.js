@@ -274,7 +274,7 @@
     frente: ["Da entrada para o fundo", "Segue o caminho natural, começando pelas atrações de alta demanda mais perto da entrada."],
     fila: ["Menor fila agora", "Ordena pelo tempo de fila ao vivo, da menor para a maior. Útil para decidir na hora."]
   };
-  const live = { data: {}, busy: {}, tried: {}, err: {}, strategy: "tras", alerts: [], notified: {} };
+  const live = { data: {}, busy: {}, tried: {}, err: {}, strategy: "tras" };
   let samples = {};
   try { samples = JSON.parse(FT.ls.get(WAIT_KEY) || "{}") || {}; } catch (e) { samples = {}; }
   try { const c = JSON.parse(FT.ls.get(LIVE_KEY) || "{}"); for (const k of Object.keys(c)) if (c[k] && Array.isArray(c[k].rides)) live.data[k] = c[k]; } catch (e) { /* sem cache */ }
@@ -313,7 +313,6 @@
       live.data[parkKey] = { at: now, rides };
       FT.ls.set(LIVE_KEY, JSON.stringify(live.data));
       recordSamples(parkKey, rides, now);
-      checkAlerts(parkKey, rides);
     } catch (e) {
       live.err[parkKey] = live.data[parkKey] ? "Sem internet agora. Mostrando a última leitura." : "Não consegui buscar as filas agora.";
     } finally {
@@ -344,24 +343,6 @@
     if (!old || liveRide.wait == null) return { kind: "none", min };
     const d = liveRide.wait - old[1], mins = Math.round((now - old[0]) / 60000);
     return { kind: d <= -10 ? "down" : d >= 10 ? "up" : "flat", delta: d, mins, min };
-  }
-
-  function checkAlerts(parkKey, rides) {
-    const park = FT.PARQUES.find(p => p.id === parkKey);
-    const A = S().rideAlert;
-    for (const r of park.rides) {
-      const th = A[r[0]];
-      if (!th) continue;
-      const l = matchLive(r, rides);
-      if (!l || l.status !== "OPERATING" || l.wait == null || l.wait > th) continue;
-      if (Date.now() - (live.notified[r[0]] || 0) < 15 * 60000) continue;
-      live.notified[r[0]] = Date.now();
-      const msg = `Fila baixa: ${r[1]} está com ${l.wait} min.`;
-      live.alerts.unshift({ t: Date.now(), msg });
-      live.alerts = live.alerts.slice(0, 5);
-      toast(msg);
-      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) { /* sem vibração */ }
-    }
   }
 
   const clsWait = w => (w <= 20 ? "wait--ok" : w <= 45 ? "wait--mid" : "wait--high");
@@ -413,16 +394,15 @@
     const when = data ? new Date(data.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
     const used = new Set(park.rides.map(r => { const l = lv(r); return l ? l.id : ""; }));
     const others = L.filter(l => !used.has(l.id) && l.status !== "CLOSED" && l.status !== "REFURBISHMENT").sort((a, b) => (a.wait == null) - (b.wait == null) || a.wait - b.wait);
-    const alertBtn = r => { const th = S_.rideAlert[r[0]]; return `<button type="button" class="btn btn--quiet btn--sm" data-act="ride-alert" data-id="${esc(r[0])}">${icon("bell")} ${th ? "Avisar ≤ " + th + " min" : "Sem aviso"}</button>`; };
     const row = (r, i, total) => {
       const l = lv(r), tr = l && l.status === "OPERATING" ? trendOf(park.id, l) : { kind: "none" };
-      const done = !!S_.rideDone[r[0]], low = S_.rideAlert[r[0]] && l && l.status === "OPERATING" && l.wait != null && l.wait <= S_.rideAlert[r[0]];
-      return `<li class="plan${done ? " plan--done" : ""}${low ? " plan--low" : ""}">
+      const done = !!S_.rideDone[r[0]];
+      return `<li class="plan${done ? " plan--done" : ""}">
         <label class="check"><input type="checkbox" data-act="ride-done" data-id="${esc(r[0])}"${done ? " checked" : ""} aria-label="Já fizemos: ${esc(r[1])}"><span class="check__box">${icon("check")}</span></label>
         <div class="plan__main"><div class="row row--between"><span class="plan__name">${esc(r[1])}</span>${waitBadge(l)}</div>
-          <div class="chips" style="margin-top:6px">${l && l.status === "OPERATING" ? trendChip(tr) : ""}${tr.min && l && l.wait != null ? `<span class="chip chip--plain">Menor hoje: ${tr.min[1]} min às ${new Date(tr.min[0]).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>` : ""}<span class="chip chip--plain">${farTxt(r[5])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}${low ? '<span class="chip chip--ok">Fila baixa agora</span>' : ""}</div>
+          <div class="chips" style="margin-top:6px">${l && l.status === "OPERATING" ? trendChip(tr) : ""}${tr.min && l && l.wait != null ? `<span class="chip chip--plain">Menor hoje: ${tr.min[1]} min às ${new Date(tr.min[0]).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>` : ""}<span class="chip chip--plain">${farTxt(r[5])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}</div>
           <p class="small muted" style="margin-top:6px">${esc(r[4])}</p>
-          <div class="plan__ctrl">${alertBtn(r)}<span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === total - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></div></div></li>`;
+          <div class="plan__ctrl"><span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === total - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></div></div></li>`;
     };
     const quick = must.filter(r => { const l = lv(r); return l && l.status === "OPERATING" && l.wait != null; }).sort((a, b) => lv(a).wait - lv(b).wait).slice(0, 3);
     return `<a class="back" href="#/mais">${icon("chev-l")} Mais</a>
@@ -434,7 +414,6 @@
           <button class="btn btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} ${live.busy[park.id] ? "Buscando…" : "Atualizar"}</button></div>
         ${live.err[park.id] ? `<p class="small" style="margin-top:8px;color:var(--alert)">${esc(live.err[park.id])}</p>` : ""}
         ${quick.length ? `<p class="small" style="margin-top:10px">Menores filas entre as imperdíveis agora: ${quick.map(r => `<strong>${esc(r[1])}</strong> (${lv(r).wait} min)`).join(", ")}.</p>` : ""}
-        ${live.alerts.length ? `<div class="callout callout--info" style="margin-top:10px">${icon("bell")}<div><strong>Avisos de fila baixa</strong>${live.alerts.map(a => `${esc(a.msg)}`).join("<br>")}</div></div>` : ""}
         <p class="hint">Atualiza sozinho a cada 2 minutos com esta tela aberta. Fonte: ThemeParks.wiki. São os tempos informados pelo próprio parque, e a tendência é calculada a partir das leituras feitas por este aparelho.</p></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Plano do dia</h2><span class="small muted">${must.length} imperdíveis</span></div>
         <div class="sheet sheet--pad stack"><div class="small muted">Estratégia para ordenar</div>
@@ -512,12 +491,6 @@
         const park = FT.PARQUES.find(p => p.rides.some(r => r[0] === el.dataset.id)), d = Number(el.dataset.v);
         const ids = orderedMusts(park).map(r => r[0]), i = ids.indexOf(el.dataset.id), j = i + d;
         if (i >= 0 && j >= 0 && j < ids.length) { [ids[i], ids[j]] = [ids[j], ids[i]]; store.update(st => { st.rideOrder[park.id] = ids; }); }
-        FT.app.render({ keepScroll: true }); return true;
-      }
-      case "ride-alert": {
-        const id = el.dataset.id, cycle = [0, 30, 45, 60], cur = S().rideAlert[id] || 0, nx = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
-        store.update(st => { if (nx) st.rideAlert[id] = nx; else delete st.rideAlert[id]; });
-        if (nx) toast(`Aviso ligado: quando a fila ficar em ${nx} min ou menos (com a tela aberta).`);
         FT.app.render({ keepScroll: true }); return true;
       }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
