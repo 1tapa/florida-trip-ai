@@ -20,12 +20,30 @@ const cors = {
 };
 const reply = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { ...cors, "content-type": "application/json" } });
 
+const ascii = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7e]/g, "");
+
+/* Envia pelo ntfy. Tenta o formato JSON e, se falhar, o texto simples. Lança erro com o motivo. */
 async function notify(topic, title, message, tags) {
-  await fetch("https://ntfy.sh/", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ topic, title, message, tags: tags || ["tada"], priority: 4 })
-  });
+  let detail = "";
+  try {
+    const r = await fetch("https://ntfy.sh/", {
+      method: "POST",
+      headers: { "content-type": "application/json", "user-agent": "florida-filas/1.0" },
+      body: JSON.stringify({ topic, title, message, tags: tags || ["tada"], priority: 4 })
+    });
+    if (r.ok) return;
+    detail = "json " + r.status + " " + (await r.text()).slice(0, 120);
+  } catch (e) { detail = "json " + String(e).slice(0, 120); }
+  try {
+    const r = await fetch("https://ntfy.sh/" + topic, {
+      method: "POST",
+      headers: { Title: ascii(title), Tags: (tags || ["tada"]).join(","), Priority: "4", "user-agent": "florida-filas/1.0" },
+      body: ascii(message)
+    });
+    if (r.ok) return;
+    detail += " | texto " + r.status + " " + (await r.text()).slice(0, 120);
+  } catch (e) { detail += " | texto " + String(e).slice(0, 120); }
+  throw new Error(detail);
 }
 
 function cleanAlerts(list) {
@@ -53,7 +71,8 @@ export default {
     }
     if (path === "/test") {
       if (!(await env.FILAS.get("cfg:" + topic))) return reply({ error: "sem-config" }, 400);
-      await notify(topic, "Teste de aviso", "Deu certo! Você vai receber aqui quando a fila das suas atrações cair.", ["white_check_mark"]);
+      try { await notify(topic, "Teste de aviso", "Deu certo! Você vai receber aqui quando a fila das suas atrações cair.", ["white_check_mark"]); }
+      catch (e) { return reply({ error: "ntfy", detail: String(e.message || e) }, 502); }
       return reply({ ok: true });
     }
     return reply({ error: "rota" }, 404);
@@ -63,6 +82,8 @@ export default {
     ctx.waitUntil(checkAll(env));
   }
 };
+
+const safe = p => p.catch(e => console.log("ntfy falhou:", e.message));
 
 async function checkAll(env) {
   const list = await env.FILAS.list({ prefix: "cfg:" });
@@ -90,14 +111,14 @@ async function checkAll(env) {
       if (e.status !== "OPERATING") continue;
       if (await env.FILAS.get(downKey)) {
         await env.FILAS.delete(downKey);
-        await notify(c.topic, a.name + " voltou", wait != null ? `Voltou a funcionar com fila de ${wait} min.` : "Voltou a funcionar.", ["arrow_forward"]);
+        await safe(notify(c.topic, a.name + " voltou", wait != null ? `Voltou a funcionar com fila de ${wait} min.` : "Voltou a funcionar.", ["arrow_forward"]));
         continue;
       }
       if (typeof wait !== "number" || wait > a.max) continue;
       const sentKey = `sent:${c.topic}:${a.id}`;
       if (await env.FILAS.get(sentKey)) continue;
       await env.FILAS.put(sentKey, "1", { expirationTtl: REPEAT_S });
-      await notify(c.topic, a.name + ": fila baixa", `Agora ${wait} min (seu limite: ${a.max} min). Vale ir!`, ["tada"]);
+      await safe(notify(c.topic, a.name + ": fila baixa", `Agora ${wait} min (seu limite: ${a.max} min). Vale ir!`, ["tada"]));
     }
   }
 }
