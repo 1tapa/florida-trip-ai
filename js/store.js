@@ -65,7 +65,6 @@
       rideOrder: {},
       rideAlert: {},
       fx: { spread: 0.2, tax: 6, manual: null },
-      notify: { url: "", topic: "" },
       undo: null,
       ai: { messages: [], mode: "ask", model: "gpt-4.1-mini" },
       ui: { status: "pend", pri: "all", view: "cat", open: null, exp: {} }
@@ -119,11 +118,6 @@
       if (Number.isFinite(sp) && sp >= 0 && sp <= 10) s.fx.spread = sp;
       if (Number.isFinite(tx) && tx >= 0 && tx <= 50) s.fx.tax = tx;
       s.fx.manual = Number.isFinite(mn) && mn > 0 && mn < 100 ? mn : null;
-    }
-    if (isObj(raw.notify)) {
-      const url = String(raw.notify.url || "").trim().replace(/\/+$/, ""), topic = String(raw.notify.topic || "");
-      s.notify.url = /^https:\/\/[^\s"'<>]{4,180}$/.test(url) ? url : "";
-      s.notify.topic = /^[a-z0-9-]{16,64}$/.test(topic) ? topic : "";
     }
     if (isObj(raw.undo) && Array.isArray(raw.undo.custom)) s.undo = raw.undo;
     if (isObj(raw.ai)) {

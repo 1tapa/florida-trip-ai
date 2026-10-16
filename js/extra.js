@@ -435,8 +435,7 @@
         ${live.err[park.id] ? `<p class="small" style="margin-top:8px;color:var(--alert)">${esc(live.err[park.id])}</p>` : ""}
         ${quick.length ? `<p class="small" style="margin-top:10px">Menores filas entre as imperdíveis agora: ${quick.map(r => `<strong>${esc(r[1])}</strong> (${lv(r).wait} min)`).join(", ")}.</p>` : ""}
         ${live.alerts.length ? `<div class="callout callout--info" style="margin-top:10px">${icon("bell")}<div><strong>Avisos de fila baixa</strong>${live.alerts.map(a => `${esc(a.msg)}`).join("<br>")}</div></div>` : ""}
-        <p class="hint">Atualiza sozinho a cada 2 minutos com esta tela aberta; com os avisos ligados, o servidor vigia mesmo com o app fechado. Fonte: ThemeParks.wiki. São os tempos informados pelo próprio parque, e a tendência é calculada a partir das leituras feitas por este aparelho.</p></section>
-      ${notifyHTML()}
+        <p class="hint">Atualiza sozinho a cada 2 minutos com esta tela aberta. Fonte: ThemeParks.wiki. São os tempos informados pelo próprio parque, e a tendência é calculada a partir das leituras feitas por este aparelho.</p></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Plano do dia</h2><span class="small muted">${must.length} imperdíveis</span></div>
         <div class="sheet sheet--pad stack"><div class="small muted">Estratégia para ordenar</div>
           <div class="segmented seg-wrap" role="group" aria-label="Estratégia">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
@@ -457,69 +456,6 @@
     const key = FT.PARQUES.some(p => p.id === m[1]) ? m[1] : (FT.PARQUES.find(p => FT.u.dayDate(p.day) === today()) || FT.PARQUES[0]).id;
     fetchLive(key, true);
   }, 120000);
-
-
-  /* ======================================================================
-     Avisos no celular (Cloudflare Worker + ntfy): funcionam com o app fechado
-     ====================================================================== */
-  const nst = { at: 0, n: 0, err: "", busy: false, t: null };
-  const notifyOn = () => { const n = S().notify; return !!(n && n.url && n.topic); };
-  const newTopic = () => { const a = new Uint8Array(10); crypto.getRandomValues(a); return "florida-" + Array.from(a, b => (b % 36).toString(36)).join("") + "x"; };
-
-  async function postWorker(path, body) {
-    const n = S().notify;
-    const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 10000);
-    try {
-      const r = await fetch(n.url + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.assign({ topic: n.topic }, body)), signal: ctrl.signal });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || "http " + r.status);
-      return j;
-    } finally { clearTimeout(t); }
-  }
-
-  /* Envia ao servidor as atrações com aviso ligado (e ainda não feitas). */
-  async function pushNotify() {
-    if (!notifyOn() || nst.busy) return;
-    nst.busy = true;
-    try {
-      const alerts = [];
-      for (const park of FT.PARQUES) {
-        const wanted = park.rides.filter(r => S().rideAlert[r[0]] && !S().rideDone[r[0]]);
-        if (!wanted.length) continue;
-        if (!live.data[park.id]) await fetchLive(park.id, true);
-        const L = live.data[park.id] ? live.data[park.id].rides : [];
-        for (const r of wanted) { const l = matchLive(r, L); if (l) alerts.push({ park: park.id, id: l.id, name: r[1], max: S().rideAlert[r[0]] }); }
-      }
-      const j = await postWorker("/config", { alerts });
-      Object.assign(nst, { at: Date.now(), n: j.n || 0, err: "" });
-    } catch (e) {
-      nst.err = "Não consegui falar com o servidor de avisos. Confira o endereço e a internet.";
-    } finally { nst.busy = false; if (/^#\/parques/.test(location.hash)) FT.app.render({ keepScroll: true }); }
-  }
-  const pushSoon = () => { clearTimeout(nst.t); nst.t = setTimeout(pushNotify, 1500); };
-  /* Renova a configuração sempre que o app abre, para ela não expirar no servidor. */
-  setTimeout(pushNotify, 4000);
-
-  function notifyHTML() {
-    const n = S().notify, on = notifyOn();
-    const when = nst.at ? new Date(nst.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
-    if (!on) return `<section class="section"><div class="section__head"><h2 class="h-section">Avisos com o celular bloqueado</h2></div>
-      <form class="sheet sheet--pad" data-form="notify-save">
-        <p class="small">Receba uma notificação quando a fila de uma atração marcada cair, mesmo com o app fechado. Precisa de uma configuração única, de uns 10 minutos: <strong>worker/LEIAME.md</strong> no repositório do app explica passo a passo.</p>
-        <label class="label" for="nfUrl">Endereço do servidor de avisos</label>
-        <input class="field" id="nfUrl" name="url" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://florida-filas.seunome.workers.dev" required>
-        <div style="margin-top:12px"><button class="btn btn--primary" type="submit">${icon("bell")} Ligar avisos</button></div></form></section>`;
-    return `<section class="section"><div class="section__head"><h2 class="h-section">Avisos com o celular bloqueado</h2></div>
-      <div class="sheet sheet--pad stack">
-        <div class="callout callout--info">${icon("bell")}<div><strong>Ligado</strong>${nst.err ? esc(nst.err) : nst.at ? `${nst.n} ${nst.n === 1 ? "atração vigiada" : "atrações vigiadas"} (enviado às ${when}).` : nst.busy ? "Enviando…" : "Aguardando o primeiro envio."} Para vigiar uma atração, toque em “Sem aviso” no plano do dia até aparecer o limite.</div></div>
-        <ol class="small" style="padding-left:18px;display:grid;gap:4px">
-          <li>Instale o app gratuito <strong>ntfy</strong> (App Store) em cada celular.</li>
-          <li>Toque em “+” e assine o tópico: <strong style="user-select:all">${esc(n.topic)}</strong></li>
-          <li>Ative as notificações do ntfy nos Ajustes do iPhone.</li>
-        </ol>
-        <div class="btn-row"><button class="btn btn--sm" type="button" data-act="notify-test">Enviar aviso de teste</button><button class="btn btn--sm" type="button" data-act="notify-push">${icon("refresh")} Reenviar atrações</button><button class="btn btn--quiet btn--sm" type="button" data-act="notify-off">Desligar</button></div>
-        <p class="hint" style="margin-top:0">O código do tópico é o que protege os avisos: não compartilhe com outras pessoas. Aviso de fila baixa não se repete por 25 minutos, e você também é avisado quando uma atração parada voltar.</p></div></section>`;
-  }
 
   /* ======================================================================
      Frases úteis
@@ -571,7 +507,7 @@
         store.update(s => { if (s.rides[id] === v) delete s.rides[id]; else s.rides[id] = v; });
         FT.app.render({ keepScroll: true }); return true;
       }
-      case "ride-done": { const id = el.dataset.id, on = el.checked; store.update(st => { if (on) st.rideDone[id] = true; else delete st.rideDone[id]; }); pushSoon(); FT.app.render({ keepScroll: true }); return true; }
+      case "ride-done": { const id = el.dataset.id, on = el.checked; store.update(st => { if (on) st.rideDone[id] = true; else delete st.rideDone[id]; }); FT.app.render({ keepScroll: true }); return true; }
       case "ride-move": {
         const park = FT.PARQUES.find(p => p.rides.some(r => r[0] === el.dataset.id)), d = Number(el.dataset.v);
         const ids = orderedMusts(park).map(r => r[0]), i = ids.indexOf(el.dataset.id), j = i + d;
@@ -581,8 +517,7 @@
       case "ride-alert": {
         const id = el.dataset.id, cycle = [0, 30, 45, 60], cur = S().rideAlert[id] || 0, nx = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
         store.update(st => { if (nx) st.rideAlert[id] = nx; else delete st.rideAlert[id]; });
-        if (nx) toast(`Aviso ligado: quando a fila ficar em ${nx} min ou menos${notifyOn() ? "." : " (com a tela aberta)."}`);
-        pushSoon();
+        if (nx) toast(`Aviso ligado: quando a fila ficar em ${nx} min ou menos (com a tela aberta).`);
         FT.app.render({ keepScroll: true }); return true;
       }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
@@ -594,9 +529,6 @@
         if (r.value === "ok") { const id = el.dataset.id; store.update(s => { s.docs = s.docs.filter(d => d.id !== id); }); await files.remove(id); FT.app.render({ keepScroll: true }); }
         return true;
       }
-      case "notify-push": await pushNotify(); toast(nst.err || "Atrações enviadas ao servidor."); return true;
-      case "notify-test": try { await pushNotify(); await postWorker("/test", {}); toast("Teste enviado. Olhe o app ntfy."); } catch (e) { toast("Não consegui enviar o teste. Confira o endereço do servidor."); } return true;
-      case "notify-off": { const r = await FT.app.dialog({ title: "Desligar os avisos no celular?", text: "O servidor para de vigiar as filas. Vale para os dois aparelhos.", ok: "Desligar", danger: true }); if (r.value === "ok") { try { await postWorker("/config", { alerts: [] }); } catch (e) { /* expira sozinho */ } store.update(st => { st.notify = { url: "", topic: "" }; }); nst.at = 0; FT.app.render({ keepScroll: true }); } return true; }
       case "park-save": saveParking(); return true;
       case "park-clear": store.update(s => { s.parking = null; }); FT.app.render({ keepScroll: true }); return true;
       case "fx-refresh": fetchRate(true); return true;
@@ -628,13 +560,6 @@
   };
 
   ex.submit = async function (name, form) {
-    if (name === "notify-save") {
-      const url = String(new FormData(form).get("url") || "").trim().replace(/\/+$/, "");
-      if (!/^https:\/\/[^\s"'<>]{4,180}$/.test(url)) { toast("Cole o endereço completo, começando com https://"); return true; }
-      store.update(st => { st.notify = { url, topic: st.notify.topic || newTopic() }; });
-      toast("Avisos ligados. Agora assine o tópico no app ntfy."); FT.app.render({ keepScroll: true }); pushNotify();
-      return true;
-    }
     if (name === "fx-expense") {
       const usd = num(fxs.amount);
       if (!(usd > 0)) { toast("Digite o valor da compra em dólar primeiro."); return true; }

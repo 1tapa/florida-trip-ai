@@ -71,5 +71,3 @@ Regras de alfândega, preços e horários de parques mudam. Os itens trazem link
 - **Guia do parque** (Magic Kingdom e Universal Studios Florida): marque imperdíveis, monte a ordem do dia (do fundo para a entrada, da entrada para o fundo ou menor fila agora), acompanhe filas ao vivo (ThemeParks.wiki), tendência medida neste aparelho e aviso de fila baixa com a tela aberta. As distâncias são aproximadas.
 - **Anexos** em Reservas (print ou PDF, até ~650 KB cada), disponíveis offline e sincronizados.
 - **Onde estacionei**, **Frases úteis em inglês** e **IA que também altera orçamento e lista de compras**.
-
-- **Avisos com o celular bloqueado** (opcional): um Cloudflare Worker gratuito vigia as filas e envia notificações pelo app ntfy. Veja `worker/LEIAME.md`.
