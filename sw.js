@@ -1,5 +1,5 @@
 /* Service worker: o guia abre sem internet. Só trata o próprio site; outros domínios (previsão do tempo, OpenAI) vão direto à rede. */
-const CACHE = "florida-guia-v14";
+const CACHE = "florida-guia-v15";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg",
   "./css/app.css", "./js/data.js", "./js/checklist-data.js", "./js/store.js", "./js/sync.js", "./js/ai.js", "./js/extra-data.js", "./js/extra.js", "./js/app.js",
@@ -26,7 +26,7 @@ function networkFirst(request, fallbackUrl) {
     let settled = false;
     const useCache = () => caches.match(request).then(hit => hit || (fallbackUrl ? caches.match(fallbackUrl) : undefined));
     const timer = setTimeout(() => useCache().then(hit => { if (hit && !settled) { settled = true; resolve(hit); } }), 4000);
-    fetch(request).then(response => {
+    fetch(request, { cache: "no-cache" }).then(response => {
       clearTimeout(timer);
       if (response.ok) { const copy = response.clone(); caches.open(CACHE).then(c => c.put(request, copy)); }
       if (!settled) { settled = true; resolve(response); }

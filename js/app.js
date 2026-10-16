@@ -686,6 +686,14 @@
   onRoute();
 
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    /* Nova versão publicada: recarrega sozinho, mas só se ninguém estiver digitando. */
+    const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || reloaded) return;
+      const el = document.activeElement;
+      if (editor || (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      reloaded = true; location.reload();
+    });
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => { /* sem offline, mas o app funciona */ }));
   }
 })();
