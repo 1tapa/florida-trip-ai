@@ -687,3 +687,12 @@ textarea.field { min-height: 88px; resize: vertical; }
 
 .edrow { border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; margin: 0 0 10px; background: var(--paper); min-width: 0; }
 .edrow textarea.field { min-height: 60px; }
+.rcard__en { font-size: var(--t-xs); color: var(--muted); margin-top: 2px; }
+.rcard__desc { font-size: var(--t-xs); color: var(--ink-2); line-height: 1.45; margin: 6px 0 0; }
+.eat__h { font-size: var(--t-sm); font-weight: 750; margin: 14px 0 4px; }
+.eat { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.eat:last-of-type { border-bottom: 0; }
+.eat__main { min-width: 0; }
+.eat__name { font-weight: 700; line-height: 1.25; }
+.eat__note { font-size: var(--t-xs); color: var(--ink-2); margin: 4px 0 0; line-height: 1.45; }
+.eat__map { flex: none; align-self: flex-start; font-size: var(--t-xs); font-weight: 700; color: var(--gulf-ink); text-decoration: none; display: inline-flex; gap: 4px; align-items: center; min-height: 32px; }
