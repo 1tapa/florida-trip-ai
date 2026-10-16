@@ -274,7 +274,7 @@
     frente: ["Da entrada para o fundo", "Segue o caminho natural, começando pelas atrações de alta demanda mais perto da entrada."],
     fila: ["Menor fila agora", "Ordena pelo tempo de fila ao vivo, da menor para a maior. Útil para decidir na hora."]
   };
-  const live = { data: {}, busy: {}, tried: {}, err: {}, strategy: "tras", alerts: [], notified: {} };
+  const live = { data: {}, busy: {}, tried: {}, err: {}, strategy: "tras" };
   let samples = {};
   try { samples = JSON.parse(FT.ls.get(WAIT_KEY) || "{}") || {}; } catch (e) { samples = {}; }
   try { const c = JSON.parse(FT.ls.get(LIVE_KEY) || "{}"); for (const k of Object.keys(c)) if (c[k] && Array.isArray(c[k].rides)) live.data[k] = c[k]; } catch (e) { /* sem cache */ }
@@ -313,7 +313,6 @@
       live.data[parkKey] = { at: now, rides };
       FT.ls.set(LIVE_KEY, JSON.stringify(live.data));
       recordSamples(parkKey, rides, now);
-      checkAlerts(parkKey, rides);
     } catch (e) {
       live.err[parkKey] = live.data[parkKey] ? "Sem internet agora. Mostrando a última leitura." : "Não consegui buscar as filas agora.";
     } finally {
@@ -344,24 +343,6 @@
     if (!old || liveRide.wait == null) return { kind: "none", min };
     const d = liveRide.wait - old[1], mins = Math.round((now - old[0]) / 60000);
     return { kind: d <= -10 ? "down" : d >= 10 ? "up" : "flat", delta: d, mins, min };
-  }
-
-  function checkAlerts(parkKey, rides) {
-    const park = FT.PARQUES.find(p => p.id === parkKey);
-    const A = S().rideAlert;
-    for (const r of park.rides) {
-      const th = A[r[0]];
-      if (!th) continue;
-      const l = matchLive(r, rides);
-      if (!l || l.status !== "OPERATING" || l.wait == null || l.wait > th) continue;
-      if (Date.now() - (live.notified[r[0]] || 0) < 15 * 60000) continue;
-      live.notified[r[0]] = Date.now();
-      const msg = `Fila baixa: ${r[1]} está com ${l.wait} min.`;
-      live.alerts.unshift({ t: Date.now(), msg });
-      live.alerts = live.alerts.slice(0, 5);
-      toast(msg);
-      try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) { /* sem vibração */ }
-    }
   }
 
   const clsWait = w => (w <= 20 ? "wait--ok" : w <= 45 ? "wait--mid" : "wait--high");
@@ -402,6 +383,19 @@
 
   const farTxt = n => (n <= 1 ? "perto da entrada" : n <= 3 ? "meio do parque" : "fundo do parque");
 
+  const fmtT = ms => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const FILTERS = [["all", "Todas"], ["high", "Mais disputadas"], ["short", "Fila curta"], ["thrill", "Emoção"], ["easy", "Família e clássicos"]];
+  live.filter = "all";
+
+  /* Número grande da fila, colorido pelo tempo. */
+  function waitTile(l) {
+    if (!l) return `<div class="wtile wtile--none"><b>–</b><span>sem dados</span></div>`;
+    if (l.status === "DOWN") return `<div class="wtile wtile--down"><b>!</b><span>parada</span></div>`;
+    if (l.status === "CLOSED" || l.status === "REFURBISHMENT") return `<div class="wtile wtile--none"><b>–</b><span>fechada</span></div>`;
+    if (l.wait == null) return `<div class="wtile wtile--none"><b>·</b><span>aberta</span></div>`;
+    return `<div class="wtile ${clsWait(l.wait).replace("wait--", "wtile--")}"><b>${l.wait}</b><span>min</span></div>`;
+  }
+
   function viewParques(arg) {
     const parks = FT.PARQUES, t = today();
     const park = parks.find(p => p.id === arg) || parks.find(p => FT.u.dayDate(p.day) === t) || parks[0];
@@ -410,46 +404,144 @@
     const st = r => R[r[0]] || "";
     const lv = r => matchLive(r, L);
     const must = orderedMusts(park), maybe = park.rides.filter(r => st(r) === "maybe");
-    const when = data ? new Date(data.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+    const isDone = r => !!S_.rideDone[r[0]];
+    const pending = must.filter(r => !isDone(r)), finished = must.filter(isDone);
+    const parkDay = FT.u.dayDate(park.day) === t;
+    const mode = live.mode || (parkDay && must.length ? "hoje" : "montar");
+    const when = data ? fmtT(data.at) : "";
+    const isOpen = l => l && l.status === "OPERATING";
+    const waitOf = r => { const l = lv(r); return isOpen(l) && l.wait != null ? l.wait : null; };
     const used = new Set(park.rides.map(r => { const l = lv(r); return l ? l.id : ""; }));
     const others = L.filter(l => !used.has(l.id) && l.status !== "CLOSED" && l.status !== "REFURBISHMENT").sort((a, b) => (a.wait == null) - (b.wait == null) || a.wait - b.wait);
-    const alertBtn = r => { const th = S_.rideAlert[r[0]]; return `<button type="button" class="btn btn--quiet btn--sm" data-act="ride-alert" data-id="${esc(r[0])}">${icon("bell")} ${th ? "Avisar ≤ " + th + " min" : "Sem aviso"}</button>`; };
-    const row = (r, i, total) => {
-      const l = lv(r), tr = l && l.status === "OPERATING" ? trendOf(park.id, l) : { kind: "none" };
-      const done = !!S_.rideDone[r[0]], low = S_.rideAlert[r[0]] && l && l.status === "OPERATING" && l.wait != null && l.wait <= S_.rideAlert[r[0]];
-      return `<li class="plan${done ? " plan--done" : ""}${low ? " plan--low" : ""}">
-        <label class="check"><input type="checkbox" data-act="ride-done" data-id="${esc(r[0])}"${done ? " checked" : ""} aria-label="Já fizemos: ${esc(r[1])}"><span class="check__box">${icon("check")}</span></label>
-        <div class="plan__main"><div class="row row--between"><span class="plan__name">${esc(r[1])}</span>${waitBadge(l)}</div>
-          <div class="chips" style="margin-top:6px">${l && l.status === "OPERATING" ? trendChip(tr) : ""}${tr.min && l && l.wait != null ? `<span class="chip chip--plain">Menor hoje: ${tr.min[1]} min às ${new Date(tr.min[0]).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>` : ""}<span class="chip chip--plain">${farTxt(r[5])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}${low ? '<span class="chip chip--ok">Fila baixa agora</span>' : ""}</div>
-          <p class="small muted" style="margin-top:6px">${esc(r[4])}</p>
-          <div class="plan__ctrl">${alertBtn(r)}<span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === total - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></div></div></li>`;
+
+    /* Atrações do "Se der tempo" que estão com fila curta ou caindo agora. */
+    const hot = maybe.filter(r => !isDone(r)).map(r => {
+      const l = lv(r), w = waitOf(r); if (w == null) return null;
+      const tr = trendOf(park.id, l);
+      const why = w <= 10 ? "Fila super curta" : w <= 20 ? "Fila curta" : tr.kind === "down" && w <= 35 ? `Fila caindo (${tr.delta} min em ${tr.mins} min)` : "";
+      return why ? { r, w, why } : null;
+    }).filter(Boolean).sort((a, b) => a.w - b.w);
+    const hotHTML = hot.length ? `<section class="hot" aria-label="Vale a pena agora">
+      <div class="hot__title">${icon("check")} Vale a pena agora</div>
+      ${hot.map(h => `<div class="hot__item"><div class="hot__main"><div class="hot__name">${esc(h.r[1])}</div><div class="hot__why">${esc(h.why)}</div></div><div class="hot__wait"><b>${h.w}</b><span>min</span></div><button class="btn btn--sm hot__go" type="button" data-act="ride-go" data-id="${esc(h.r[0])}" data-park="${park.id}">Ir agora</button></div>`).join("")}</section>` : "";
+
+    const head = `
+      <a class="back" href="#/mais">${icon("chev-l")} Mais</a>
+      <header class="page-head"><h1 class="h-page">Guia do parque</h1></header>
+      <div class="ptabs" role="group" aria-label="Parque">${parks.map(p => `<a class="ptab" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}"><strong>${esc(p.name)}</strong><span>${p.day} de dezembro</span></a>`).join("")}</div>
+      <div class="pulse"><span class="pulse__dot${data && !live.err[park.id] ? " pulse__dot--on" : ""}"></span><span class="pulse__txt">${live.busy[park.id] ? "Buscando as filas…" : data ? "Filas ao vivo · " + when : "Sem leitura ainda"}</span>
+        <button class="btn btn--quiet btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} Atualizar</button></div>
+      ${live.err[park.id] ? `<p class="small" style="color:var(--alert);margin:-4px 0 12px">${esc(live.err[park.id])}</p>` : ""}
+      <div class="modes" role="group" aria-label="Modo">
+        <button type="button" data-act="mode" data-v="montar" aria-pressed="${mode === "montar"}">Montar o dia</button>
+        <button type="button" data-act="mode" data-v="hoje" aria-pressed="${mode === "hoje"}">No parque${pending.length ? ` <i>${pending.length}</i>` : ""}</button></div>
+      ${hotHTML}`;
+
+    const foot = `
+      ${others.length ? `<details class="alt" style="margin-top:24px"><summary>Outras atrações abertas (${others.length})${icon("chev-d")}</summary><div style="padding-top:6px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></details>` : ""}
+      <details class="alt"><summary>Dicas e fonte dos dados${icon("chev-d")}</summary><p>${esc(park.note)}</p><p>Os tempos de fila vêm do ThemeParks.wiki e são os informados pelo próprio parque; atualizam sozinhos a cada 2 minutos com esta tela aberta. A tendência é calculada com as leituras feitas neste aparelho, e as distâncias até a entrada são aproximadas.</p></details>`;
+
+    /* ---------- modo: no parque ---------- */
+    if (mode === "hoje") {
+      let eta = Date.now();
+      const plan = pending.map(r => { const w = waitOf(r); const row = { r, w, at: eta }; eta += ((w == null ? 20 : w) + 12) * 60000; return row; });
+      const isDown = x => { const l = lv(x.r); return l && l.status === "DOWN"; };
+      const next = plan.find(x => !isDown(x)) || plan[0];
+      let hero;
+      if (!must.length) hero = `<div class="sheet empty">Você ainda não montou o dia deste parque. <button class="btn btn--primary btn--sm" type="button" data-act="mode" data-v="montar" style="margin-top:12px">Montar o dia</button></div>`;
+      else if (!next) hero = `<div class="nextup nextup--done"><div class="nextup__label">Dia completo</div><div class="nextup__name">Todas as atrações do roteiro foram feitas.</div><p class="nextup__sub">Veja se alguma atração “Se der tempo” está com a fila baixa agora.</p></div>`;
+      else {
+        const l = lv(next.r), tr = isOpen(l) ? trendOf(park.id, l) : { kind: "none" };
+        const second = plan.filter(x => x !== next).find(x => x.w != null && next.w != null && next.w >= 30 && x.w <= next.w / 2);
+        hero = `<section class="nextup" aria-label="Próxima atração">
+          <div class="nextup__label">Próxima atração</div>
+          <div class="nextup__row"><div class="nextup__name">${esc(next.r[1])}</div><div class="nextup__wait">${l && l.status === "DOWN" ? `<b>!</b><span>parada</span>` : next.w != null ? `<b>${next.w}</b><span>min de fila</span>` : `<b>–</b><span>sem dado</span>`}</div></div>
+          <p class="nextup__sub">${esc(next.r[4])}</p>
+          <div class="nextup__chips">${isOpen(l) ? trendChip(tr).replace("chip chip--ok", "nchip nchip--ok").replace("chip chip--e", "nchip nchip--e").replace("chip chip--plain", "nchip") : ""}${tr.min && tr.kind !== "none" && next.w != null ? `<span class="nchip">Menor hoje: ${tr.min[1]} min às ${fmtT(tr.min[0])}</span>` : ""}<span class="nchip">${farTxt(next.r[5])}</span></div>
+          <div class="nextup__act"><button class="btn btn--sun" type="button" data-act="ride-fin" data-id="${esc(next.r[0])}">${icon("check")} Já fizemos</button><button class="btn btn--ghost" type="button" data-act="ride-skip" data-id="${esc(next.r[0])}">Pular</button></div>
+          ${second ? `<div class="nudge">${icon("info")}<div><strong>${esc(second.r[1])}</strong> está com ${second.w} min agora, bem menos que a fila atual.<button class="btn btn--sm" type="button" data-act="ride-first" data-id="${esc(second.r[0])}" data-park="${park.id}" style="margin-top:8px">Ir primeiro nessa</button></div></div>` : ""}
+        </section>`;
+      }
+      const total = must.length;
+      const prog = total ? `<div class="prog"><div class="prog__bar"><i style="width:${Math.round(finished.length / total * 100)}%"></i></div><span>${finished.length} de ${total} feitas${plan.length ? ` · termina por volta das ${fmtT(eta)}` : ""}</span></div>` : "";
+      return head + hero + prog + `
+        ${plan.length > 1 ? `<section class="section"><div class="section__head"><h2 class="h-section">Depois disso</h2></div><ol class="route">${plan.filter(x => x !== next).map((x, i) => `<li><span class="route__n">${i + 2}</span><div class="route__main"><div class="route__name">${esc(x.r[1])}</div><div class="small muted">${isDown(x) ? "parada agora, volte a olhar depois" : "chegada ~" + fmtT(x.at)}</div></div>${waitBadge(lv(x.r))}</li>`).join("")}</ol></section>` : ""}
+        ${finished.length ? `<details class="alt" style="margin-top:20px"><summary>Já feitas (${finished.length})${icon("chev-d")}</summary><div style="padding-top:6px">${finished.map(r => `<div class="stat"><dt style="text-decoration:line-through;color:var(--muted)">${esc(r[1])}</dt><dd><button class="btn btn--quiet btn--sm" type="button" data-act="ride-undone" data-id="${esc(r[0])}">Desfazer</button></dd></div>`).join("")}</div></details>` : ""}
+        ${foot}`;
+    }
+
+    /* ---------- modo: montar o dia ---------- */
+    const pass = r => {
+      const w = waitOf(r), f = live.filter;
+      return f === "all" || (f === "high" && r[3]) || (f === "short" && w != null && w <= 25) || (f === "thrill" && /Emoção|Aquática/.test(r[2])) || (f === "easy" && !/Emoção|Aquática/.test(r[2]));
     };
-    const quick = must.filter(r => { const l = lv(r); return l && l.status === "OPERATING" && l.wait != null; }).sort((a, b) => lv(a).wait - lv(b).wait).slice(0, 3);
-    return `<a class="back" href="#/mais">${icon("chev-l")} Mais</a>
-      <header class="page-head"><h1 class="h-page">Guia do parque</h1><p class="lede">Escolha as atrações, monte a ordem do dia e acompanhe a fila ao vivo. Vocês dois veem o mesmo plano.</p></header>
-      <div class="segmented" role="group" aria-label="Parque" style="margin-bottom:16px">${parks.map(p => `<a class="seg-link" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}">${esc(p.name)}</a>`).join("")}</div>
-      <div class="callout callout--info">${icon("info")}<div><strong>Dia ${park.day} de dezembro</strong>${esc(park.note)}</div></div>
-      <section class="sheet sheet--pad livebar" style="margin-top:16px">
-        <div class="row row--between row--wrap"><div><strong>Filas ao vivo</strong><div class="small muted">${data ? "Leitura das " + when : live.busy[park.id] ? "Buscando…" : "Ainda sem leitura"}</div></div>
-          <button class="btn btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} ${live.busy[park.id] ? "Buscando…" : "Atualizar"}</button></div>
-        ${live.err[park.id] ? `<p class="small" style="margin-top:8px;color:var(--alert)">${esc(live.err[park.id])}</p>` : ""}
-        ${quick.length ? `<p class="small" style="margin-top:10px">Menores filas entre as imperdíveis agora: ${quick.map(r => `<strong>${esc(r[1])}</strong> (${lv(r).wait} min)`).join(", ")}.</p>` : ""}
-        ${live.alerts.length ? `<div class="callout callout--info" style="margin-top:10px">${icon("bell")}<div><strong>Avisos de fila baixa</strong>${live.alerts.map(a => `${esc(a.msg)}`).join("<br>")}</div></div>` : ""}
-        <p class="hint">Atualiza sozinho a cada 2 minutos com esta tela aberta; com os avisos ligados, o servidor vigia mesmo com o app fechado. Fonte: ThemeParks.wiki. São os tempos informados pelo próprio parque, e a tendência é calculada a partir das leituras feitas por este aparelho.</p></section>
-      ${notifyHTML()}
-      <section class="section"><div class="section__head"><h2 class="h-section">Plano do dia</h2><span class="small muted">${must.length} imperdíveis</span></div>
-        <div class="sheet sheet--pad stack"><div class="small muted">Estratégia para ordenar</div>
-          <div class="segmented seg-wrap" role="group" aria-label="Estratégia">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
-          <p class="small muted">${esc(STRATEGY[live.strategy][1])}</p>
-          <button class="btn btn--primary" type="button" data-act="plan-suggest" data-id="${park.id}"${must.length ? "" : " disabled"}>${icon("route")} Sugerir ordem</button>
-          <p class="hint" style="margin-top:0">Distâncias até a entrada são aproximadas, só para ordenar. Use as setas para ajustar do seu jeito e siga o roteiro de preferência de vocês.</p></div>
-        ${must.length ? `<ol class="plans" style="margin-top:12px">${must.map((r, i) => row(r, i, must.length)).join("")}</ol>` : `<div class="sheet empty" style="margin-top:12px">Marque atrações como “Imperdível” na lista abaixo e elas aparecem aqui.</div>`}</section>
-      ${maybe.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Se der tempo</h2></div><div class="sheet" style="padding:0 16px">${maybe.map(r => { const l = lv(r); return `<div class="stat"><dt>${esc(r[1])}</dt><dd>${waitBadge(l)}</dd></div>`; }).join("")}</div></section>` : ""}
-      <section class="section"><div class="section__head"><h2 class="h-section">Todas as atrações</h2></div>
-        <div class="sheet" style="padding:0 16px">${park.rides.map(r => `<div class="ride"><div class="ride__top"><div style="min-width:0"><div class="row row--between"><span class="ride__name">${esc(r[1])}</span>${waitBadge(lv(r))}</div><div class="chips" style="margin-top:6px"><span class="chip chip--plain">${esc(r[2])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}</div></div></div>
-          <div class="status" role="group" aria-label="${esc(r[1])}">${Object.keys(RIDE_LABEL).map(k => `<button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="${k}" aria-pressed="${st(r) === k}">${RIDE_LABEL[k]}</button>`).join("")}</div></div>`).join("")}</div></section>
-      ${others.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Outras atrações abertas</h2></div><div class="sheet" style="padding:0 16px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></section>` : ""}`;
+    const list = park.rides.filter(pass).sort((a, b) => (st(a) === "skip") - (st(b) === "skip") || ((waitOf(a) == null) - (waitOf(b) == null)) || (waitOf(a) - waitOf(b)));
+    const card = r => {
+      const l = lv(r), s = st(r), tr = isOpen(l) ? trendOf(park.id, l) : { kind: "none" };
+      const idx = must.indexOf(r), isHot = hot.some(h => h.r === r);
+      return `<li class="rcard${s === "must" ? " rcard--in" : ""}${s === "skip" ? " rcard--skip" : ""}${isHot ? " rcard--hot" : ""}">
+        ${waitTile(l)}
+        <div class="rcard__main"><div class="rcard__name">${esc(r[1])}</div>
+          <div class="chips" style="margin-top:5px"><span class="chip chip--plain">${esc(r[2])}</span>${isHot ? '<span class="chip chip--ok">Vale a pena agora</span>' : ""}${r[3] ? '<span class="chip chip--i">Disputada</span>' : ""}${tr.kind === "down" ? `<span class="chip chip--ok">↓ caindo</span>` : tr.kind === "up" ? `<span class="chip chip--e">↑ subindo</span>` : ""}</div>
+          <div class="rcard__more"><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="maybe" aria-pressed="${s === "maybe"}">Se der tempo</button><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="skip" aria-pressed="${s === "skip"}">Pular</button><span class="small muted">${farTxt(r[5])}</span></div></div>
+        <button class="radd" type="button" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-pressed="${s === "must"}" aria-label="${s === "must" ? "Tirar do roteiro: " : "Adicionar ao roteiro: "}${esc(r[1])}">${s === "must" ? `<b>${idx + 1}</b>` : icon("plus")}</button>
+      </li>`;
+    };
+    const mine = must.length ? `<ol class="mine" data-park="${park.id}">${must.map((r, i) => `<li data-id="${esc(r[0])}"><button type="button" class="grip" aria-label="Arrastar para mudar a ordem: ${esc(r[1])}"><i></i><i></i><i></i></button><span class="route__n">${i + 1}</span><span class="mine__name">${esc(r[1])}${isDone(r) ? " ✓" : ""}</span>${waitBadge(lv(r))}<button type="button" class="mine__x" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-label="Tirar do roteiro: ${esc(r[1])}">${icon("close")}</button></li>`).join("")}</ol>${must.length > 1 ? `<p class="hint" style="margin-top:8px">Segure no ícone de três linhas e arraste para mudar a ordem.</p>` : ""}`
+      : `<p class="small muted" style="margin:0">Toque no <strong>+</strong> das atrações abaixo para montar o roteiro do dia.</p>`;
+    return head + `
+      <section class="sheet sheet--pad mineBox">
+        <div class="row row--between"><h2 class="h-section" style="margin:0">Meu roteiro</h2><span class="small muted">${must.length} ${must.length === 1 ? "atração" : "atrações"}</span></div>
+        <div style="margin-top:10px">${mine}</div>
+        ${must.length > 1 ? `<div class="mineBox__order"><div class="segmented seg-wrap" role="group" aria-label="Ordenar por">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
+          <p class="small muted" style="margin:8px 0 10px">${esc(STRATEGY[live.strategy][1])}</p>
+          <button class="btn btn--primary" type="button" data-act="plan-suggest" data-id="${park.id}">${icon("route")} Ordenar para mim</button></div>` : ""}
+      </section>
+      <div class="fchips" role="group" aria-label="Filtrar">${FILTERS.map(f => `<button type="button" data-act="filter" data-v="${f[0]}" aria-pressed="${live.filter === f[0]}">${f[1]}</button>`).join("")}</div>
+      ${list.length ? `<ul class="rcards">${list.map(card).join("")}</ul>` : `<div class="sheet empty">Nenhuma atração com esse filtro agora.</div>`}
+      ${foot}`;
   }
+
+
+  /* Arrastar para reordenar o roteiro (funciona com toque e mouse). */
+  (function () {
+    let drag = null;
+    document.addEventListener("pointerdown", ev => {
+      const g = ev.target.closest && ev.target.closest(".mine .grip");
+      if (!g) return;
+      const li = g.closest("li"), ol = li.parentNode;
+      drag = { li, ol, id: g.pointerId };
+      li.classList.add("is-drag");
+      try { g.setPointerCapture(ev.pointerId); } catch (e) { /* sem captura */ }
+      ev.preventDefault();
+    });
+    document.addEventListener("pointermove", ev => {
+      if (!drag) return;
+      const items = [...drag.ol.children].filter(x => x !== drag.li);
+      for (const it of items) {
+        const b = it.getBoundingClientRect();
+        if (ev.clientY > b.top && ev.clientY < b.bottom) {
+          const before = ev.clientY < b.top + b.height / 2;
+          drag.ol.insertBefore(drag.li, before ? it : it.nextSibling);
+          break;
+        }
+      }
+      const top = drag.ol.getBoundingClientRect().top, bottom = drag.ol.getBoundingClientRect().bottom;
+      if (ev.clientY < top) drag.ol.insertBefore(drag.li, drag.ol.firstChild);
+      else if (ev.clientY > bottom) drag.ol.appendChild(drag.li);
+      const edge = 70;
+      if (ev.clientY < edge) window.scrollBy(0, -12); else if (ev.clientY > window.innerHeight - 110) window.scrollBy(0, 12);
+    });
+    const end = () => {
+      if (!drag) return;
+      const ids = [...drag.ol.children].map(x => x.dataset.id), park = drag.ol.dataset.park;
+      drag.li.classList.remove("is-drag"); drag = null;
+      store.update(st => { st.rideOrder[park] = ids; });
+      FT.app.render({ keepScroll: true });
+    };
+    document.addEventListener("pointerup", end);
+    document.addEventListener("pointercancel", end);
+  })();
 
   setInterval(() => {
     const m = /^#\/parques\/?([a-z]*)/.exec(location.hash);
@@ -457,69 +549,6 @@
     const key = FT.PARQUES.some(p => p.id === m[1]) ? m[1] : (FT.PARQUES.find(p => FT.u.dayDate(p.day) === today()) || FT.PARQUES[0]).id;
     fetchLive(key, true);
   }, 120000);
-
-
-  /* ======================================================================
-     Avisos no celular (Cloudflare Worker + ntfy): funcionam com o app fechado
-     ====================================================================== */
-  const nst = { at: 0, n: 0, err: "", busy: false, t: null };
-  const notifyOn = () => { const n = S().notify; return !!(n && n.url && n.topic); };
-  const newTopic = () => { const a = new Uint8Array(10); crypto.getRandomValues(a); return "florida-" + Array.from(a, b => (b % 36).toString(36)).join("") + "x"; };
-
-  async function postWorker(path, body) {
-    const n = S().notify;
-    const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 10000);
-    try {
-      const r = await fetch(n.url + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.assign({ topic: n.topic }, body)), signal: ctrl.signal });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error || "http " + r.status);
-      return j;
-    } finally { clearTimeout(t); }
-  }
-
-  /* Envia ao servidor as atrações com aviso ligado (e ainda não feitas). */
-  async function pushNotify() {
-    if (!notifyOn() || nst.busy) return;
-    nst.busy = true;
-    try {
-      const alerts = [];
-      for (const park of FT.PARQUES) {
-        const wanted = park.rides.filter(r => S().rideAlert[r[0]] && !S().rideDone[r[0]]);
-        if (!wanted.length) continue;
-        if (!live.data[park.id]) await fetchLive(park.id, true);
-        const L = live.data[park.id] ? live.data[park.id].rides : [];
-        for (const r of wanted) { const l = matchLive(r, L); if (l) alerts.push({ park: park.id, id: l.id, name: r[1], max: S().rideAlert[r[0]] }); }
-      }
-      const j = await postWorker("/config", { alerts });
-      Object.assign(nst, { at: Date.now(), n: j.n || 0, err: "" });
-    } catch (e) {
-      nst.err = "Não consegui falar com o servidor de avisos. Confira o endereço e a internet.";
-    } finally { nst.busy = false; if (/^#\/parques/.test(location.hash)) FT.app.render({ keepScroll: true }); }
-  }
-  const pushSoon = () => { clearTimeout(nst.t); nst.t = setTimeout(pushNotify, 1500); };
-  /* Renova a configuração sempre que o app abre, para ela não expirar no servidor. */
-  setTimeout(pushNotify, 4000);
-
-  function notifyHTML() {
-    const n = S().notify, on = notifyOn();
-    const when = nst.at ? new Date(nst.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
-    if (!on) return `<section class="section"><div class="section__head"><h2 class="h-section">Avisos com o celular bloqueado</h2></div>
-      <form class="sheet sheet--pad" data-form="notify-save">
-        <p class="small">Receba uma notificação quando a fila de uma atração marcada cair, mesmo com o app fechado. Precisa de uma configuração única, de uns 10 minutos: <strong>worker/LEIAME.md</strong> no repositório do app explica passo a passo.</p>
-        <label class="label" for="nfUrl">Endereço do servidor de avisos</label>
-        <input class="field" id="nfUrl" name="url" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="https://florida-filas.seunome.workers.dev" required>
-        <div style="margin-top:12px"><button class="btn btn--primary" type="submit">${icon("bell")} Ligar avisos</button></div></form></section>`;
-    return `<section class="section"><div class="section__head"><h2 class="h-section">Avisos com o celular bloqueado</h2></div>
-      <div class="sheet sheet--pad stack">
-        <div class="callout callout--info">${icon("bell")}<div><strong>Ligado</strong>${nst.err ? esc(nst.err) : nst.at ? `${nst.n} ${nst.n === 1 ? "atração vigiada" : "atrações vigiadas"} (enviado às ${when}).` : nst.busy ? "Enviando…" : "Aguardando o primeiro envio."} Para vigiar uma atração, toque em “Sem aviso” no plano do dia até aparecer o limite.</div></div>
-        <ol class="small" style="padding-left:18px;display:grid;gap:4px">
-          <li>Instale o app gratuito <strong>ntfy</strong> (App Store) em cada celular.</li>
-          <li>Toque em “+” e assine o tópico: <strong style="user-select:all">${esc(n.topic)}</strong></li>
-          <li>Ative as notificações do ntfy nos Ajustes do iPhone.</li>
-        </ol>
-        <div class="btn-row"><button class="btn btn--sm" type="button" data-act="notify-test">Enviar aviso de teste</button><button class="btn btn--sm" type="button" data-act="notify-push">${icon("refresh")} Reenviar atrações</button><button class="btn btn--quiet btn--sm" type="button" data-act="notify-off">Desligar</button></div>
-        <p class="hint" style="margin-top:0">O código do tópico é o que protege os avisos: não compartilhe com outras pessoas. Aviso de fila baixa não se repete por 25 minutos, e você também é avisado quando uma atração parada voltar.</p></div></section>`;
-  }
 
   /* ======================================================================
      Frases úteis
@@ -571,20 +600,20 @@
         store.update(s => { if (s.rides[id] === v) delete s.rides[id]; else s.rides[id] = v; });
         FT.app.render({ keepScroll: true }); return true;
       }
-      case "ride-done": { const id = el.dataset.id, on = el.checked; store.update(st => { if (on) st.rideDone[id] = true; else delete st.rideDone[id]; }); pushSoon(); FT.app.render({ keepScroll: true }); return true; }
+      case "ride-done": { const id = el.dataset.id, on = el.checked; store.update(st => { if (on) st.rideDone[id] = true; else delete st.rideDone[id]; }); FT.app.render({ keepScroll: true }); return true; }
       case "ride-move": {
         const park = FT.PARQUES.find(p => p.rides.some(r => r[0] === el.dataset.id)), d = Number(el.dataset.v);
         const ids = orderedMusts(park).map(r => r[0]), i = ids.indexOf(el.dataset.id), j = i + d;
         if (i >= 0 && j >= 0 && j < ids.length) { [ids[i], ids[j]] = [ids[j], ids[i]]; store.update(st => { st.rideOrder[park.id] = ids; }); }
         FT.app.render({ keepScroll: true }); return true;
       }
-      case "ride-alert": {
-        const id = el.dataset.id, cycle = [0, 30, 45, 60], cur = S().rideAlert[id] || 0, nx = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
-        store.update(st => { if (nx) st.rideAlert[id] = nx; else delete st.rideAlert[id]; });
-        if (nx) toast(`Aviso ligado: quando a fila ficar em ${nx} min ou menos${notifyOn() ? "." : " (com a tela aberta)."}`);
-        pushSoon();
-        FT.app.render({ keepScroll: true }); return true;
-      }
+      case "mode": live.mode = el.dataset.v; FT.app.render({ keepScroll: false }); window.scrollTo(0, 0); return true;
+      case "filter": live.filter = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
+      case "ride-fin": store.update(st => { st.rideDone[el.dataset.id] = true; }); toast("Boa! Marcada como feita."); FT.app.render({ keepScroll: true }); return true;
+      case "ride-undone": store.update(st => { delete st.rideDone[el.dataset.id]; }); FT.app.render({ keepScroll: true }); return true;
+      case "ride-skip": store.update(st => { st.rides[el.dataset.id] = "skip"; }); FT.app.render({ keepScroll: true }); return true;
+      case "ride-go": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rides[id] = "must"; st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); live.mode = "hoje"; toast("Passou para o começo do roteiro."); FT.app.render({ keepScroll: false }); window.scrollTo(0, 0); return true; }
+      case "ride-first": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); FT.app.render({ keepScroll: true }); return true; }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
       case "plan-suggest": { const park = FT.PARQUES.find(p => p.id === el.dataset.id); suggestOrder(park); toast("Ordem sugerida: " + STRATEGY[live.strategy][0].toLowerCase() + "."); FT.app.render({ keepScroll: true }); return true; }
       case "live-refresh": fetchLive(el.dataset.id, true); return true;
@@ -594,9 +623,6 @@
         if (r.value === "ok") { const id = el.dataset.id; store.update(s => { s.docs = s.docs.filter(d => d.id !== id); }); await files.remove(id); FT.app.render({ keepScroll: true }); }
         return true;
       }
-      case "notify-push": await pushNotify(); toast(nst.err || "Atrações enviadas ao servidor."); return true;
-      case "notify-test": try { await pushNotify(); await postWorker("/test", {}); toast("Teste enviado. Olhe o app ntfy."); } catch (e) { toast("Não consegui enviar o teste. Confira o endereço do servidor."); } return true;
-      case "notify-off": { const r = await FT.app.dialog({ title: "Desligar os avisos no celular?", text: "O servidor para de vigiar as filas. Vale para os dois aparelhos.", ok: "Desligar", danger: true }); if (r.value === "ok") { try { await postWorker("/config", { alerts: [] }); } catch (e) { /* expira sozinho */ } store.update(st => { st.notify = { url: "", topic: "" }; }); nst.at = 0; FT.app.render({ keepScroll: true }); } return true; }
       case "park-save": saveParking(); return true;
       case "park-clear": store.update(s => { s.parking = null; }); FT.app.render({ keepScroll: true }); return true;
       case "fx-refresh": fetchRate(true); return true;
@@ -628,13 +654,6 @@
   };
 
   ex.submit = async function (name, form) {
-    if (name === "notify-save") {
-      const url = String(new FormData(form).get("url") || "").trim().replace(/\/+$/, "");
-      if (!/^https:\/\/[^\s"'<>]{4,180}$/.test(url)) { toast("Cole o endereço completo, começando com https://"); return true; }
-      store.update(st => { st.notify = { url, topic: st.notify.topic || newTopic() }; });
-      toast("Avisos ligados. Agora assine o tópico no app ntfy."); FT.app.render({ keepScroll: true }); pushNotify();
-      return true;
-    }
     if (name === "fx-expense") {
       const usd = num(fxs.amount);
       if (!(usd > 0)) { toast("Digite o valor da compra em dólar primeiro."); return true; }

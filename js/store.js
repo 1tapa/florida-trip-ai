@@ -63,9 +63,7 @@
       rides: {},
       rideDone: {},
       rideOrder: {},
-      rideAlert: {},
       fx: { spread: 0.2, tax: 6, manual: null },
-      notify: { url: "", topic: "" },
       undo: null,
       ai: { messages: [], mode: "ask", model: "gpt-4.1-mini" },
       ui: { status: "pend", pri: "all", view: "cat", open: null, exp: {} }
@@ -113,17 +111,11 @@
     if (isObj(raw.rides)) for (const [k, v] of Object.entries(raw.rides)) if (k.length < 40 && ["must", "maybe", "skip"].includes(v)) s.rides[k] = v;
     if (isObj(raw.rideDone)) for (const k of Object.keys(raw.rideDone)) if (k.length < 40 && raw.rideDone[k] === true) s.rideDone[k] = true;
     if (isObj(raw.rideOrder)) for (const [k, v] of Object.entries(raw.rideOrder)) if (k.length < 20 && Array.isArray(v)) s.rideOrder[k] = v.filter(x => typeof x === "string" && x.length < 40).slice(0, 60);
-    if (isObj(raw.rideAlert)) for (const [k, v] of Object.entries(raw.rideAlert)) if (k.length < 40 && [30, 45, 60].includes(Number(v))) s.rideAlert[k] = Number(v);
     if (isObj(raw.fx)) {
       const sp = Number(raw.fx.spread), tx = Number(raw.fx.tax), mn = Number(raw.fx.manual);
       if (Number.isFinite(sp) && sp >= 0 && sp <= 10) s.fx.spread = sp;
       if (Number.isFinite(tx) && tx >= 0 && tx <= 50) s.fx.tax = tx;
       s.fx.manual = Number.isFinite(mn) && mn > 0 && mn < 100 ? mn : null;
-    }
-    if (isObj(raw.notify)) {
-      const url = String(raw.notify.url || "").trim().replace(/\/+$/, ""), topic = String(raw.notify.topic || "");
-      s.notify.url = /^https:\/\/[^\s"'<>]{4,180}$/.test(url) ? url : "";
-      s.notify.topic = /^[a-z0-9-]{16,64}$/.test(topic) ? topic : "";
     }
     if (isObj(raw.undo) && Array.isArray(raw.undo.custom)) s.undo = raw.undo;
     if (isObj(raw.ai)) {
