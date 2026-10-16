@@ -265,7 +265,7 @@
   /* ======================================================================
      Guia por parque: prioridades, plano do dia e filas ao vivo (ThemeParks.wiki)
      ====================================================================== */
-  const ENTITY = { mk: "75ea578a-adc8-4116-a54d-dccb60765ef9", usf: "eb3f4560-2383-4a36-9152-6b3e5ed6bc57" };
+  const ENTITY = { mk: "75ea578a-adc8-4116-a54d-dccb60765ef9", usf: "eb3f4560-2383-4a36-9152-6b3e5ed6bc57", ioa: "267615cc-8943-4c2a-ae2c-5da728ca591f" };
   const LIVE_KEY = "floridaTripAI_live";
   const WAIT_KEY = "floridaTripAI_waits";
   const RIDE_LABEL = { must: "Imperdível", maybe: "Se der", skip: "Pular" };
@@ -450,7 +450,7 @@
     const head = `
       <a class="back" href="#/mais">${icon("chev-l")} Mais</a>
       <header class="page-head"><h1 class="h-page">Guia do parque</h1></header>
-      <div class="ptabs" role="group" aria-label="Parque">${parks.map(p => `<a class="ptab" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}"><strong>${esc(p.name)}</strong><span>${p.day} de dezembro</span></a>`).join("")}</div>
+      <div class="ptabs" role="group" aria-label="Parque">${parks.map(p => `<a class="ptab" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}"><strong>${esc(p.short || p.name)}</strong><span>${p.day} de dezembro</span></a>`).join("")}</div>
       <div class="pulse"><span class="pulse__dot${data && !live.err[park.id] ? " pulse__dot--on" : ""}"></span><span class="pulse__txt">${live.busy[park.id] ? "Buscando as filas…" : data ? "Filas ao vivo · " + when : "Sem leitura ainda"}</span>
         <button class="btn btn--quiet btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} Atualizar</button></div>
       ${live.err[park.id] ? `<p class="small" style="color:var(--alert);margin:-4px 0 12px">${esc(live.err[park.id])}</p>` : ""}
@@ -713,6 +713,17 @@
     { id: "carro", label: "Onde estacionei", icon: "car", text: "Salve a localização do carro e volte a pé até ele" }
   ];
   ex.rail = [{ id: "hoje", label: "Hoje", icon: "clock" }];
+
+  /* Migração: se o cabeçalho do dia 9 ainda é o texto antigo (só Universal Studios), troca pelo de Park-to-Park. Edições do usuário nunca são tocadas. */
+  (function migrateParkToPark() {
+    try {
+      const st = S(), d = st && st.days && st.days[5], nd = FT.DAYS_DEFAULT[5];
+      if (!d || d.title !== "Universal Studios Florida") return;
+      if (!/^Dia inteiro no Universal Studios Florida, priorizando/.test(d.desc || "")) return;
+      if (!/^Defina de quatro a seis/.test(d.tip || "")) return;
+      store.update(s => { Object.assign(s.days[5], { title: nd.title, where: nd.where, desc: nd.desc, tags: nd.tags.slice(), tip: nd.tip }); });
+    } catch (e) { /* sem migração */ }
+  })();
 
   /* Na viagem, a tela Hoje se atualiza sozinha a cada minuto. */
   setInterval(() => {

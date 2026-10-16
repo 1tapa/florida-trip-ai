@@ -575,8 +575,8 @@ textarea.field { min-height: 88px; resize: vertical; }
 .ride .status { margin-top: 10px; }
 
 /* ---------- Guia do parque (versão fluida) ------------------------------ */
-.ptabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.ptab { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink-2); text-decoration: none; }
+.ptabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.ptab { display: flex; flex-direction: column; gap: 2px; padding: 10px 10px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink-2); text-decoration: none; }
 .ptab strong { font-size: var(--t-sm); line-height: 1.25; }
 .ptab span { font-size: var(--t-xs); color: var(--muted); }
 .ptab[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }

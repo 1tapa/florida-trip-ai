@@ -44,9 +44,9 @@
     { date: "08", dow: "TER", leg: "orlando", title: "Kennedy Space Center e Disney Springs", where: "Cabo Canaveral → Disney Springs",
       desc: "Dia espacial no Kennedy Space Center e passeio noturno por lojas, decoração e restaurantes no Disney Springs.",
       tags: ["NASA", "Passeio"], tip: "É o dia mais longo do roteiro. Se o cansaço pesar, troque o Disney Springs por um jantar perto do hotel." },
-    { date: "09", dow: "QUA", leg: "orlando", title: "Universal Studios Florida", where: "Universal Orlando Resort",
-      desc: "Dia inteiro no Universal Studios Florida, priorizando Harry Potter e atrações de alta demanda. O ingresso Park-to-Park é necessário para o Hogwarts Express.",
-      tags: ["Universal", "Dia inteiro"], tip: "Defina de quatro a seis atrações prioritárias antes de entrar no parque." },
+    { date: "09", dow: "QUA", leg: "orlando", title: "Universal: Islands of Adventure e Studios", where: "Universal Orlando Resort",
+      desc: "Dia inteiro com ingresso Park-to-Park: Islands of Adventure de manhã, com Hagrid’s, VelociCoaster e Forbidden Journey, e Hogwarts Express até o Universal Studios Florida para a tarde e a noite.",
+      tags: ["Universal", "Park-to-Park", "Dia inteiro"], tip: "Comecem pelo Islands of Adventure, onde estão as maiores filas, e usem o Hogwarts Express só depois do meio-dia." },
     { date: "10", dow: "QUI", leg: "orlando", title: "Vineland Outlets e festa de Natal da Disney", where: "Vineland Premium Outlets → Magic Kingdom",
       desc: "Compras pela manhã, descanso no hotel e Mickey’s Very Merry Christmas Party à noite (ingresso separado).",
       tags: ["Compras", "Natal Disney"], tip: "A festa começa às 19h e a entrada antecipada, às 16h: guarde energia para a noite." },
@@ -143,15 +143,16 @@
 
     { schedule: [
         ["06:30–07:00", "Acordar e café", "Confira ingresso, aplicativo, bateria, previsão e horário de abertura."],
-        ["07:30", "Saída para a Universal Orlando", "Chegue com margem para estacionamento, segurança e caminhada até a entrada.", "Universal Studios Florida"],
-        ["Abertura–12:30", "Prioridade: Harry Potter e atrações concorridas", "Diagon Alley, Harry Potter and the Escape from Gringotts, Revenge of the Mummy, Transformers, MEN IN BLACK, The Simpsons e Minion Mayhem, conforme filas e operação."],
-        ["12:30–13:30", "Almoço", "Escolha um restaurante perto da área onde estiverem."],
-        ["13:30–18:00", "Completar atrações e explorar as áreas", "Reserve tempo para Harry Potter, lojas, fotos e atrações que ficaram pendentes."],
-        ["18:00–fechamento", "Últimas atrações", "Consulte o horário oficial do dia; não assuma fechamento às 20h."],
+        ["07:30", "Saída para a Universal Orlando", "Chegue com margem para estacionamento, segurança e caminhada até a entrada do Islands of Adventure.", "Universal Islands of Adventure"],
+        ["Abertura–12:00", "Islands of Adventure: as filas grandes primeiro", "Hagrid’s Magical Creatures Motorbike Adventure, Jurassic World VelociCoaster e Harry Potter and the Forbidden Journey, nessa ordem, conforme as filas ao vivo.", "Universal Islands of Adventure"],
+        ["12:00–13:00", "Almoço em Hogsmeade ou Marvel Super Hero Island", "Almocem antes de trocar de parque, para chegar ao Studios com energia."],
+        ["13:00–13:30", "Hogwarts Express até o Universal Studios Florida", "Embarque na estação de Hogsmeade; só funciona com o ingresso Park-to-Park.", "Universal Studios Florida"],
+        ["13:30–18:00", "Universal Studios Florida: Diagon Alley e atrações", "Escape from Gringotts, Revenge of the Mummy, Transformers, MEN IN BLACK e Minion Mayhem, conforme filas e operação."],
+        ["18:00–fechamento", "Últimas atrações e lojas", "Consulte o horário oficial dos dois parques; não assuma fechamento às 20h."],
         ["Depois do parque", "Jantar e hotel", "Se estiverem exaustos, refeição rápida no caminho e descanso."]
       ],
       alternatives: [
-        ["Hogwarts Express", "Exige ingresso Park-to-Park para alternar entre o Universal Studios Florida e Islands of Adventure. O plano-base é o Universal Studios Florida; se quiserem fazer os dois parques, o dia fica muito mais corrido."],
+        ["Hogwarts Express", "Exige ingresso Park-to-Park e funciona nos dois sentidos. Se a manhã no Islands of Adventure render menos que o previsto, façam o Studios com menos paradas e deixem as lojas para o fim."],
         ["Express Pass", "Compare o custo para a data e quais atrações aceita. Ele não garante acesso a todas as atrações."],
         ["Se as filas estiverem enormes", "Escolha de quatro a seis atrações prioritárias, use o app oficial para filas e horários e não atravesse o parque repetidamente."],
         ["O que levar", "Água, snacks permitidos, power bank, poncho, protetor solar e uma bolsa pequena; confira as regras de armários e itens proibidos."]
@@ -210,7 +211,7 @@
     { id: "carro", icon: "car", title: "Carro alugado (Mustang)", when: "Retirada no MIA em 04/12, devolução no MCO em 12/12", hint: "Locadora e número da reserva" },
     { id: "ing-md", icon: "ticket", title: "Magic Kingdom", when: "07/12", hint: "Ingresso vinculado ao My Disney Experience?" },
     { id: "ing-ksc", icon: "ticket", title: "Kennedy Space Center", when: "08/12", hint: "Ingresso com data" },
-    { id: "ing-uni", icon: "ticket", title: "Universal Orlando", when: "09/12", hint: "Ingresso (Park-to-Park?)" },
+    { id: "ing-uni", icon: "ticket", title: "Universal Orlando", when: "09/12", hint: "Ingresso Park-to-Park (2 parques)" },
     { id: "ing-festa", icon: "ticket", title: "Festa de Natal no Magic Kingdom", when: "10/12, a partir das 19h", hint: "Ingresso da festa" },
     { id: "seguro", icon: "shield", title: "Seguro-viagem", when: "04 a 12/12", hint: "Seguradora, apólice e telefone 24 horas" }
   ];
