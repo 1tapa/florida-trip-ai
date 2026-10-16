@@ -414,6 +414,17 @@
     const used = new Set(park.rides.map(r => { const l = lv(r); return l ? l.id : ""; }));
     const others = L.filter(l => !used.has(l.id) && l.status !== "CLOSED" && l.status !== "REFURBISHMENT").sort((a, b) => (a.wait == null) - (b.wait == null) || a.wait - b.wait);
 
+    /* Atrações do "Se der tempo" que estão com fila curta ou caindo agora. */
+    const hot = maybe.filter(r => !isDone(r)).map(r => {
+      const l = lv(r), w = waitOf(r); if (w == null) return null;
+      const tr = trendOf(park.id, l);
+      const why = w <= 10 ? "Fila super curta" : w <= 20 ? "Fila curta" : tr.kind === "down" && w <= 35 ? `Fila caindo (${tr.delta} min em ${tr.mins} min)` : "";
+      return why ? { r, w, why } : null;
+    }).filter(Boolean).sort((a, b) => a.w - b.w);
+    const hotHTML = hot.length ? `<section class="hot" aria-label="Vale a pena agora">
+      <div class="hot__title">${icon("check")} Vale a pena agora</div>
+      ${hot.map(h => `<div class="hot__item"><div class="hot__main"><div class="hot__name">${esc(h.r[1])}</div><div class="hot__why">${esc(h.why)}</div></div><div class="hot__wait"><b>${h.w}</b><span>min</span></div><button class="btn btn--sm hot__go" type="button" data-act="ride-go" data-id="${esc(h.r[0])}" data-park="${park.id}">Ir agora</button></div>`).join("")}</section>` : "";
+
     const head = `
       <a class="back" href="#/mais">${icon("chev-l")} Mais</a>
       <header class="page-head"><h1 class="h-page">Guia do parque</h1></header>
@@ -423,7 +434,8 @@
       ${live.err[park.id] ? `<p class="small" style="color:var(--alert);margin:-4px 0 12px">${esc(live.err[park.id])}</p>` : ""}
       <div class="modes" role="group" aria-label="Modo">
         <button type="button" data-act="mode" data-v="montar" aria-pressed="${mode === "montar"}">Montar o dia</button>
-        <button type="button" data-act="mode" data-v="hoje" aria-pressed="${mode === "hoje"}">No parque${pending.length ? ` <i>${pending.length}</i>` : ""}</button></div>`;
+        <button type="button" data-act="mode" data-v="hoje" aria-pressed="${mode === "hoje"}">No parque${pending.length ? ` <i>${pending.length}</i>` : ""}</button></div>
+      ${hotHTML}`;
 
     const foot = `
       ${others.length ? `<details class="alt" style="margin-top:24px"><summary>Outras atrações abertas (${others.length})${icon("chev-d")}</summary><div style="padding-top:6px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></details>` : ""}
@@ -452,10 +464,8 @@
       }
       const total = must.length;
       const prog = total ? `<div class="prog"><div class="prog__bar"><i style="width:${Math.round(finished.length / total * 100)}%"></i></div><span>${finished.length} de ${total} feitas${plan.length ? ` · termina por volta das ${fmtT(eta)}` : ""}</span></div>` : "";
-      const nowLow = maybe.filter(r => !isDone(r) && waitOf(r) != null && waitOf(r) <= 20);
       return head + hero + prog + `
         ${plan.length > 1 ? `<section class="section"><div class="section__head"><h2 class="h-section">Depois disso</h2></div><ol class="route">${plan.filter(x => x !== next).map((x, i) => `<li><span class="route__n">${i + 2}</span><div class="route__main"><div class="route__name">${esc(x.r[1])}</div><div class="small muted">${isDown(x) ? "parada agora, volte a olhar depois" : "chegada ~" + fmtT(x.at)}</div></div>${waitBadge(lv(x.r))}</li>`).join("")}</ol></section>` : ""}
-        ${nowLow.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Fila baixa agora</h2></div><div class="sheet" style="padding:0 16px">${nowLow.map(r => `<div class="stat"><dt>${esc(r[1])}<div class="small muted">estava em “Se der tempo”</div></dt><dd>${waitBadge(lv(r))}</dd></div>`).join("")}</div></section>` : ""}
         ${finished.length ? `<details class="alt" style="margin-top:20px"><summary>Já feitas (${finished.length})${icon("chev-d")}</summary><div style="padding-top:6px">${finished.map(r => `<div class="stat"><dt style="text-decoration:line-through;color:var(--muted)">${esc(r[1])}</dt><dd><button class="btn btn--quiet btn--sm" type="button" data-act="ride-undone" data-id="${esc(r[0])}">Desfazer</button></dd></div>`).join("")}</div></details>` : ""}
         ${foot}`;
     }
@@ -468,16 +478,16 @@
     const list = park.rides.filter(pass).sort((a, b) => (st(a) === "skip") - (st(b) === "skip") || ((waitOf(a) == null) - (waitOf(b) == null)) || (waitOf(a) - waitOf(b)));
     const card = r => {
       const l = lv(r), s = st(r), tr = isOpen(l) ? trendOf(park.id, l) : { kind: "none" };
-      const idx = must.indexOf(r);
-      return `<li class="rcard${s === "must" ? " rcard--in" : ""}${s === "skip" ? " rcard--skip" : ""}">
+      const idx = must.indexOf(r), isHot = hot.some(h => h.r === r);
+      return `<li class="rcard${s === "must" ? " rcard--in" : ""}${s === "skip" ? " rcard--skip" : ""}${isHot ? " rcard--hot" : ""}">
         ${waitTile(l)}
         <div class="rcard__main"><div class="rcard__name">${esc(r[1])}</div>
-          <div class="chips" style="margin-top:5px"><span class="chip chip--plain">${esc(r[2])}</span>${r[3] ? '<span class="chip chip--i">Disputada</span>' : ""}${tr.kind === "down" ? `<span class="chip chip--ok">↓ caindo</span>` : tr.kind === "up" ? `<span class="chip chip--e">↑ subindo</span>` : ""}</div>
+          <div class="chips" style="margin-top:5px"><span class="chip chip--plain">${esc(r[2])}</span>${isHot ? '<span class="chip chip--ok">Vale a pena agora</span>' : ""}${r[3] ? '<span class="chip chip--i">Disputada</span>' : ""}${tr.kind === "down" ? `<span class="chip chip--ok">↓ caindo</span>` : tr.kind === "up" ? `<span class="chip chip--e">↑ subindo</span>` : ""}</div>
           <div class="rcard__more"><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="maybe" aria-pressed="${s === "maybe"}">Se der tempo</button><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="skip" aria-pressed="${s === "skip"}">Pular</button><span class="small muted">${farTxt(r[5])}</span></div></div>
         <button class="radd" type="button" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-pressed="${s === "must"}" aria-label="${s === "must" ? "Tirar do roteiro: " : "Adicionar ao roteiro: "}${esc(r[1])}">${s === "must" ? `<b>${idx + 1}</b>` : icon("plus")}</button>
       </li>`;
     };
-    const mine = must.length ? `<ol class="mine">${must.map((r, i) => `<li><span class="route__n">${i + 1}</span><span class="mine__name">${esc(r[1])}${isDone(r) ? " ✓" : ""}</span>${waitBadge(lv(r))}<span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === must.length - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></li>`).join("")}</ol>`
+    const mine = must.length ? `<ol class="mine" data-park="${park.id}">${must.map((r, i) => `<li data-id="${esc(r[0])}"><button type="button" class="grip" aria-label="Arrastar para mudar a ordem: ${esc(r[1])}"><i></i><i></i><i></i></button><span class="route__n">${i + 1}</span><span class="mine__name">${esc(r[1])}${isDone(r) ? " ✓" : ""}</span>${waitBadge(lv(r))}<button type="button" class="mine__x" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-label="Tirar do roteiro: ${esc(r[1])}">${icon("close")}</button></li>`).join("")}</ol>${must.length > 1 ? `<p class="hint" style="margin-top:8px">Segure no ícone de três linhas e arraste para mudar a ordem.</p>` : ""}`
       : `<p class="small muted" style="margin:0">Toque no <strong>+</strong> das atrações abaixo para montar o roteiro do dia.</p>`;
     return head + `
       <section class="sheet sheet--pad mineBox">
@@ -491,6 +501,47 @@
       ${list.length ? `<ul class="rcards">${list.map(card).join("")}</ul>` : `<div class="sheet empty">Nenhuma atração com esse filtro agora.</div>`}
       ${foot}`;
   }
+
+
+  /* Arrastar para reordenar o roteiro (funciona com toque e mouse). */
+  (function () {
+    let drag = null;
+    document.addEventListener("pointerdown", ev => {
+      const g = ev.target.closest && ev.target.closest(".mine .grip");
+      if (!g) return;
+      const li = g.closest("li"), ol = li.parentNode;
+      drag = { li, ol, id: g.pointerId };
+      li.classList.add("is-drag");
+      try { g.setPointerCapture(ev.pointerId); } catch (e) { /* sem captura */ }
+      ev.preventDefault();
+    });
+    document.addEventListener("pointermove", ev => {
+      if (!drag) return;
+      const items = [...drag.ol.children].filter(x => x !== drag.li);
+      for (const it of items) {
+        const b = it.getBoundingClientRect();
+        if (ev.clientY > b.top && ev.clientY < b.bottom) {
+          const before = ev.clientY < b.top + b.height / 2;
+          drag.ol.insertBefore(drag.li, before ? it : it.nextSibling);
+          break;
+        }
+      }
+      const top = drag.ol.getBoundingClientRect().top, bottom = drag.ol.getBoundingClientRect().bottom;
+      if (ev.clientY < top) drag.ol.insertBefore(drag.li, drag.ol.firstChild);
+      else if (ev.clientY > bottom) drag.ol.appendChild(drag.li);
+      const edge = 70;
+      if (ev.clientY < edge) window.scrollBy(0, -12); else if (ev.clientY > window.innerHeight - 110) window.scrollBy(0, 12);
+    });
+    const end = () => {
+      if (!drag) return;
+      const ids = [...drag.ol.children].map(x => x.dataset.id), park = drag.ol.dataset.park;
+      drag.li.classList.remove("is-drag"); drag = null;
+      store.update(st => { st.rideOrder[park] = ids; });
+      FT.app.render({ keepScroll: true });
+    };
+    document.addEventListener("pointerup", end);
+    document.addEventListener("pointercancel", end);
+  })();
 
   setInterval(() => {
     const m = /^#\/parques\/?([a-z]*)/.exec(location.hash);
@@ -561,6 +612,7 @@
       case "ride-fin": store.update(st => { st.rideDone[el.dataset.id] = true; }); toast("Boa! Marcada como feita."); FT.app.render({ keepScroll: true }); return true;
       case "ride-undone": store.update(st => { delete st.rideDone[el.dataset.id]; }); FT.app.render({ keepScroll: true }); return true;
       case "ride-skip": store.update(st => { st.rides[el.dataset.id] = "skip"; }); FT.app.render({ keepScroll: true }); return true;
+      case "ride-go": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rides[id] = "must"; st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); live.mode = "hoje"; toast("Passou para o começo do roteiro."); FT.app.render({ keepScroll: false }); window.scrollTo(0, 0); return true; }
       case "ride-first": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); FT.app.render({ keepScroll: true }); return true; }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
       case "plan-suggest": { const park = FT.PARQUES.find(p => p.id === el.dataset.id); suggestOrder(park); toast("Ordem sugerida: " + STRATEGY[live.strategy][0].toLowerCase() + "."); FT.app.render({ keepScroll: true }); return true; }
