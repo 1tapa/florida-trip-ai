@@ -1,6 +1,6 @@
 # Florida · Caderno de viagem
 
-Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens, reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
+Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens separado em fases (Pré-viagem, Magic Kingdom, Universal, Na viagem e Pré-volta), reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
 
 App estático (PWA): abre sem internet depois da primeira visita e guarda tudo no próprio aparelho (`localStorage`).
 
