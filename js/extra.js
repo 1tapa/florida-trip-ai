@@ -289,7 +289,7 @@
         if (found.includes(r)) continue;
         let pos = -1;
         for (const al of aliasesOf(r)) { const i = title.indexOf(al); if (i >= 0 && (pos < 0 || i < pos)) pos = i; }
-        if (pos < 0) { const mine = tokens(r[1]); if (mine.length && mine.every(w => tt.includes(w))) pos = title.indexOf(mine[0]); }
+        if (pos < 0) for (const nm of [r[1], r[7]]) { const mine = nm ? tokens(nm) : []; if (mine.length && mine.every(w => tt.includes(w))) { pos = title.indexOf(mine[0]); break; } }
         if (pos >= 0) hits.push([pos, r]);
       }
       hits.sort((x, y) => x[0] - y[0]).forEach(h => found.push(h[1]));
@@ -299,11 +299,11 @@
 
   /* Casa uma atração do guia com uma entrada da fila ao vivo, pelo nome. */
   function matchLive(ride, rides) {
-    const mine = tokens(ride[1]), aliases = aliasesOf(ride);
+    const names = [ride[1], ride[7]].filter(Boolean).map(tokens), aliases = aliasesOf(ride);
     let best = null;
     for (const l of rides) {
       const ln = norm(l.name), lt = tokens(l.name);
-      if (aliases.some(al => ln.includes(al)) || mine.every(w => lt.includes(w))) { if (!best || lt.length < tokens(best.name).length) best = l; }
+      if (aliases.some(al => ln.includes(al)) || names.some(mine => mine.length && mine.every(w => lt.includes(w)))) { if (!best || lt.length < tokens(best.name).length) best = l; }
     }
     return best;
   }
@@ -451,8 +451,14 @@
         <button type="button" data-act="mode" data-v="hoje" aria-pressed="${mode === "hoje"}">No parque${pending.length ? ` <i>${pending.length}</i>` : ""}</button></div>
       ${hotHTML}`;
 
+    const eatRow = e => `<div class="eat"><div class="eat__main"><div class="eat__name">${esc(e[0])}</div><div class="small muted">${esc(e[2])}</div><p class="eat__note">${esc(e[3])}</p></div><a class="eat__map" href="${esc(mapsUrl(e[0].replace(/^Carrinhos de /, "").replace(/^The Leaky Cauldron e carrinho /, "") + " " + park.name + " Orlando"))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Mapa</a></div>`;
+    const eatHTML = park.eat && park.eat.length ? `<details class="alt" style="margin-top:24px"><summary>Pausa para comer e comidas típicas${icon("chev-d")}</summary>
+      <div style="padding-top:6px"><h3 class="eat__h">Rápidos para o almoço</h3>${park.eat.filter(e => e[1] === "Rápido").map(eatRow).join("")}
+      <h3 class="eat__h">Típicos do parque</h3>${park.eat.filter(e => e[1] === "Típico").map(eatRow).join("")}
+      <p class="small muted" style="margin-top:12px">Dica geral: almoçar antes das 11h30 ou depois das 13h30 costuma pegar menos fila. Cardápios e horários mudam: confirme no app do parque, onde muitos restaurantes de serviço rápido aceitam pedido pelo celular.</p></div></details>` : "";
     const foot = `
-      ${others.length ? `<details class="alt" style="margin-top:24px"><summary>Outras atrações abertas (${others.length})${icon("chev-d")}</summary><div style="padding-top:6px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></details>` : ""}
+      ${eatHTML}
+      ${others.length ? `<details class="alt"><summary>Outras atrações abertas (${others.length})${icon("chev-d")}</summary><div style="padding-top:6px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></details>` : ""}
       <details class="alt"><summary>Dicas e fonte dos dados${icon("chev-d")}</summary><p>${esc(park.note)}</p><p>Os tempos de fila vêm do ThemeParks.wiki e são os informados pelo próprio parque; atualizam sozinhos a cada 2 minutos com esta tela aberta. A tendência é calculada com as leituras feitas neste aparelho, e as distâncias até a entrada são aproximadas.</p></details>`;
 
     /* ---------- modo: no parque ---------- */
@@ -495,7 +501,7 @@
       const idx = must.indexOf(r), isHot = hot.some(h => h.r === r);
       return `<li class="rcard${s === "must" ? " rcard--in" : ""}${s === "skip" ? " rcard--skip" : ""}${isHot ? " rcard--hot" : ""}">
         ${waitTile(l)}
-        <div class="rcard__main"><div class="rcard__name">${esc(r[1])}</div>
+        <div class="rcard__main"><div class="rcard__name">${esc(r[1])}</div>${r[7] && r[7] !== r[1] ? `<div class="rcard__en">${esc(r[7])}</div>` : ""}<p class="rcard__desc">${esc(r[4])}</p>
           <div class="chips" style="margin-top:5px"><span class="chip chip--plain">${esc(r[2])}</span>${isHot ? '<span class="chip chip--ok">Vale a pena agora</span>' : ""}${r[3] ? '<span class="chip chip--i">Disputada</span>' : ""}${tr.kind === "down" ? `<span class="chip chip--ok">↓ caindo</span>` : tr.kind === "up" ? `<span class="chip chip--e">↑ subindo</span>` : ""}</div>
           <div class="rcard__more"><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="maybe" aria-pressed="${s === "maybe"}">Se der tempo</button><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="skip" aria-pressed="${s === "skip"}">Pular</button><span class="small muted">${farTxt(r[5])}</span></div></div>
         <button class="radd" type="button" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-pressed="${s === "must"}" aria-label="${s === "must" ? "Tirar do roteiro: " : "Adicionar ao roteiro: "}${esc(r[1])}">${s === "must" ? `<b>${idx + 1}</b>` : icon("plus")}</button>

@@ -70,4 +70,5 @@ Regras de alfândega, preços e horários de parques mudam. Os itens trazem link
 - **Câmbio**: converte dólar em real com a conta (cotação + R$ 0,20) × 1,06. Acréscimo, imposto e cotação manual são ajustáveis. A cotação vem de open.er-api.com (com AwesomeAPI de reserva) e é a de mercado, sem taxas do banco. Dá para registrar a compra como gasto.
 - **Guia do parque** (Magic Kingdom, Universal Studios Florida e Islands of Adventure no dia Park-to-Park): marque imperdíveis, monte a ordem do dia (do fundo para a entrada, da entrada para o fundo ou menor fila agora) e acompanhe as filas ao vivo (ThemeParks.wiki), com tendência medida neste aparelho. As distâncias são aproximadas.
 - **Anexos** em Reservas (print ou PDF, até ~650 KB cada), disponíveis offline e sincronizados.
+- **Guia do parque** com nomes e descrições em português (o nome original aparece embaixo) e a seção Pausa para comer, com restaurantes rápidos e comidas típicas.
 - **Compras** em duas listas (Leo e Camily) e **edição manual de cada dia do roteiro**, com a opção de a IA complementar.
