@@ -383,6 +383,19 @@
 
   const farTxt = n => (n <= 1 ? "perto da entrada" : n <= 3 ? "meio do parque" : "fundo do parque");
 
+  const fmtT = ms => new Date(ms).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const FILTERS = [["all", "Todas"], ["high", "Mais disputadas"], ["short", "Fila curta"], ["thrill", "Emoção"], ["easy", "Família e clássicos"]];
+  live.filter = "all";
+
+  /* Número grande da fila, colorido pelo tempo. */
+  function waitTile(l) {
+    if (!l) return `<div class="wtile wtile--none"><b>–</b><span>sem dados</span></div>`;
+    if (l.status === "DOWN") return `<div class="wtile wtile--down"><b>!</b><span>parada</span></div>`;
+    if (l.status === "CLOSED" || l.status === "REFURBISHMENT") return `<div class="wtile wtile--none"><b>–</b><span>fechada</span></div>`;
+    if (l.wait == null) return `<div class="wtile wtile--none"><b>·</b><span>aberta</span></div>`;
+    return `<div class="wtile ${clsWait(l.wait).replace("wait--", "wtile--")}"><b>${l.wait}</b><span>min</span></div>`;
+  }
+
   function viewParques(arg) {
     const parks = FT.PARQUES, t = today();
     const park = parks.find(p => p.id === arg) || parks.find(p => FT.u.dayDate(p.day) === t) || parks[0];
@@ -391,42 +404,92 @@
     const st = r => R[r[0]] || "";
     const lv = r => matchLive(r, L);
     const must = orderedMusts(park), maybe = park.rides.filter(r => st(r) === "maybe");
-    const when = data ? new Date(data.at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
+    const isDone = r => !!S_.rideDone[r[0]];
+    const pending = must.filter(r => !isDone(r)), finished = must.filter(isDone);
+    const parkDay = FT.u.dayDate(park.day) === t;
+    const mode = live.mode || (parkDay && must.length ? "hoje" : "montar");
+    const when = data ? fmtT(data.at) : "";
+    const isOpen = l => l && l.status === "OPERATING";
+    const waitOf = r => { const l = lv(r); return isOpen(l) && l.wait != null ? l.wait : null; };
     const used = new Set(park.rides.map(r => { const l = lv(r); return l ? l.id : ""; }));
     const others = L.filter(l => !used.has(l.id) && l.status !== "CLOSED" && l.status !== "REFURBISHMENT").sort((a, b) => (a.wait == null) - (b.wait == null) || a.wait - b.wait);
-    const row = (r, i, total) => {
-      const l = lv(r), tr = l && l.status === "OPERATING" ? trendOf(park.id, l) : { kind: "none" };
-      const done = !!S_.rideDone[r[0]];
-      return `<li class="plan${done ? " plan--done" : ""}">
-        <label class="check"><input type="checkbox" data-act="ride-done" data-id="${esc(r[0])}"${done ? " checked" : ""} aria-label="Já fizemos: ${esc(r[1])}"><span class="check__box">${icon("check")}</span></label>
-        <div class="plan__main"><div class="row row--between"><span class="plan__name">${esc(r[1])}</span>${waitBadge(l)}</div>
-          <div class="chips" style="margin-top:6px">${l && l.status === "OPERATING" ? trendChip(tr) : ""}${tr.min && l && l.wait != null ? `<span class="chip chip--plain">Menor hoje: ${tr.min[1]} min às ${new Date(tr.min[0]).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>` : ""}<span class="chip chip--plain">${farTxt(r[5])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}</div>
-          <p class="small muted" style="margin-top:6px">${esc(r[4])}</p>
-          <div class="plan__ctrl"><span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === total - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></div></div></li>`;
+
+    const head = `
+      <a class="back" href="#/mais">${icon("chev-l")} Mais</a>
+      <header class="page-head"><h1 class="h-page">Guia do parque</h1></header>
+      <div class="ptabs" role="group" aria-label="Parque">${parks.map(p => `<a class="ptab" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}"><strong>${esc(p.name)}</strong><span>${p.day} de dezembro</span></a>`).join("")}</div>
+      <div class="pulse"><span class="pulse__dot${data && !live.err[park.id] ? " pulse__dot--on" : ""}"></span><span class="pulse__txt">${live.busy[park.id] ? "Buscando as filas…" : data ? "Filas ao vivo · " + when : "Sem leitura ainda"}</span>
+        <button class="btn btn--quiet btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} Atualizar</button></div>
+      ${live.err[park.id] ? `<p class="small" style="color:var(--alert);margin:-4px 0 12px">${esc(live.err[park.id])}</p>` : ""}
+      <div class="modes" role="group" aria-label="Modo">
+        <button type="button" data-act="mode" data-v="montar" aria-pressed="${mode === "montar"}">Montar o dia</button>
+        <button type="button" data-act="mode" data-v="hoje" aria-pressed="${mode === "hoje"}">No parque${pending.length ? ` <i>${pending.length}</i>` : ""}</button></div>`;
+
+    const foot = `
+      ${others.length ? `<details class="alt" style="margin-top:24px"><summary>Outras atrações abertas (${others.length})${icon("chev-d")}</summary><div style="padding-top:6px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></details>` : ""}
+      <details class="alt"><summary>Dicas e fonte dos dados${icon("chev-d")}</summary><p>${esc(park.note)}</p><p>Os tempos de fila vêm do ThemeParks.wiki e são os informados pelo próprio parque; atualizam sozinhos a cada 2 minutos com esta tela aberta. A tendência é calculada com as leituras feitas neste aparelho, e as distâncias até a entrada são aproximadas.</p></details>`;
+
+    /* ---------- modo: no parque ---------- */
+    if (mode === "hoje") {
+      let eta = Date.now();
+      const plan = pending.map(r => { const w = waitOf(r); const row = { r, w, at: eta }; eta += ((w == null ? 20 : w) + 12) * 60000; return row; });
+      const isDown = x => { const l = lv(x.r); return l && l.status === "DOWN"; };
+      const next = plan.find(x => !isDown(x)) || plan[0];
+      let hero;
+      if (!must.length) hero = `<div class="sheet empty">Você ainda não montou o dia deste parque. <button class="btn btn--primary btn--sm" type="button" data-act="mode" data-v="montar" style="margin-top:12px">Montar o dia</button></div>`;
+      else if (!next) hero = `<div class="nextup nextup--done"><div class="nextup__label">Dia completo</div><div class="nextup__name">Todas as atrações do roteiro foram feitas.</div><p class="nextup__sub">Veja se alguma atração “Se der tempo” está com a fila baixa agora.</p></div>`;
+      else {
+        const l = lv(next.r), tr = isOpen(l) ? trendOf(park.id, l) : { kind: "none" };
+        const second = plan.filter(x => x !== next).find(x => x.w != null && next.w != null && next.w >= 30 && x.w <= next.w / 2);
+        hero = `<section class="nextup" aria-label="Próxima atração">
+          <div class="nextup__label">Próxima atração</div>
+          <div class="nextup__row"><div class="nextup__name">${esc(next.r[1])}</div><div class="nextup__wait">${l && l.status === "DOWN" ? `<b>!</b><span>parada</span>` : next.w != null ? `<b>${next.w}</b><span>min de fila</span>` : `<b>–</b><span>sem dado</span>`}</div></div>
+          <p class="nextup__sub">${esc(next.r[4])}</p>
+          <div class="nextup__chips">${isOpen(l) ? trendChip(tr).replace("chip chip--ok", "nchip nchip--ok").replace("chip chip--e", "nchip nchip--e").replace("chip chip--plain", "nchip") : ""}${tr.min && tr.kind !== "none" && next.w != null ? `<span class="nchip">Menor hoje: ${tr.min[1]} min às ${fmtT(tr.min[0])}</span>` : ""}<span class="nchip">${farTxt(next.r[5])}</span></div>
+          <div class="nextup__act"><button class="btn btn--sun" type="button" data-act="ride-fin" data-id="${esc(next.r[0])}">${icon("check")} Já fizemos</button><button class="btn btn--ghost" type="button" data-act="ride-skip" data-id="${esc(next.r[0])}">Pular</button></div>
+          ${second ? `<div class="nudge">${icon("info")}<div><strong>${esc(second.r[1])}</strong> está com ${second.w} min agora, bem menos que a fila atual.<button class="btn btn--sm" type="button" data-act="ride-first" data-id="${esc(second.r[0])}" data-park="${park.id}" style="margin-top:8px">Ir primeiro nessa</button></div></div>` : ""}
+        </section>`;
+      }
+      const total = must.length;
+      const prog = total ? `<div class="prog"><div class="prog__bar"><i style="width:${Math.round(finished.length / total * 100)}%"></i></div><span>${finished.length} de ${total} feitas${plan.length ? ` · termina por volta das ${fmtT(eta)}` : ""}</span></div>` : "";
+      const nowLow = maybe.filter(r => !isDone(r) && waitOf(r) != null && waitOf(r) <= 20);
+      return head + hero + prog + `
+        ${plan.length > 1 ? `<section class="section"><div class="section__head"><h2 class="h-section">Depois disso</h2></div><ol class="route">${plan.filter(x => x !== next).map((x, i) => `<li><span class="route__n">${i + 2}</span><div class="route__main"><div class="route__name">${esc(x.r[1])}</div><div class="small muted">${isDown(x) ? "parada agora, volte a olhar depois" : "chegada ~" + fmtT(x.at)}</div></div>${waitBadge(lv(x.r))}</li>`).join("")}</ol></section>` : ""}
+        ${nowLow.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Fila baixa agora</h2></div><div class="sheet" style="padding:0 16px">${nowLow.map(r => `<div class="stat"><dt>${esc(r[1])}<div class="small muted">estava em “Se der tempo”</div></dt><dd>${waitBadge(lv(r))}</dd></div>`).join("")}</div></section>` : ""}
+        ${finished.length ? `<details class="alt" style="margin-top:20px"><summary>Já feitas (${finished.length})${icon("chev-d")}</summary><div style="padding-top:6px">${finished.map(r => `<div class="stat"><dt style="text-decoration:line-through;color:var(--muted)">${esc(r[1])}</dt><dd><button class="btn btn--quiet btn--sm" type="button" data-act="ride-undone" data-id="${esc(r[0])}">Desfazer</button></dd></div>`).join("")}</div></details>` : ""}
+        ${foot}`;
+    }
+
+    /* ---------- modo: montar o dia ---------- */
+    const pass = r => {
+      const w = waitOf(r), f = live.filter;
+      return f === "all" || (f === "high" && r[3]) || (f === "short" && w != null && w <= 25) || (f === "thrill" && /Emoção|Aquática/.test(r[2])) || (f === "easy" && !/Emoção|Aquática/.test(r[2]));
     };
-    const quick = must.filter(r => { const l = lv(r); return l && l.status === "OPERATING" && l.wait != null; }).sort((a, b) => lv(a).wait - lv(b).wait).slice(0, 3);
-    return `<a class="back" href="#/mais">${icon("chev-l")} Mais</a>
-      <header class="page-head"><h1 class="h-page">Guia do parque</h1><p class="lede">Escolha as atrações, monte a ordem do dia e acompanhe a fila ao vivo. Vocês dois veem o mesmo plano.</p></header>
-      <div class="segmented" role="group" aria-label="Parque" style="margin-bottom:16px">${parks.map(p => `<a class="seg-link" href="#/parques/${p.id}" aria-pressed="${p.id === park.id}">${esc(p.name)}</a>`).join("")}</div>
-      <div class="callout callout--info">${icon("info")}<div><strong>Dia ${park.day} de dezembro</strong>${esc(park.note)}</div></div>
-      <section class="sheet sheet--pad livebar" style="margin-top:16px">
-        <div class="row row--between row--wrap"><div><strong>Filas ao vivo</strong><div class="small muted">${data ? "Leitura das " + when : live.busy[park.id] ? "Buscando…" : "Ainda sem leitura"}</div></div>
-          <button class="btn btn--sm" type="button" data-act="live-refresh" data-id="${park.id}"${live.busy[park.id] ? " disabled" : ""}>${icon("refresh")} ${live.busy[park.id] ? "Buscando…" : "Atualizar"}</button></div>
-        ${live.err[park.id] ? `<p class="small" style="margin-top:8px;color:var(--alert)">${esc(live.err[park.id])}</p>` : ""}
-        ${quick.length ? `<p class="small" style="margin-top:10px">Menores filas entre as imperdíveis agora: ${quick.map(r => `<strong>${esc(r[1])}</strong> (${lv(r).wait} min)`).join(", ")}.</p>` : ""}
-        <p class="hint">Atualiza sozinho a cada 2 minutos com esta tela aberta. Fonte: ThemeParks.wiki. São os tempos informados pelo próprio parque, e a tendência é calculada a partir das leituras feitas por este aparelho.</p></section>
-      <section class="section"><div class="section__head"><h2 class="h-section">Plano do dia</h2><span class="small muted">${must.length} imperdíveis</span></div>
-        <div class="sheet sheet--pad stack"><div class="small muted">Estratégia para ordenar</div>
-          <div class="segmented seg-wrap" role="group" aria-label="Estratégia">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
-          <p class="small muted">${esc(STRATEGY[live.strategy][1])}</p>
-          <button class="btn btn--primary" type="button" data-act="plan-suggest" data-id="${park.id}"${must.length ? "" : " disabled"}>${icon("route")} Sugerir ordem</button>
-          <p class="hint" style="margin-top:0">Distâncias até a entrada são aproximadas, só para ordenar. Use as setas para ajustar do seu jeito e siga o roteiro de preferência de vocês.</p></div>
-        ${must.length ? `<ol class="plans" style="margin-top:12px">${must.map((r, i) => row(r, i, must.length)).join("")}</ol>` : `<div class="sheet empty" style="margin-top:12px">Marque atrações como “Imperdível” na lista abaixo e elas aparecem aqui.</div>`}</section>
-      ${maybe.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Se der tempo</h2></div><div class="sheet" style="padding:0 16px">${maybe.map(r => { const l = lv(r); return `<div class="stat"><dt>${esc(r[1])}</dt><dd>${waitBadge(l)}</dd></div>`; }).join("")}</div></section>` : ""}
-      <section class="section"><div class="section__head"><h2 class="h-section">Todas as atrações</h2></div>
-        <div class="sheet" style="padding:0 16px">${park.rides.map(r => `<div class="ride"><div class="ride__top"><div style="min-width:0"><div class="row row--between"><span class="ride__name">${esc(r[1])}</span>${waitBadge(lv(r))}</div><div class="chips" style="margin-top:6px"><span class="chip chip--plain">${esc(r[2])}</span>${r[3] ? '<span class="chip chip--i">Alta demanda</span>' : ""}</div></div></div>
-          <div class="status" role="group" aria-label="${esc(r[1])}">${Object.keys(RIDE_LABEL).map(k => `<button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="${k}" aria-pressed="${st(r) === k}">${RIDE_LABEL[k]}</button>`).join("")}</div></div>`).join("")}</div></section>
-      ${others.length ? `<section class="section"><div class="section__head"><h2 class="h-section">Outras atrações abertas</h2></div><div class="sheet" style="padding:0 16px">${others.map(l => `<div class="stat"><dt>${esc(l.name)}</dt><dd>${waitBadge(l)}</dd></div>`).join("")}</div></section>` : ""}`;
+    const list = park.rides.filter(pass).sort((a, b) => (st(a) === "skip") - (st(b) === "skip") || ((waitOf(a) == null) - (waitOf(b) == null)) || (waitOf(a) - waitOf(b)));
+    const card = r => {
+      const l = lv(r), s = st(r), tr = isOpen(l) ? trendOf(park.id, l) : { kind: "none" };
+      const idx = must.indexOf(r);
+      return `<li class="rcard${s === "must" ? " rcard--in" : ""}${s === "skip" ? " rcard--skip" : ""}">
+        ${waitTile(l)}
+        <div class="rcard__main"><div class="rcard__name">${esc(r[1])}</div>
+          <div class="chips" style="margin-top:5px"><span class="chip chip--plain">${esc(r[2])}</span>${r[3] ? '<span class="chip chip--i">Disputada</span>' : ""}${tr.kind === "down" ? `<span class="chip chip--ok">↓ caindo</span>` : tr.kind === "up" ? `<span class="chip chip--e">↑ subindo</span>` : ""}</div>
+          <div class="rcard__more"><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="maybe" aria-pressed="${s === "maybe"}">Se der tempo</button><button type="button" data-act="ride" data-id="${esc(r[0])}" data-v="skip" aria-pressed="${s === "skip"}">Pular</button><span class="small muted">${farTxt(r[5])}</span></div></div>
+        <button class="radd" type="button" data-act="ride" data-id="${esc(r[0])}" data-v="must" aria-pressed="${s === "must"}" aria-label="${s === "must" ? "Tirar do roteiro: " : "Adicionar ao roteiro: "}${esc(r[1])}">${s === "must" ? `<b>${idx + 1}</b>` : icon("plus")}</button>
+      </li>`;
+    };
+    const mine = must.length ? `<ol class="mine">${must.map((r, i) => `<li><span class="route__n">${i + 1}</span><span class="mine__name">${esc(r[1])}${isDone(r) ? " ✓" : ""}</span>${waitBadge(lv(r))}<span class="plan__move"><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="-1" aria-label="Subir na ordem"${i === 0 ? " disabled" : ""}>${icon("chev-l", "rot-up")}</button><button type="button" class="btn btn--quiet btn--icon btn--sm" data-act="ride-move" data-id="${esc(r[0])}" data-v="1" aria-label="Descer na ordem"${i === must.length - 1 ? " disabled" : ""}>${icon("chev-r", "rot-down")}</button></span></li>`).join("")}</ol>`
+      : `<p class="small muted" style="margin:0">Toque no <strong>+</strong> das atrações abaixo para montar o roteiro do dia.</p>`;
+    return head + `
+      <section class="sheet sheet--pad mineBox">
+        <div class="row row--between"><h2 class="h-section" style="margin:0">Meu roteiro</h2><span class="small muted">${must.length} ${must.length === 1 ? "atração" : "atrações"}</span></div>
+        <div style="margin-top:10px">${mine}</div>
+        ${must.length > 1 ? `<div class="mineBox__order"><div class="segmented seg-wrap" role="group" aria-label="Ordenar por">${Object.keys(STRATEGY).map(k => `<button type="button" data-act="strategy" data-v="${k}" aria-pressed="${live.strategy === k}">${esc(STRATEGY[k][0])}</button>`).join("")}</div>
+          <p class="small muted" style="margin:8px 0 10px">${esc(STRATEGY[live.strategy][1])}</p>
+          <button class="btn btn--primary" type="button" data-act="plan-suggest" data-id="${park.id}">${icon("route")} Ordenar para mim</button></div>` : ""}
+      </section>
+      <div class="fchips" role="group" aria-label="Filtrar">${FILTERS.map(f => `<button type="button" data-act="filter" data-v="${f[0]}" aria-pressed="${live.filter === f[0]}">${f[1]}</button>`).join("")}</div>
+      ${list.length ? `<ul class="rcards">${list.map(card).join("")}</ul>` : `<div class="sheet empty">Nenhuma atração com esse filtro agora.</div>`}
+      ${foot}`;
   }
 
   setInterval(() => {
@@ -493,6 +556,12 @@
         if (i >= 0 && j >= 0 && j < ids.length) { [ids[i], ids[j]] = [ids[j], ids[i]]; store.update(st => { st.rideOrder[park.id] = ids; }); }
         FT.app.render({ keepScroll: true }); return true;
       }
+      case "mode": live.mode = el.dataset.v; FT.app.render({ keepScroll: false }); window.scrollTo(0, 0); return true;
+      case "filter": live.filter = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
+      case "ride-fin": store.update(st => { st.rideDone[el.dataset.id] = true; }); toast("Boa! Marcada como feita."); FT.app.render({ keepScroll: true }); return true;
+      case "ride-undone": store.update(st => { delete st.rideDone[el.dataset.id]; }); FT.app.render({ keepScroll: true }); return true;
+      case "ride-skip": store.update(st => { st.rides[el.dataset.id] = "skip"; }); FT.app.render({ keepScroll: true }); return true;
+      case "ride-first": { const park = FT.PARQUES.find(p => p.id === el.dataset.park), id = el.dataset.id; if (park) store.update(st => { st.rideOrder[park.id] = [id].concat(orderedMusts(park).map(r => r[0]).filter(x => x !== id)); }); FT.app.render({ keepScroll: true }); return true; }
       case "strategy": live.strategy = el.dataset.v; FT.app.render({ keepScroll: true }); return true;
       case "plan-suggest": { const park = FT.PARQUES.find(p => p.id === el.dataset.id); suggestOrder(park); toast("Ordem sugerida: " + STRATEGY[live.strategy][0].toLowerCase() + "."); FT.app.render({ keepScroll: true }); return true; }
       case "live-refresh": fetchLive(el.dataset.id, true); return true;
