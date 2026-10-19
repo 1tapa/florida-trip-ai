@@ -53,7 +53,7 @@ Os dois aparelhos compartilham os mesmos dados (checklist, gastos, compras, rese
 - Funciona sem internet: as mudanças são enviadas quando o sinal volta.
 - O documento fica em `trips/{SHA-256 do código}`. As regras não permitem listar documentos, então só quem tem o código chega aos dados. Trate o código e o convite como senha.
 - A chave da OpenAI é criptografada (AES-GCM) com uma chave derivada do código antes de ir para a nuvem.
-- **Login com e-mail e senha** (opcional): em vez de decorar o código, vocês criam um login em *Ajustes*. O código é calculado a partir do e-mail e da senha (PBKDF2, 300 mil voltas), então é o mesmo em qualquer aparelho, sem mexer nas regras do Firestore. Use uma senha longa que só vocês dois conheçam: quem acertar e-mail e senha vê os dados. No aparelho novo, cole o *convite de configuração* (só o Firebase, sem dados) e entre.
+- **Login com e-mail e senha** (opcional): em vez de decorar o código, vocês criam um login em *Ajustes*. O código é calculado a partir do e-mail e da senha (PBKDF2, 300 mil voltas), então é o mesmo em qualquer aparelho, sem mexer nas regras do Firestore. Use uma senha longa que só vocês dois conheçam: quem acertar e-mail e senha vê os dados. No aparelho novo, abra o *link de configuração* (só o Firebase, sem dados) e entre.
 - **Backup automático diário**: ao abrir o app, ele guarda uma cópia do dia (7 dias no aparelho; 14 dias rotativos na nuvem, nos documentos `trips/{id}_snap0..13`). Em *Ajustes > Backup automático* dá para ver as cópias e restaurar. O iPhone não permite baixar arquivos sozinho, por isso as cópias ficam no app e na nuvem.
 - Apagar todos os dados ou restaurar um backup desliga a sincronização naquele aparelho, para não apagar os dados do outro.
 
@@ -74,3 +74,7 @@ Regras de alfândega, preços e horários de parques mudam. Os itens trazem link
 - **Anexos** em Reservas (print ou PDF, até ~650 KB cada), disponíveis offline e sincronizados.
 - **Guia do parque** com nomes e descrições em português (o nome original aparece embaixo) e a seção Pausa para comer, com restaurantes rápidos e comidas típicas.
 - **Compras** em duas listas (Leo e Camily) e **edição manual de cada dia do roteiro**, com a opção de a IA complementar.
+
+## Links de convite
+
+Em vez de copiar e colar, o app gera um link (`.../#/entrar/...`) que já traz a configuração e o código: ao abrir no outro aparelho, ele pergunta se quer entrar e conecta. Com login por e-mail e senha, o link leva só a configuração e a pessoa digita e-mail e senha.

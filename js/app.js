@@ -517,7 +517,7 @@
           ${on && !y.loginEmail ? `<li><strong>Guarde o convite da sincronização</strong><span>Copie e guarde numa nota ou mensagem para você mesmo. É ele que traz tudo de volta no aparelho novo.</span></li>` : ""}${on && y.loginEmail ? `<li><strong>Guarde o convite de configuração</strong><span>Ele só leva a configuração do Firebase, sem dados. No aparelho novo você cola o convite e entra com e-mail e senha.</span></li>` : ""}
           <li><strong>Refaça o backup depois de mudanças grandes</strong><span>Em especial na véspera da viagem, dia 3 de dezembro.</span></li>
         </ol>
-        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="${y.loginEmail ? "sync-copy-cfg" : "sync-copy-invite"}">${icon("link")} Copiar convite${y.loginEmail ? " de configuração" : ""}</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
+        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="${y.loginEmail ? "sync-copy-cfg" : "sync-copy-invite"}">${icon("link")} Copiar link${y.loginEmail ? " de configuração" : ""}</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
       <section class="section"><div class="section__head"><h2 class="h-section">No celular novo</h2></div>
         <ol class="steps">
           <li><strong>Abra o guia no Safari</strong><span>Endereço: ${esc(addr)}. Depois toque em Compartilhar e em Adicionar à Tela de Início.</span></li>
@@ -567,15 +567,15 @@
         ${y.detail ? `<div class="callout callout--alert">${icon("alert")}<div>${esc(y.detail)}</div></div>` : ""}
         <p class="small muted">Tudo que vocês marcarem, registrarem ou mudarem no roteiro aparece nos dois aparelhos. A chave da IA vai criptografada.</p>
         ${y.loginEmail ? `<p class="small"><strong>Login:</strong> ${esc(y.loginEmail)}. Em outro aparelho, entre com este e-mail e a mesma senha.</p>` : ""}
-        <div class="btn-row">${y.loginEmail ? `<button class="btn btn--primary" type="button" data-act="sync-copy-cfg">${icon("link")} Copiar convite de configuração</button>` : `<button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite para ela</button>`}<button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
-        <p class="hint">${y.loginEmail ? "Quem souber o e-mail e a senha vê e edita tudo. Use uma senha que só vocês dois conheçam." : "O convite contém o código secreto. Mande só para ela, de preferência por mensagem direta."}</p></div>
+        <div class="btn-row">${y.loginEmail ? `<button class="btn btn--primary" type="button" data-act="sync-copy-cfg">${icon("link")} Copiar link de configuração</button>` : `<button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar link para ela</button>`}<button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
+        <p class="hint">${y.loginEmail ? "Quem souber o e-mail e a senha vê e edita tudo. Use uma senha que só vocês dois conheçam." : "O link contém o código secreto. Mande só para ela, de preferência por mensagem direta."}</p></div>
         ${y.loginEmail ? "" : LOGIN_CREATE.replace("__T__", "Trocar o código por e-mail e senha").replace("__D__", "Mais fácil de lembrar. Seus dados atuais continuam e passam a ficar sob este login. Depois é só entrar com e-mail e senha no outro aparelho; o convite antigo deixa de valer.")}`;
     } else {
       body = `<div class="stack">
         ${y.hasConfig() ? `<div class="sheet sheet--pad stack"><strong>Criar a conta compartilhada</strong><p class="small muted">Gera um código secreto. Depois você copia o convite e manda para ela.</p><button class="btn btn--primary" type="button" data-act="sync-create">Criar código do casal</button></div>`
         : `<form class="sheet sheet--pad" data-form="sync-config"><strong>1. Configurar o Firebase (uma vez)</strong><p class="small muted" style="margin-top:6px">Cole aqui a configuração do app web do seu projeto Firebase.</p><label class="label" for="fbCfg">Configuração do Firebase</label><textarea class="field" id="fbCfg" name="cfg" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }" required></textarea><div style="margin-top:12px"><button class="btn btn--primary" type="submit">Salvar configuração</button></div></form>`}
         ${y.hasConfig() ? LOGIN_CREATE.replace("__T__", "Criar login com e-mail e senha").replace("__D__", "Sem código para decorar. Escolha um e-mail e uma senha que só vocês dois saibam; no outro aparelho vocês entram com os mesmos dois.") + LOGIN_ENTER : ""}
-        <form class="sheet sheet--pad" data-form="sync-join"><strong>Já recebeu um convite?</strong><p class="small muted" style="margin-top:6px">Cole o convite que a outra pessoa mandou. Os dados dela passam a aparecer aqui.</p><label class="label" for="inv">Convite ou código</label><input class="field" id="inv" name="invite" autocomplete="off" autocapitalize="off" spellcheck="false" required><div style="margin-top:12px"><button class="btn" type="submit">Entrar</button></div></form></div>`;
+        <form class="sheet sheet--pad" data-form="sync-join"><strong>Já recebeu um convite?</strong><p class="small muted" style="margin-top:6px">Normalmente basta abrir o link que a outra pessoa mandou. Se preferir, cole o link ou o convite aqui.</p><label class="label" for="inv">Link, convite ou código</label><input class="field" id="inv" name="invite" autocomplete="off" autocapitalize="off" spellcheck="false" required><div style="margin-top:12px"><button class="btn" type="submit">Entrar</button></div></form></div>`;
     }
     return `<section><div class="section__head"><h2 class="h-section">Sincronizar com a namorada</h2></div>${body}</section>`;
   }
@@ -639,6 +639,7 @@
   }
 
   function onRoute() {
+    if (/^#\/entrar\//.test(location.hash)) return;
     recent = new Set();
     render();
     window.scrollTo(0, 0);
@@ -692,15 +693,15 @@
       case "ask-day": FT.ai.prefill("No dia " + el.dataset.day + ", ", "edit"); location.hash = "#/concierge"; setTimeout(() => $("#aiq") && $("#aiq").focus(), 50); break;
       case "sync-create": { const ok = await FT.sync.create(); toast(ok ? "Código criado. Copie o convite e mande para ela." : "Configure o Firebase primeiro."); render({ keepScroll: true }); break; }
       case "sync-copy-cfg": {
-        const inv = FT.sync.configInvite();
-        try { await navigator.clipboard.writeText(inv); toast("Copiado. Cole no outro aparelho e entre com e-mail e senha."); }
-        catch (e) { await dialog({ title: "Copie o convite de configuração", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
+        const inv = FT.sync.configLink();
+        try { await navigator.clipboard.writeText(inv); toast("Link copiado. Abra no outro aparelho e entre com e-mail e senha."); }
+        catch (e) { await dialog({ title: "Copie o link", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
         break;
       }
       case "sync-copy-invite": {
-        const inv = FT.sync.invite();
-        try { await navigator.clipboard.writeText(inv); toast("Convite copiado. Mande para ela por mensagem direta."); }
-        catch (e) { await dialog({ title: "Copie o convite", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
+        const inv = FT.sync.inviteLink();
+        try { await navigator.clipboard.writeText(inv); toast("Link copiado. Mande para ela por mensagem direta; ao abrir, ela já entra."); }
+        catch (e) { await dialog({ title: "Copie o link", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
         break;
       }
       case "sync-show-code": await dialog({ title: "Código do casal", text: "Quem tiver este código vê e edita tudo. Trate como senha.", html: `<p class="tnum" style="font-size:1.3rem;font-weight:700;letter-spacing:0.04em;margin-top:12px">${esc(FT.sync.code)}</p>`, ok: "Fechar", cancel: null }); break;
@@ -829,8 +830,29 @@
   window.addEventListener("hashchange", onRoute);
   FT.sync.onUI = () => { if (location.hash === "#/ajustes") render({ keepScroll: true }); };
 
+  /* Link de convite: abrir #/entrar/<convite> conecta direto, sem copiar e colar. */
+  function acceptLink() {
+    const m = location.hash.match(/^#\/entrar\/(.+)$/); if (!m) return;
+    let inv = m[1]; try { inv = decodeURIComponent(inv); } catch (e) { /* usa como veio */ }
+    history.replaceState(null, "", "#/inicio");
+    setTimeout(async () => {
+      if (inv.startsWith("FTRIP2.")) {
+        const ok = await FT.sync.join(inv);
+        toast(ok ? "Configuração salva. Entre com o e-mail e a senha." : "Link inválido.");
+        if (ok) location.hash = "#/ajustes";
+        return;
+      }
+      const r = await dialog({ title: "Entrar na nuvem do casal?", text: "Os dados do casal vão aparecer neste aparelho. O que já existe aqui e não estiver lá é enviado para a nuvem.", ok: "Entrar" });
+      if (r.value !== "ok") return;
+      const ok = await FT.sync.join(inv);
+      toast(ok ? "Conectado. Os dados do casal vão aparecer aqui." : "Link inválido ou incompleto.");
+      render({ keepScroll: true });
+    }, 0);
+  }
+  window.addEventListener("hashchange", acceptLink);
   FT.app = { render, toast, dialog, stats, itemHTML, wxHTML };
   if (!location.hash) history.replaceState(null, "", FT.u.today() >= FT.TRIP.start && FT.u.today() <= FT.TRIP.end ? "#/hoje" : "#/inicio");
+  acceptLink();
   onRoute();
 
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
