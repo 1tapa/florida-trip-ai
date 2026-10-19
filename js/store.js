@@ -74,6 +74,37 @@
   const isObj = v => v && typeof v === "object" && !Array.isArray(v);
   const arr = v => (Array.isArray(v) ? v : []);
 
+
+  /* Migrações do roteiro salvo no aparelho (a cópia do usuário não acompanha o roteiro-base). Edições do usuário são preservadas. */
+  const clone = x => JSON.parse(JSON.stringify(x));
+  const BAD = /festa|kennedy|ksc/i;
+  function migratePlan(rdays, rplans, flags) {
+    const D = FT.DAYS_DEFAULT, P = FT.PLANS_DEFAULT;
+    if (!Array.isArray(rdays) || !Array.isArray(rplans) || rdays.length !== rplans.length) return [rdays, rplans];
+    rdays = clone(rdays); rplans = clone(rplans);
+    if (rdays.length === D.length - 1 && rdays[0] && rdays[0].date === "04") {
+      rdays.unshift(clone(D[0])); rplans.unshift(clone(P[0]));
+      if (rdays[1] && /^Chegada, iPhone e Miami Beach/.test(rdays[1].title || "")) { rdays[1] = clone(D[1]); rplans[1] = clone(P[1]); }
+      flags.add("d3");
+    }
+    if (rdays.length !== D.length || flags.has("sem-festa")) return [rdays, rplans];
+    rdays.forEach((d, i) => {
+      const p = rplans[i];
+      if (d.date === "10" && BAD.test(d.title || "")) Object.assign(d, { title: "Outlets e Disney Springs", where: "Orlando → Disney Springs", desc: "Compras nos outlets, passeio no Disney Springs à noite e descanso.", tags: ["Compras", "Passeio"], tip: "No dia seguinte tem mais outlet e as malas: não gaste toda a energia hoje." });
+      if (d.date === "08" && /Cabo Canaveral/.test(d.where || "")) d.where = "Orlando → Disney Springs";
+      if (!p || !Array.isArray(p.schedule)) return;
+      p.schedule = p.schedule.map(r => (Array.isArray(r) ? r.map(x => (typeof x === "string"
+        ? x.replace("Confira o ingresso separado da festa e o horário oficial do outlet.", "Confira o horário oficial do outlet.").replace("Voltar com calma e preparar para a festa ou descanso.", "Voltar com calma e descansar.")
+        : x)) : r)).filter(r => !(Array.isArray(r) && BAD.test(String(r[1] || "") + " " + String(r[2] || ""))));
+      if (Array.isArray(p.alternatives)) p.alternatives = p.alternatives.filter(a => !(Array.isArray(a) && BAD.test(String(a[0] || "") + " " + String(a[1] || ""))));
+      if (d.date === "07" && Array.isArray(p.alternatives) && p.schedule.some(r => /fogos/i.test(String(r[1] || ""))) && !p.alternatives.some(a => /Horário dos fogos/.test(String(a[0])))) {
+        p.alternatives.push(["Horário dos fogos", "Os fogos do Magic Kingdom são à noite. O plano atual os coloca às 16h40, o que provavelmente está errado: confira no app oficial o horário da data e ajuste o fim do dia."]);
+      }
+    });
+    flags.add("sem-festa");
+    return [rdays, rplans];
+  }
+
   /* Aceita qualquer objeto vindo do disco ou de um backup e devolve um estado válido. */
   function normalize(raw) {
     const d = defaults();
@@ -107,8 +138,13 @@
       for (const k of ["a", "b"]) { const n = Number(raw.customs[k]); s.customs[k] = raw.customs[k] != null && raw.customs[k] !== "" && Number.isFinite(n) && n >= 0 ? n : null; }
     }
     if (isObj(raw.contacts)) s.contacts = { name: u.clamp(raw.contacts.name, 60), phone: u.clamp(raw.contacts.phone, 30) };
-    if (Array.isArray(raw.days) && raw.days.length === FT.DAYS_DEFAULT.length) s.days = raw.days;
-    if (Array.isArray(raw.plans) && raw.plans.length === FT.PLANS_DEFAULT.length) s.plans = raw.plans;
+    const flags = new Set(arr(raw.mig).map(String));
+    let rdays = raw.days, rplans = raw.plans;
+    if (Array.isArray(rdays) && Array.isArray(rplans)) [rdays, rplans] = migratePlan(rdays, rplans, flags);
+    if (!Array.isArray(rdays) || !Array.isArray(rplans)) { flags.add("d3"); flags.add("sem-festa"); }
+    s.mig = [...flags].slice(0, 10);
+    if (Array.isArray(rdays) && rdays.length === FT.DAYS_DEFAULT.length) s.days = rdays;
+    if (Array.isArray(rplans) && rplans.length === FT.PLANS_DEFAULT.length) s.plans = rplans;
     if (!s.days || !s.plans) { s.days = null; s.plans = null; }
     s.docs = arr(raw.docs).filter(x => isObj(x) && x.id && x.name).slice(0, 80).map(x => ({ id: String(x.id), res: String(x.res || ""), name: u.clamp(x.name, 80), type: String(x.type || "").slice(0, 60), size: Number(x.size) || 0, sync: x.sync !== false }));
     if (isObj(raw.parking) && Number.isFinite(Number(raw.parking.lat)) && Number.isFinite(Number(raw.parking.lon))) s.parking = { lat: Number(raw.parking.lat), lon: Number(raw.parking.lon), t: Number(raw.parking.t) || 0, note: u.clamp(raw.parking.note, 120) };
