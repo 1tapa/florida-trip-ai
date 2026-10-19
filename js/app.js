@@ -517,7 +517,7 @@
           ${on && !y.loginEmail ? `<li><strong>Guarde o convite da sincronização</strong><span>Copie e guarde numa nota ou mensagem para você mesmo. É ele que traz tudo de volta no aparelho novo.</span></li>` : ""}${on && y.loginEmail ? `<li><strong>Guarde o convite de configuração</strong><span>Ele só leva a configuração do Firebase, sem dados. No aparelho novo você cola o convite e entra com e-mail e senha.</span></li>` : ""}
           <li><strong>Refaça o backup depois de mudanças grandes</strong><span>Em especial na véspera da viagem, dia 3 de dezembro.</span></li>
         </ol>
-        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="${y.loginEmail ? "sync-copy-cfg" : "sync-copy-invite"}">${icon("link")} Copiar link${y.loginEmail ? " de configuração" : ""}</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
+        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="${y.loginEmail ? "sync-copy-cfg" : "sync-copy-invite"}">${icon("link")} Enviar link${y.loginEmail ? " de configuração" : ""}</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
       <section class="section"><div class="section__head"><h2 class="h-section">No celular novo</h2></div>
         <ol class="steps">
           <li><strong>Abra o guia no Safari</strong><span>Endereço: ${esc(addr)}. Depois toque em Compartilhar e em Adicionar à Tela de Início.</span></li>
@@ -567,7 +567,7 @@
         ${y.detail ? `<div class="callout callout--alert">${icon("alert")}<div>${esc(y.detail)}</div></div>` : ""}
         <p class="small muted">Tudo que vocês marcarem, registrarem ou mudarem no roteiro aparece nos dois aparelhos. A chave da IA vai criptografada.</p>
         ${y.loginEmail ? `<p class="small"><strong>Login:</strong> ${esc(y.loginEmail)}. Em outro aparelho, entre com este e-mail e a mesma senha.</p>` : ""}
-        <div class="btn-row">${y.loginEmail ? `<button class="btn btn--primary" type="button" data-act="sync-copy-cfg">${icon("link")} Copiar link de configuração</button>` : `<button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar link para ela</button>`}<button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
+        <div class="btn-row">${y.loginEmail ? `<button class="btn btn--primary" type="button" data-act="sync-copy-cfg">${icon("link")} Enviar link de configuração</button>` : `<button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Enviar link para ela</button>`}<button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
         <p class="hint">${y.loginEmail ? "Quem souber o e-mail e a senha vê e edita tudo. Use uma senha que só vocês dois conheçam." : "O link contém o código secreto. Mande só para ela, de preferência por mensagem direta."}</p></div>
         ${y.loginEmail ? "" : LOGIN_CREATE.replace("__T__", "Trocar o código por e-mail e senha").replace("__D__", "Mais fácil de lembrar. Seus dados atuais continuam e passam a ficar sob este login. Depois é só entrar com e-mail e senha no outro aparelho; o convite antigo deixa de valer.")}`;
     } else {
@@ -694,12 +694,14 @@
       case "sync-create": { const ok = await FT.sync.create(); toast(ok ? "Código criado. Copie o convite e mande para ela." : "Configure o Firebase primeiro."); render({ keepScroll: true }); break; }
       case "sync-copy-cfg": {
         const inv = FT.sync.configLink();
+        if (navigator.share) { try { await navigator.share({ title: "Florida · Caderno de viagem", text: "Guia da viagem para a Florida: abra o link e entre com o e-mail e a senha.", url: inv }); break; } catch (e) { if (e && e.name === "AbortError") break; } }
         try { await navigator.clipboard.writeText(inv); toast("Link copiado. Abra no outro aparelho e entre com e-mail e senha."); }
         catch (e) { await dialog({ title: "Copie o link", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
         break;
       }
       case "sync-copy-invite": {
         const inv = FT.sync.inviteLink();
+        if (navigator.share) { try { await navigator.share({ title: "Florida · Caderno de viagem", text: "Entra no nosso guia da viagem para a Florida: abra o link e toque em Entrar.", url: inv }); break; } catch (e) { if (e && e.name === "AbortError") break; } }
         try { await navigator.clipboard.writeText(inv); toast("Link copiado. Mande para ela por mensagem direta; ao abrir, ela já entra."); }
         catch (e) { await dialog({ title: "Copie o link", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
         break;
