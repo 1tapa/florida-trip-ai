@@ -22,6 +22,7 @@
     { id: "contatos", label: "Contatos e emergência", icon: "shield", text: "911, contato no Brasil e o que fazer se perder algo" },
     { id: "ajustes", label: "Ajustes e backup", icon: "sliders", text: "Salvar, restaurar, instalar no iPhone" }
   ];
+  MORE.splice(1, 0, { id: "trocar", label: "Trocar de celular", icon: "phone", text: "Como levar o roteiro e o que você fez para o iPhone novo" });
   const EX = FT.extra || { routes: {}, more: [], rail: [] };
   MORE.splice(1, 0, ...EX.more);
   const FOOD_ICON = { pancake: "coffee", chicken: "utensils", burger: "utensils", fries: "utensils", shake: "coffee", cart: "cart" };
@@ -501,9 +502,40 @@
         <li><strong>Problema com o carro</strong><span>Ligue para a locadora antes de qualquer conserto e guarde fotos e recibos.</span></li></ol></section>`;
   }
 
+  function viewTrocar() {
+    const y = FT.sync, on = y.connected, ok = on && (y.status === "ok" || y.status === "pending");
+    const addr = location.href.split("#")[0];
+    const status = on
+      ? `<div class="callout callout--info">${icon("info")}<div><strong>Sincronização ligada</strong>Seus dados já estão na nuvem do casal${ok ? "" : ", mas o status agora não está em dia: abra Ajustes e confira antes de trocar"}. No celular novo basta colar o convite. Mesmo assim, salve um backup por garantia.</div></div>`
+      : `<div class="callout callout--alert">${icon("alert")}<div><strong>A sincronização está desligada</strong>Seus dados existem só neste aparelho. Salve o backup abaixo e guarde fora do celular. Se quiser, ligue a sincronização em Ajustes: aí o celular novo recupera tudo sozinho.</div></div>`;
+    return `${backTo()}
+      <header class="page-head"><h1 class="h-page">Trocar de celular</h1><p class="lede">No dia 4 você muda de aparelho. Faça isto antes, para não perder o roteiro, o checklist marcado e as listas de compras.</p></header>
+      ${status}
+      <section class="section"><div class="section__head"><h2 class="h-section">Antes de trocar</h2></div>
+        <ol class="steps">
+          <li><strong>Salve o backup</strong><span>Toque no botão abaixo. Mande o arquivo para o seu e-mail ou salve no iCloud Drive ou no Drive, fora do celular antigo.</span></li>
+          ${on ? `<li><strong>Guarde o convite da sincronização</strong><span>Copie e guarde numa nota ou mensagem para você mesmo. É ele que traz tudo de volta no aparelho novo.</span></li>` : ""}
+          <li><strong>Refaça o backup depois de mudanças grandes</strong><span>Em especial na véspera da viagem, dia 3 de dezembro.</span></li>
+        </ol>
+        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
+      <section class="section"><div class="section__head"><h2 class="h-section">No celular novo</h2></div>
+        <ol class="steps">
+          <li><strong>Abra o guia no Safari</strong><span>Endereço: ${esc(addr)}. Depois toque em Compartilhar e em Adicionar à Tela de Início.</span></li>
+          <li><strong>Recupere os dados</strong><span>${on ? "Em Ajustes e backup, cole o convite em Já recebeu um convite." : "Em Ajustes e backup, toque em Restaurar backup e escolha o arquivo que você salvou."}</span></li>
+          <li><strong>Confira antes de entregar o antigo</strong><span>Veja o roteiro que você editou, o checklist marcado e as duas listas de compras. Só então entregue o aparelho antigo e saia do Apple ID.</span></li>
+          <li><strong>Chave da IA</strong><span>${on ? "Ela vai junto com a sincronização, criptografada." : "O backup não inclui a chave. Cole-a de novo em Concierge."}</span></li>
+        </ol></section>
+      <section class="section"><div class="section__head"><h2 class="h-section">Bom saber</h2></div>
+        <div class="stack">
+          <div class="callout">${icon("info")}<div><strong>Anexos das reservas</strong>O backup não leva os arquivos anexados. Com a sincronização ligada, os de até cerca de 650 KB vão junto. Guarde os originais nas Fotos ou no Drive.</div></div>
+          <div class="callout">${icon("info")}<div><strong>Transferência da Apple</strong>Se você trouxer tudo do celular antigo pelo iCloud ou pelo Início Rápido, o atalho do guia pode vir junto, mas não conte com isso. Use o backup ou o convite.</div></div>
+          <div class="callout callout--alert">${icon("alert")}<div><strong>Não apague nada antes de conferir</strong>Não limpe os dados do Safari nem apague o atalho do guia no celular antigo até ver tudo certo no novo.</div></div>
+        </div></section>`;
+  }
+
   function viewAjustes() {
     return `${backTo()}
-      <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam neste aparelho e, se você ligar a sincronização, também no seu projeto Firebase. Faça backup antes de trocar de celular.</p></header>
+      <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam neste aparelho e, se você ligar a sincronização, também no seu projeto Firebase. Antes de trocar de celular, veja <a href="#/trocar">o passo a passo</a>.</p></header>
       ${syncSection()}
       <section class="section"><div class="section__head"><h2 class="h-section">Backup</h2></div>
         <div class="btn-row"><button class="btn" type="button" data-act="export">${icon("download")} Salvar backup</button><button class="btn" type="button" data-act="import">${icon("upload")} Restaurar backup</button></div>
@@ -552,6 +584,7 @@
     compras: { title: "Compras", tab: "mais", fn: viewCompras },
     comida: { title: "Onde comer", tab: "mais", fn: viewComida },
     contatos: { title: "Contatos e emergência", tab: "mais", fn: viewContatos },
+    trocar: { title: "Trocar de celular", tab: "mais", fn: viewTrocar },
     ajustes: { title: "Ajustes e backup", tab: "mais", fn: viewAjustes }
   };
   Object.assign(ROUTES, EX.routes);

@@ -1,5 +1,5 @@
 /* Service worker: o guia abre sem internet. Só trata o próprio site; outros domínios (previsão do tempo, OpenAI) vão direto à rede. */
-const CACHE = "florida-guia-v18";
+const CACHE = "florida-guia-v19";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg",
   "./css/app.css", "./js/data.js", "./js/checklist-data.js", "./js/store.js", "./js/sync.js", "./js/ai.js", "./js/extra-data.js", "./js/extra.js", "./js/app.js",

@@ -1,6 +1,6 @@
 # Florida · Caderno de viagem
 
-Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 137 itens separado em fases (Pré-viagem, Magic Kingdom, Universal, Na viagem e Pré-volta), reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
+Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 139 itens separado em fases (Pré-viagem, Magic Kingdom, Universal, Na viagem e Pré-volta), reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
 
 App estático (PWA): abre sem internet depois da primeira visita e guarda tudo no próprio aparelho (`localStorage`).
 
@@ -11,7 +11,7 @@ App estático (PWA): abre sem internet depois da primeira visita e guarda tudo n
 | `index.html` | Estrutura da página e ícones |
 | `css/app.css` | Visual (Marcellus + Hanken Grotesk, hospedadas em `fonts/`) |
 | `js/data.js` | Viagem, roteiro, programação por dia, reservas, comida, outlets |
-| `js/checklist-data.js` | 12 áreas e 137 itens, com prioridade, prazo e fonte |
+| `js/checklist-data.js` | 12 áreas e 139 itens, com prioridade, prazo e fonte |
 | `js/store.js` | Estado, migração da versão anterior e utilitários |
 | `js/app.js` | Telas, navegação e eventos |
 | `js/ai.js` | Concierge (conversa e alteração do roteiro) |
