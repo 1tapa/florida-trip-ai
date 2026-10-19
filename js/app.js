@@ -218,7 +218,19 @@
       </form></details>`;
   }
 
-  function checklistBody() {
+  /* Com o filtro "Pendentes", os concluídos ficam numa lista própria no fim, para sempre dar para ver e desmarcar. */
+  function doneHTML() {
+    const ui = S().ui, ph = curPhase();
+    if (ui.status !== "pend") return "";
+    const list = store.items().filter(i => phaseOf(i) === ph && isDone(i) && !recent.has(i.id));
+    if (!list.length) return "";
+    return `<details class="section" style="margin-top:24px"><summary class="small"><strong>Concluídos nesta fase (${list.length})</strong></summary>
+      <div class="sheet" style="padding:0 16px;margin-top:8px"><ul>${list.sort(sortItems).map(it => itemHTML(it, ph === "pre")).join("")}</ul></div></details>`;
+  }
+
+  function checklistBody() { return checklistMain() + doneHTML(); }
+
+  function checklistMain() {
     const ui = S().ui, ph = curPhase(), phase = PHASES.find(p => p.id === ph);
     const all = store.items().filter(i => phaseOf(i) === ph), items = all.filter(passes);
     const done = all.filter(isDone).length;
