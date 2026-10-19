@@ -41,15 +41,15 @@
     { date: "07", dow: "SEG", leg: "orlando", title: "Magic Kingdom", where: "Walt Disney World",
       desc: "Dia inteiro no parque: atrações concorridas cedo, atrações clássicas à tarde e show ou ambiente noturno.",
       tags: ["Disney", "Dia inteiro"], tip: "As primeiras horas depois da abertura costumam ter as menores filas." },
-    { date: "08", dow: "TER", leg: "orlando", title: "Kennedy Space Center e Disney Springs", where: "Cabo Canaveral → Disney Springs",
-      desc: "Dia espacial no Kennedy Space Center e passeio noturno por lojas, decoração e restaurantes no Disney Springs.",
-      tags: ["NASA", "Passeio"], tip: "É o dia mais longo do roteiro. Se o cansaço pesar, troque o Disney Springs por um jantar perto do hotel." },
+    { date: "08", dow: "TER", leg: "orlando", title: "Descanso e Disney Springs", where: "Kissimmee → Disney Springs",
+      desc: "Manhã livre para descansar depois do Magic Kingdom e passeio à tarde e à noite por lojas, decoração e restaurantes no Disney Springs.",
+      tags: ["Descanso", "Passeio"], tip: "Depois de um dia inteiro de parque, aproveite a manhã sem pressa e deixe as compras para a tarde." },
     { date: "09", dow: "QUA", leg: "orlando", title: "Universal: Islands of Adventure e Studios", where: "Universal Orlando Resort",
       desc: "Dia inteiro com ingresso Park-to-Park: Islands of Adventure de manhã, com Hagrid’s, VelociCoaster e Forbidden Journey, e Hogwarts Express até o Universal Studios Florida para a tarde e a noite.",
       tags: ["Universal", "Park-to-Park", "Dia inteiro"], tip: "Comecem pelo Islands of Adventure, onde estão as maiores filas, e usem o Hogwarts Express só depois do meio-dia." },
-    { date: "10", dow: "QUI", leg: "orlando", title: "Vineland Outlets e festa de Natal da Disney", where: "Vineland Premium Outlets → Magic Kingdom",
-      desc: "Compras pela manhã, descanso no hotel e Mickey’s Very Merry Christmas Party à noite (ingresso separado).",
-      tags: ["Compras", "Natal Disney"], tip: "A festa começa às 19h e a entrada antecipada, às 16h: guarde energia para a noite." },
+    { date: "10", dow: "QUI", leg: "orlando", title: "Vineland Outlets e noite livre", where: "Vineland Premium Outlets → Kissimmee",
+      desc: "Compras no Vineland Premium Outlets, descanso no hotel e jantar tranquilo à noite.",
+      tags: ["Compras", "Descanso"], tip: "No dia seguinte tem mais outlet e as malas: não gaste toda a energia hoje." },
     { date: "11", dow: "SEX", leg: "orlando", title: "International Premium Outlets e malas", where: "Orlando",
       desc: "Completar roupas, tênis e acessórios, voltar cedo ao hotel e organizar as malas.",
       tags: ["Compras", "Organização"], tip: "Compre só o que falta na lista. A última passada serve para fechar, não para recomeçar." },
@@ -126,18 +126,16 @@
       ] },
 
     { schedule: [
-        ["07:30–08:00", "Café da manhã", "Saída cedo para aproveitar o complexo."],
-        ["08:30", "Sair para o Kennedy Space Center", "Confirme o endereço de entrada, o estacionamento e o horário de funcionamento oficial.", "Kennedy Space Center Visitor Complex"],
-        ["09:30–12:30", "Bus Tour e complexo Apollo/Saturn V", "Comece pelas experiências de maior interesse. O passeio de ônibus usa fila virtual (QR code no local) e leva cerca de três horas: confirme os horários no dia."],
-        ["12:30–13:15", "Almoço", "Refeição dentro do complexo para evitar deslocamentos."],
-        ["13:15–16:30", "Space Shuttle Atlantis, Gateway e exposições", "Ajuste a ordem conforme os horários e o interesse de vocês."],
-        ["16:30", "Saída do KSC", "A viagem de volta pode variar com o trânsito."],
-        ["18:00–21:00", "Disney Springs", "Lojas Disney, LEGO, decoração de Natal, passeio e fotos; não exige ingresso de parque.", "Disney Springs Lake Buena Vista"],
-        ["21:00–22:00", "Jantar e retorno", "Se o KSC terminar tarde, faça só um passeio curto no Disney Springs."]
+        ["08:30–10:00", "Café da manhã sem pressa", "Depois do Magic Kingdom, aproveite para descansar os pés."],
+        ["10:00–13:00", "Descanso, piscina ou mercado", "Faça o mercado do dia seguinte e organize as fotos do parque.", "Walmart Supercenter Kissimmee"],
+        ["13:00–14:00", "Almoço", "Algo simples perto do hotel."],
+        ["15:00–18:00", "Disney Springs", "Lojas Disney, LEGO, decoração de Natal, passeio e fotos; não exige ingresso de parque.", "Disney Springs Lake Buena Vista"],
+        ["18:00–20:30", "Jantar", "Escolha um restaurante no próprio Disney Springs ou volte para comer perto do hotel."],
+        ["20:30–21:30", "Retorno ao hotel", "Carregue os celulares e confira o plano do dia 9 na Universal."]
       ],
       alternatives: [
-        ["Se preferirem menos estrada", "Troque o Kennedy Space Center por uma manhã de descanso, piscina e mercado, e tarde e noite no Disney Springs."],
-        ["Se chover", "O KSC tem exposições internas, mas transporte e algumas experiências podem ser afetados. Confira a operação oficial."],
+        ["Se preferirem outro programa", "Troque o Disney Springs por um dia de piscina e descanso no hotel; no dia 9 vocês têm um parque grande pela frente."],
+        ["Se chover", "O Disney Springs tem várias lojas cobertas; se a chuva apertar, fiquem no hotel e deixem o passeio para a noite."],
         ["Compras em Disney Springs", "Defina um limite para lembranças; os outlets dos dias 10 e 11 são melhores para roupas e tênis."]
       ] },
 
@@ -159,17 +157,15 @@
       ] },
 
     { schedule: [
-        ["09:00", "Café da manhã", "Confira o ingresso separado da festa e o horário oficial do outlet."],
+        ["09:00", "Café da manhã", "Confira o horário do outlet e leve uma lista do que falta comprar."],
         ["10:00–15:00", "Orlando Vineland Premium Outlets", "Foco em roupas principais, marcas e calçados. Compare o preço final e os tamanhos.", "Orlando Vineland Premium Outlets"],
-        ["15:00–16:00", "Voltar ao hotel e descansar", "Banho, lanche, trocar de roupa e carregar o celular."],
-        ["A partir de 16:00", "Entrada antecipada para a festa", "Quem tem ingresso da festa pode entrar no Magic Kingdom a partir das 16h (confirme as regras oficiais para o dia).", "Magic Kingdom Park Walt Disney World"],
-        ["16:00–19:00", "Castelo, decoração, fotos e lojas", "Coma algo antes do pico e escolha as prioridades da festa."],
-        ["19:00–00:00", "Mickey’s Very Merry Christmas Party", "Foco em desfile, fogos, personagens, decoração, comidas natalinas e atrações selecionadas. A festa começa às 19h; confirme o horário de término e a programação."],
-        ["00:00–00:45", "Saída e retorno ao hotel", "Planeje caminhada e transporte ou estacionamento com paciência."]
+        ["15:00–16:30", "Voltar ao hotel e descansar", "Banho, lanche e carregar o celular."],
+        ["17:00–19:00", "Tempo livre", "Piscina, mercado ou uma volta perto do hotel."],
+        ["19:00–21:00", "Jantar", "Escolha um restaurante perto do hotel para encerrar o dia sem pressa."]
       ],
       alternatives: [
-        ["Se não comprarem a festa", "Use o dia para Vineland, descanso e um passeio gratuito ou de baixo custo, ou Disney Springs. Não entre na festa sem o ingresso específico."],
-        ["Se estiverem cansados", "Reduza o outlet para duas ou três horas e priorize a festa, que é a experiência exclusiva desta noite."],
+        ["Se estiverem cansados", "Reduza o outlet para duas ou três horas e passe a tarde descansando."],
+        ["Se sobrar energia", "Um passeio curto no Disney Springs ou em Celebration, sem ingresso de parque."],
         ["Compras do outlet", "Faça uma lista por pessoa, prove as peças e guarde os recibos; não comprometa o orçamento reservado para alimentação e para a volta."]
       ] },
 
@@ -210,9 +206,7 @@
     { id: "hotel-2", icon: "bed", title: "Ramada em Kissimmee", when: "06 a 12/12", hint: "Endereço e código da reserva" },
     { id: "carro", icon: "car", title: "Carro alugado (Mustang)", when: "Retirada no MIA em 04/12, devolução no MCO em 12/12", hint: "Locadora e número da reserva" },
     { id: "ing-md", icon: "ticket", title: "Magic Kingdom", when: "07/12", hint: "Ingresso vinculado ao My Disney Experience?" },
-    { id: "ing-ksc", icon: "ticket", title: "Kennedy Space Center", when: "08/12", hint: "Ingresso com data" },
     { id: "ing-uni", icon: "ticket", title: "Universal Orlando", when: "09/12", hint: "Ingresso Park-to-Park (2 parques)" },
-    { id: "ing-festa", icon: "ticket", title: "Festa de Natal no Magic Kingdom", when: "10/12, a partir das 19h", hint: "Ingresso da festa" },
     { id: "seguro", icon: "shield", title: "Seguro-viagem", when: "04 a 12/12", hint: "Seguradora, apólice e telefone 24 horas" }
   ];
 
@@ -229,7 +223,7 @@
 
   FT.OUTLETS = [
     { name: "Sawgrass Mills", day: "06/12", q: "Sawgrass Mills Sunrise Florida", note: "Primeira rodada, no caminho para Orlando. Procure peças-chave e ofertas excepcionais." },
-    { name: "Orlando Vineland Premium Outlets", day: "10/12", q: "Orlando Vineland Premium Outlets", note: "Manhã de compras antes da festa de Natal. Foco em roupas principais e calçados." },
+    { name: "Orlando Vineland Premium Outlets", day: "10/12", q: "Orlando Vineland Premium Outlets", note: "Manhã e começo da tarde de compras. Foco em roupas principais e calçados." },
     { name: "Orlando International Premium Outlets", day: "11/12", q: "Orlando International Premium Outlets", note: "Última passada. Compare com o Vineland antes de compras maiores." }
   ];
 
