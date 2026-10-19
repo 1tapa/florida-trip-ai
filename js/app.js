@@ -506,7 +506,7 @@
     const y = FT.sync, on = y.connected, ok = on && (y.status === "ok" || y.status === "pending");
     const addr = location.href.split("#")[0];
     const status = on
-      ? `<div class="callout callout--info">${icon("info")}<div><strong>Sincronização ligada</strong>Seus dados já estão na nuvem do casal${ok ? "" : ", mas o status agora não está em dia: abra Ajustes e confira antes de trocar"}. No celular novo basta colar o convite. Mesmo assim, salve um backup por garantia.</div></div>`
+      ? `<div class="callout callout--info">${icon("info")}<div><strong>Sincronização ligada</strong>Seus dados já estão na nuvem do casal${ok ? "" : ", mas o status agora não está em dia: abra Ajustes e confira antes de trocar"}. No celular novo ${y.loginEmail ? "basta entrar com o e-mail e a senha" : "basta colar o convite"}. Mesmo assim, salve um backup por garantia.</div></div>`
       : `<div class="callout callout--alert">${icon("alert")}<div><strong>A sincronização está desligada</strong>Seus dados existem só neste aparelho. Salve o backup abaixo e guarde fora do celular. Se quiser, ligue a sincronização em Ajustes: aí o celular novo recupera tudo sozinho.</div></div>`;
     return `${backTo()}
       <header class="page-head"><h1 class="h-page">Trocar de celular</h1><p class="lede">No dia 4 você muda de aparelho. Faça isto antes, para não perder o roteiro, o checklist marcado e as listas de compras.</p></header>
@@ -514,14 +514,14 @@
       <section class="section"><div class="section__head"><h2 class="h-section">Antes de trocar</h2></div>
         <ol class="steps">
           <li><strong>Salve o backup</strong><span>Toque no botão abaixo. Mande o arquivo para o seu e-mail ou salve no iCloud Drive ou no Drive, fora do celular antigo.</span></li>
-          ${on ? `<li><strong>Guarde o convite da sincronização</strong><span>Copie e guarde numa nota ou mensagem para você mesmo. É ele que traz tudo de volta no aparelho novo.</span></li>` : ""}
+          ${on && !y.loginEmail ? `<li><strong>Guarde o convite da sincronização</strong><span>Copie e guarde numa nota ou mensagem para você mesmo. É ele que traz tudo de volta no aparelho novo.</span></li>` : ""}${on && y.loginEmail ? `<li><strong>Guarde o convite de configuração</strong><span>Ele só leva a configuração do Firebase, sem dados. No aparelho novo você cola o convite e entra com e-mail e senha.</span></li>` : ""}
           <li><strong>Refaça o backup depois de mudanças grandes</strong><span>Em especial na véspera da viagem, dia 3 de dezembro.</span></li>
         </ol>
-        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
+        <div class="btn-row" style="margin-top:12px"><button class="btn btn--primary" type="button" data-act="export">${icon("download")} Salvar backup</button>${on ? `<button class="btn" type="button" data-act="${y.loginEmail ? "sync-copy-cfg" : "sync-copy-invite"}">${icon("link")} Copiar convite${y.loginEmail ? " de configuração" : ""}</button>` : `<a class="btn" href="#/ajustes">Ajustes e sincronização</a>`}</div></section>
       <section class="section"><div class="section__head"><h2 class="h-section">No celular novo</h2></div>
         <ol class="steps">
           <li><strong>Abra o guia no Safari</strong><span>Endereço: ${esc(addr)}. Depois toque em Compartilhar e em Adicionar à Tela de Início.</span></li>
-          <li><strong>Recupere os dados</strong><span>${on ? "Em Ajustes e backup, cole o convite em Já recebeu um convite." : "Em Ajustes e backup, toque em Restaurar backup e escolha o arquivo que você salvou."}</span></li>
+          <li><strong>Recupere os dados</strong><span>${on ? (y.loginEmail ? "Em Ajustes e backup, cole o convite de configuração em Já recebeu um convite (ou configure o Firebase) e entre em Já tem login com o mesmo e-mail e senha." : "Em Ajustes e backup, cole o convite em Já recebeu um convite.") : "Em Ajustes e backup, toque em Restaurar backup e escolha o arquivo que você salvou."}</span></li>
           <li><strong>Confira antes de entregar o antigo</strong><span>Veja o roteiro que você editou, o checklist marcado e as duas listas de compras. Só então entregue o aparelho antigo e saia do Apple ID.</span></li>
           <li><strong>Chave da IA</strong><span>${on ? "Ela vai junto com a sincronização, criptografada." : "O backup não inclui a chave. Cole-a de novo em Concierge."}</span></li>
         </ol></section>
@@ -533,11 +533,17 @@
         </div></section>`;
   }
 
+  let bkPoints = [];
+
   function viewAjustes() {
     return `${backTo()}
       <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam neste aparelho e, se você ligar a sincronização, também no seu projeto Firebase. Antes de trocar de celular, veja <a href="#/trocar">o passo a passo</a>.</p></header>
       ${syncSection()}
-      <section class="section"><div class="section__head"><h2 class="h-section">Backup</h2></div>
+      <section class="section"><div class="section__head"><h2 class="h-section">Backup automático</h2></div>
+        <div class="stack"><p class="small muted">Todo dia, ao abrir o app, ele guarda uma cópia: ${FT.backup.local().length} neste aparelho (últimos 7 dias)${FT.sync.connected ? " e na nuvem do casal (últimos 14 dias)" : ". Ligue a sincronização para guardar também na nuvem"}. Se algo for apagado sem querer, volte a um dia anterior.</p>
+          <div class="btn-row"><button class="btn" type="button" data-act="bk-list">${icon("refresh")} Ver cópias e restaurar</button><button class="btn btn--quiet" type="button" data-act="bk-now">Guardar agora</button></div>
+          <div id="bkList"></div></div></section>
+      <section class="section"><div class="section__head"><h2 class="h-section">Backup em arquivo</h2></div>
         <div class="btn-row"><button class="btn" type="button" data-act="export">${icon("download")} Salvar backup</button><button class="btn" type="button" data-act="import">${icon("upload")} Restaurar backup</button></div>
         <input type="file" id="importFile" accept="application/json,.json" hidden></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Instalar no iPhone</h2></div>
@@ -547,6 +553,8 @@
       <p class="small muted" style="margin-top:32px">Versão ${VERSION}. Regras, preços e prazos pesquisados em outubro de 2026: confirme sempre na fonte oficial perto da viagem.</p>`;
   }
 
+  const LOGIN_CREATE = '<form class="sheet sheet--pad" data-form="sync-login-create"><strong>__T__</strong><p class="small muted" style="margin-top:6px">__D__</p><label class="label" for="sync-login-create-em">E-mail</label><input class="field" id="sync-login-create-em" name="email" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" required><label class="label" for="sync-login-create-pw">Senha (mínimo 8 caracteres)</label><input class="field" id="sync-login-create-pw" name="pw" type="password" autocomplete="new-password" minlength="8" required><div style="margin-top:12px"><button class="btn btn--primary" type="submit">Criar login</button></div></form>';
+  const LOGIN_ENTER = '<form class="sheet sheet--pad" data-form="sync-login-enter"><strong>Já tem login?</strong><p class="small muted" style="margin-top:6px">Entre com o e-mail e a senha que foram criados no outro aparelho.</p><label class="label" for="sync-login-enter-em">E-mail</label><input class="field" id="sync-login-enter-em" name="email" type="email" autocomplete="username" autocapitalize="off" spellcheck="false" required><label class="label" for="sync-login-enter-pw">Senha (mínimo 8 caracteres)</label><input class="field" id="sync-login-enter-pw" name="pw" type="password" autocomplete="current-password" minlength="8" required><div style="margin-top:12px"><button class="btn" type="submit">Entrar</button></div></form>';
   const SYNC_LABEL = { off: "Desligada", connecting: "Conectando…", ok: "Sincronizado", pending: "Enviando alterações…", offline: "Sem internet: salvo, envia quando voltar", error: "Com problema" };
 
   function syncSection() {
@@ -558,12 +566,15 @@
         <div class="row row--between row--wrap"><strong>Sincronização ligada</strong><span class="chip ${ok ? "chip--ok" : y.status === "error" ? "chip--late" : "chip--plain"}">${esc(SYNC_LABEL[y.status] || "")}</span></div>
         ${y.detail ? `<div class="callout callout--alert">${icon("alert")}<div>${esc(y.detail)}</div></div>` : ""}
         <p class="small muted">Tudo que vocês marcarem, registrarem ou mudarem no roteiro aparece nos dois aparelhos. A chave da IA vai criptografada.</p>
-        <div class="btn-row"><button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite para ela</button><button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
-        <p class="hint">O convite contém o código secreto. Mande só para ela, de preferência por mensagem direta.</p></div>`;
+        ${y.loginEmail ? `<p class="small"><strong>Login:</strong> ${esc(y.loginEmail)}. Em outro aparelho, entre com este e-mail e a mesma senha.</p>` : ""}
+        <div class="btn-row">${y.loginEmail ? `<button class="btn btn--primary" type="button" data-act="sync-copy-cfg">${icon("link")} Copiar convite de configuração</button>` : `<button class="btn btn--primary" type="button" data-act="sync-copy-invite">${icon("link")} Copiar convite para ela</button>`}<button class="btn" type="button" data-act="sync-show-code">Ver código</button><button class="btn btn--quiet btn--danger" type="button" data-act="sync-disconnect">Desligar neste aparelho</button></div>
+        <p class="hint">${y.loginEmail ? "Quem souber o e-mail e a senha vê e edita tudo. Use uma senha que só vocês dois conheçam." : "O convite contém o código secreto. Mande só para ela, de preferência por mensagem direta."}</p></div>
+        ${y.loginEmail ? "" : LOGIN_CREATE.replace("__T__", "Trocar o código por e-mail e senha").replace("__D__", "Mais fácil de lembrar. Seus dados atuais continuam e passam a ficar sob este login. Depois é só entrar com e-mail e senha no outro aparelho; o convite antigo deixa de valer.")}`;
     } else {
       body = `<div class="stack">
         ${y.hasConfig() ? `<div class="sheet sheet--pad stack"><strong>Criar a conta compartilhada</strong><p class="small muted">Gera um código secreto. Depois você copia o convite e manda para ela.</p><button class="btn btn--primary" type="button" data-act="sync-create">Criar código do casal</button></div>`
         : `<form class="sheet sheet--pad" data-form="sync-config"><strong>1. Configurar o Firebase (uma vez)</strong><p class="small muted" style="margin-top:6px">Cole aqui a configuração do app web do seu projeto Firebase.</p><label class="label" for="fbCfg">Configuração do Firebase</label><textarea class="field" id="fbCfg" name="cfg" rows="5" placeholder="const firebaseConfig = { apiKey: ..., projectId: ..., appId: ... }" required></textarea><div style="margin-top:12px"><button class="btn btn--primary" type="submit">Salvar configuração</button></div></form>`}
+        ${y.hasConfig() ? LOGIN_CREATE.replace("__T__", "Criar login com e-mail e senha").replace("__D__", "Sem código para decorar. Escolha um e-mail e uma senha que só vocês dois saibam; no outro aparelho vocês entram com os mesmos dois.") + LOGIN_ENTER : ""}
         <form class="sheet sheet--pad" data-form="sync-join"><strong>Já recebeu um convite?</strong><p class="small muted" style="margin-top:6px">Cole o convite que a outra pessoa mandou. Os dados dela passam a aparecer aqui.</p><label class="label" for="inv">Convite ou código</label><input class="field" id="inv" name="invite" autocomplete="off" autocapitalize="off" spellcheck="false" required><div style="margin-top:12px"><button class="btn" type="submit">Entrar</button></div></form></div>`;
     }
     return `<section><div class="section__head"><h2 class="h-section">Sincronizar com a namorada</h2></div>${body}</section>`;
@@ -680,6 +691,12 @@
       case "del-shop": store.update(s => { s.shopping = s.shopping.filter(x => x.id !== el.dataset.id); }); render({ keepScroll: true }); break;
       case "ask-day": FT.ai.prefill("No dia " + el.dataset.day + ", ", "edit"); location.hash = "#/concierge"; setTimeout(() => $("#aiq") && $("#aiq").focus(), 50); break;
       case "sync-create": { const ok = await FT.sync.create(); toast(ok ? "Código criado. Copie o convite e mande para ela." : "Configure o Firebase primeiro."); render({ keepScroll: true }); break; }
+      case "sync-copy-cfg": {
+        const inv = FT.sync.configInvite();
+        try { await navigator.clipboard.writeText(inv); toast("Copiado. Cole no outro aparelho e entre com e-mail e senha."); }
+        catch (e) { await dialog({ title: "Copie o convite de configuração", html: `<textarea class="field" rows="5" readonly>${esc(inv)}</textarea>`, ok: "Fechar", cancel: null }); }
+        break;
+      }
       case "sync-copy-invite": {
         const inv = FT.sync.invite();
         try { await navigator.clipboard.writeText(inv); toast("Convite copiado. Mande para ela por mensagem direta."); }
@@ -690,6 +707,20 @@
       case "sync-disconnect": {
         const r = await dialog({ title: "Desligar a sincronização?", text: "Este aparelho mantém os dados que tem agora, mas para de enviar e receber mudanças.", ok: "Desligar", danger: true });
         if (r.value === "ok") { FT.sync.disconnect(); toast("Sincronização desligada neste aparelho."); render({ keepScroll: true }); }
+        break;
+      }
+      case "bk-list": {
+        const box = $("#bkList"); if (!box) break;
+        box.innerHTML = '<p class="small muted">Buscando…</p>';
+        bkPoints = await FT.backup.points();
+        box.innerHTML = bkPoints.length ? bkPoints.map((p, i) => `<div class="row row--between row--wrap" style="padding:8px 0;border-top:1px solid var(--line,#ddd)"><span class="small"><strong>${esc(short(p.day))}</strong> · ${p.src === "nuvem" ? "na nuvem" : "neste aparelho"}</span><button class="btn btn--quiet" type="button" data-act="bk-restore" data-i="${i}">Restaurar</button></div>`).join("") : '<p class="small muted">Ainda não há cópias. A primeira é criada ao abrir o app.</p>';
+        break;
+      }
+      case "bk-now": FT.backup.runLocal(); await FT.backup.runCloud(true); toast("Cópia de hoje salva."); render({ keepScroll: true }); break;
+      case "bk-restore": {
+        const p = bkPoints[Number(el.dataset.i)]; if (!p) break;
+        const r = await dialog({ title: "Restaurar a cópia de " + short(p.day) + "?", text: "Os dados deste aparelho voltam ao estado daquele dia. Se a sincronização estiver ligada, o outro aparelho recebe o mesmo.", ok: "Restaurar", danger: true });
+        if (r.value === "ok") { try { FT.backup.restore(p.d); toast("Cópia restaurada."); render(); } catch (e) { toast("Essa cópia não pôde ser lida."); } }
         break;
       }
       case "export": {
@@ -740,7 +771,17 @@
       }
       case "shop": { const nm = clamp(d.get("name"), 80); if (!nm) return; store.update(s => { s.shopping.push({ id: uid(), name: nm, who: shopWho === "camily" ? "camily" : "leo", done: false }); }); render({ keepScroll: true }); $("#shopName") && $("#shopName").focus(); break; }
       case "sync-config": { const ok = FT.sync.configure(String(d.get("cfg"))); toast(ok ? "Configuração salva." : "Não encontrei apiKey, projectId e appId nesse texto."); render({ keepScroll: true }); break; }
-      case "sync-join": { const ok = await FT.sync.join(String(d.get("invite"))); toast(ok ? "Conectado. Os dados do casal vão aparecer aqui." : "Convite ou código inválido. Se for só o código, configure o Firebase antes."); render({ keepScroll: true }); break; }
+      case "sync-login-create": case "sync-login-enter": {
+        const create = name === "sync-login-create";
+        if (!create || !FT.sync.connected || (await dialog({ title: "Trocar para e-mail e senha?", text: "Seus dados continuam. O código e o convite antigos deixam de valer; a outra pessoa precisa entrar com o e-mail e a senha.", ok: "Trocar" })).value === "ok") {
+          toast(create ? "Criando o login…" : "Entrando…");
+          const r = await FT.sync.login(String(d.get("email")), String(d.get("pw")), create);
+          toast({ ok: create ? "Pronto. Entre com o mesmo e-mail e senha no outro aparelho." : "Conectado. Os dados do casal vão aparecer aqui.", nodata: "Não achei dados com esse e-mail e senha. Confira ou use Criar login.", senha: "Use um e-mail válido e senha com 8 ou mais caracteres.", config: "Configure o Firebase primeiro (cole o convite de configuração).", timeout: "Sem resposta da nuvem. Verifique a internet e tente de novo." }[r] || "Não foi possível entrar.");
+          render({ keepScroll: true });
+        }
+        break;
+      }
+      case "sync-join": { const ok = await FT.sync.join(String(d.get("invite"))); toast(ok ? (FT.sync.connected ? "Conectado. Os dados do casal vão aparecer aqui." : "Configuração salva. Agora entre com e-mail e senha.") : "Convite ou código inválido. Se for só o código, configure o Firebase antes."); render({ keepScroll: true }); break; }
       case "contact": store.update(s => { s.contacts = { name: clamp(d.get("name"), 60), phone: clamp(d.get("phone"), 30) }; }); toast("Contato salvo."); render({ keepScroll: true }); break;
     }
   }
