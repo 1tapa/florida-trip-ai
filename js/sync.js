@@ -1,6 +1,6 @@
 /* Sincronização entre aparelhos (Firebase Firestore), sem login.
  *
- * - O casal compartilha um código longo. O documento fica em trips/{SHA-256 do código}: o código em si nunca vai ao servidor.
+ * - O casal compartilha um código longo (ou entra com e-mail e senha, que geram o mesmo tipo de código). O documento fica em trips/{SHA-256 do código}: o código em si nunca vai ao servidor.
  * - Cada dado (item do checklist, gasto, reserva...) é uma entrada própria { v: JSON, t: horário }. Vale a mais recente por entrada,
  *   então dois aparelhos editando coisas diferentes nunca se sobrescrevem.
  * - A chave da OpenAI vai criptografada (AES-GCM) com uma chave derivada do código.
@@ -15,18 +15,18 @@
   const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const CODE_LEN = 20;
 
-  let hashId = "", cfg = null, code = "", db = null, ref = null, sdk = null, unsub = null;
+  let hashId = "", cfg = null, code = "", login = "", requireExisting = false, prevAuth = null, firstDone = null, db = null, ref = null, sdk = null, unsub = null;
   let shadow = null, times = {}, suppress = false, timer = null, first = true, appStarted = false, ready = false;
 
   const sync = (FT.sync = { status: "off", detail: "", onUI: null, sdkOverride: null });
 
   /* ---------- persistência local ---------- */
   function load() {
-    try { const s = JSON.parse(FT.ls.get(LS) || "null"); if (s && typeof s === "object") { code = normCode(s.code || ""); times = s.times && typeof s.times === "object" ? s.times : {}; } } catch (e) { /* começa limpo */ }
+    try { const s = JSON.parse(FT.ls.get(LS) || "null"); if (s && typeof s === "object") { code = normCode(s.code || ""); login = typeof s.login === "string" ? s.login : ""; times = s.times && typeof s.times === "object" ? s.times : {}; } } catch (e) { /* começa limpo */ }
     try { cfg = FT.SYNC_CONFIG || JSON.parse(FT.ls.get(CFG) || "null"); } catch (e) { cfg = FT.SYNC_CONFIG || null; }
     if (cfg && !validCfg(cfg)) cfg = null;
   }
-  const persist = () => FT.ls.set(LS, JSON.stringify({ code, times }));
+  const persist = () => FT.ls.set(LS, JSON.stringify({ code, times, login }));
   const validCfg = c => c && typeof c === "object" && ["apiKey", "projectId", "appId"].every(k => typeof c[k] === "string" && c[k]);
   const pickCfg = c => { const o = {}; for (const k of ["apiKey", "authDomain", "projectId", "storageBucket", "messagingSenderId", "appId"]) if (typeof c[k] === "string" && c[k]) o[k] = c[k]; return o; };
 
@@ -38,6 +38,7 @@
     return Array.from(b, x => ALPHABET[x % 32]).join("");
   }
   const enc = new TextEncoder();
+  const normEmail = e => String(e || "").trim().toLowerCase();
   const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
   const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
   const b64url = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -59,6 +60,14 @@
   async function decrypt(o) {
     const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(o.iv) }, await aesKey(code), unb64(o.ct));
     return new TextDecoder().decode(pt);
+  }
+
+  /* Login com e-mail e senha: o código secreto é calculado a partir dos dois (PBKDF2 lento), igual em qualquer aparelho.
+     Não depende de Firebase Auth nem de mudar as regras do Firestore. */
+  async function deriveCode(email, pw) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(String(pw)), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: enc.encode("florida-trip-ai/login/" + normEmail(email)), iterations: 300000, hash: "SHA-256" }, base, CODE_LEN * 8);
+    return Array.from(new Uint8Array(bits), x => ALPHABET[x % 32]).join("");
   }
 
   /* Lê a configuração colada do console do Firebase (trecho JavaScript ou JSON). */
@@ -199,6 +208,22 @@
     return snap.exists() ? String(snap.data().d || "") : "";
   };
 
+  /* Pontos de restauração na nuvem: 14 vagas rotativas (uma por dia), cada uma com a cópia completa daquele dia. */
+  const SNAP_SLOTS = 14, dayNum = () => Math.floor(Date.now() / 864e5);
+  sync.putSnapshot = async function (day, json) {
+    if (!ready || !hashId || json.length > 900000) return false;
+    try { await sdk.setDoc(sdk.doc(db, "trips", hashId + "_snap" + (dayNum() % SNAP_SLOTS)), { d: json, t: Date.now(), day }); return true; }
+    catch (e) { return false; }
+  };
+  sync.listSnapshots = async function () {
+    if (!ready || !hashId) return [];
+    const out = [];
+    for (let i = 0; i < SNAP_SLOTS; i++) {
+      try { const snap = await sdk.getDoc(sdk.doc(db, "trips", hashId + "_snap" + i)); if (snap.exists()) { const x = snap.data(); out.push({ day: String(x.day || ""), t: x.t || 0, d: String(x.d || "") }); } } catch (e) { /* vaga ilegível */ }
+    }
+    return out.sort((a, b) => b.t - a.t);
+  };
+
   sync.pushKey = async function () {
     if (!ready) return;
     const t = Date.now(), k = store.apiKey();
@@ -241,6 +266,20 @@
 
   function onSnap(snap) {
     const remote = (snap.exists() && snap.data().e) || {};
+    if (first && requireExisting) {
+      const md0 = snap.metadata || {};
+      if (!snap.exists()) {
+        if (md0.fromCache) return; /* ainda não ouvimos o servidor */
+        requireExisting = false;
+        const back = prevAuth; prevAuth = null;
+        stop(); code = back ? back.code : ""; login = back ? back.login : ""; times = back ? back.times : {}; persist();
+        setStatus(code ? "connecting" : "off");
+        if (code) start();
+        if (firstDone) { firstDone("nodata"); firstDone = null; }
+        return;
+      }
+      requireExisting = false; prevAuth = null;
+    }
     if (first) {
       first = false;
       const local = flatten(store.state), def = flatten(store.defaults()), out = {}, now = Date.now();
@@ -252,6 +291,8 @@
       if (FT.files) for (const k of Object.keys(out)) if (k.startsWith("doc:")) FT.files.upload(k.slice(4));
       if (remote.aikey) { /* já tratado em applyRemote */ } else if (store.apiKey()) sync.pushKey();
       persist();
+      if (firstDone) { firstDone("ok"); firstDone = null; }
+      if (sync.onReady) sync.onReady();
     } else applyRemote(remote);
     const md = snap.metadata || {};
     setStatus(md.hasPendingWrites ? "pending" : md.fromCache && typeof navigator !== "undefined" && navigator.onLine === false ? "offline" : "ok");
@@ -280,7 +321,10 @@
     },
     async join(text) {
       text = String(text || "").trim();
-      stop();
+      if (text.startsWith("FTRIP2.")) {
+        try { const o = JSON.parse(unb64url(text.slice(7))); if (!validCfg(o)) return false; cfg = pickCfg(o); FT.ls.set(CFG, JSON.stringify(cfg)); if (sync.onUI) sync.onUI(); return true; } catch (e) { return false; }
+      }
+      stop(); login = "";
       if (text.startsWith("FTRIP1.")) {
         try {
           const o = JSON.parse(unb64url(text.slice(7)));
@@ -296,14 +340,31 @@
       await start();
       return true;
     },
+    /* Entra (ou cria) o login com e-mail e senha. Resolve "ok", "nodata", "senha", "config" ou "timeout". */
+    async login(email, pw, create) {
+      email = normEmail(email); pw = String(pw || "");
+      if (!cfg) return "config";
+      if (!/^\S+@\S+\.\S+$/.test(email) || pw.length < 8) return "senha";
+      const c = await deriveCode(email, pw);
+      prevAuth = code ? { code, login, times } : null;
+      stop(); code = c; login = email; times = {}; persist();
+      requireExisting = !create;
+      const done = new Promise(res => { firstDone = res; setTimeout(() => { if (firstDone === res) { firstDone = null; res("timeout"); } }, 20000); });
+      await start();
+      const r = await done;
+      if (r === "timeout" && requireExisting) { requireExisting = false; const back = prevAuth; prevAuth = null; stop(); code = back ? back.code : ""; login = back ? back.login : ""; times = back ? back.times : {}; persist(); setStatus(code ? "connecting" : "off"); if (code) start(); }
+      return r;
+    },
+    configInvite() { return cfg ? "FTRIP2." + b64url(JSON.stringify(cfg)) : ""; },
     invite() { return code && cfg ? "FTRIP1." + b64url(JSON.stringify({ c: cfg, k: code })) : ""; },
-    disconnect() { stop(); code = ""; times = {}; persist(); setStatus("off"); },
-    flatten, applyEntry, parseConfig, normCode, genCode
+    disconnect() { stop(); code = ""; login = ""; times = {}; persist(); setStatus("off"); },
+    deriveCode, flatten, applyEntry, parseConfig, normCode, genCode
   });
 
   Object.defineProperties(sync, {
     code: { get: () => (code ? fmtCode(code) : "") },
-    connected: { get: () => !!code && !!cfg }
+    connected: { get: () => !!code && !!cfg },
+    loginEmail: { get: () => login }
   });
 
   load();

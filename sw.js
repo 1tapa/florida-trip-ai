@@ -1,8 +1,8 @@
 /* Service worker: o guia abre sem internet. Só trata o próprio site; outros domínios (previsão do tempo, OpenAI) vão direto à rede. */
-const CACHE = "florida-guia-v19";
+const CACHE = "florida-guia-v20";
 const CORE = [
   "./", "./index.html", "./manifest.webmanifest", "./icon.svg",
-  "./css/app.css", "./js/data.js", "./js/checklist-data.js", "./js/store.js", "./js/sync.js", "./js/ai.js", "./js/extra-data.js", "./js/extra.js", "./js/app.js",
+  "./css/app.css", "./js/data.js", "./js/checklist-data.js", "./js/store.js", "./js/sync.js", "./js/backup.js", "./js/ai.js", "./js/extra-data.js", "./js/extra.js", "./js/app.js",
   "./fonts/marcellus-latin-400-normal.woff2", "./fonts/hanken-grotesk-latin-wght-normal.woff2",
   "./icons/icon.svg", "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"
 ];
