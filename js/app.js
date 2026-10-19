@@ -117,7 +117,7 @@
     const done = isDone(it), open = !!S().ui.exp[it.id];
     const [priTxt, priCls] = PRI[it.pri] || PRI.i;
     const link = it.link && safeUrl(it.link[1]) ? `<a href="${esc(safeUrl(it.link[1]))}" target="_blank" rel="noopener noreferrer">${esc(it.link[0])} ${icon("external")}</a>` : "";
-    const del = it.custom ? `<button type="button" data-act="del-custom" data-id="${esc(it.id)}">${icon("trash")} Remover</button>` : "";
+    const del = `<button type="button" data-act="${it.custom ? "del-custom" : "hide-item"}" data-id="${esc(it.id)}">${icon("trash")} Remover</button>`;
     const cat = showCat ? catOf(it.cat) : null;
     return `<li class="item${done ? " item--done" : ""}">
       <label class="check"><input type="checkbox" data-act="toggle-check" data-id="${esc(it.id)}"${done ? " checked" : ""} aria-label="Concluído: ${esc(it.title)}"><span class="check__box">${icon("check")}</span></label>
@@ -282,7 +282,15 @@
         ${ph === "pre" ? `<div class="segmented" role="group" aria-label="Organizar por"><button type="button" data-act="view-mode" data-v="cat" aria-pressed="${ui.view === "cat"}">Por área</button><button type="button" data-act="view-mode" data-v="prazo" aria-pressed="${ui.view === "prazo"}">Por prazo</button></div>` : ""}
         <div class="filters" role="group" aria-label="Filtros">${f("status", "pend", "Pendentes")}${f("status", "done", "Concluídos")}${f("status", "all", "Todos")}<button type="button" class="filter-chip" data-act="filter" data-k="pri" data-v="${ui.pri === "e" ? "all" : "e"}" aria-pressed="${ui.pri === "e"}">Só essenciais</button></div>
       </div>
-      ${checklistBody()}`;
+      ${checklistBody()}
+      ${removedHTML()}`;
+  }
+
+  function removedHTML() {
+    const list = store.hiddenItems();
+    if (!list.length) return "";
+    return `<details class="section" style="margin-top:24px"><summary class="small"><strong>Itens removidos (${list.length})</strong></summary>
+      <ul class="stack" style="list-style:none;padding:0;margin-top:8px">${list.map(it => `<li class="row row--between row--wrap" style="padding:8px 0;border-top:1px solid var(--line,#ddd)"><span class="small">${esc(it.title)}</span><button class="btn btn--quiet" type="button" data-act="unhide-item" data-id="${esc(it.id)}">Trazer de volta</button></li>`).join("")}</ul></details>`;
   }
 
   /* ---------- início ---------- */
@@ -667,6 +675,12 @@
         if (r.value === "ok") { store.update(s => { s.custom = s.custom.filter(x => x.id !== el.dataset.id); delete s.checks[el.dataset.id]; }); render({ keepScroll: true }); }
         break;
       }
+      case "hide-item": {
+        const r = await dialog({ title: "Remover este item?", text: "Ele sai do checklist e das contagens. Dá para trazer de volta em \"Itens removidos\", no fim da lista.", ok: "Remover", danger: true });
+        if (r.value === "ok") { store.update(s => { s.hidden = s.hidden || {}; s.hidden[el.dataset.id] = true; delete s.checks[el.dataset.id]; }); render({ keepScroll: true }); toast("Item removido."); }
+        break;
+      }
+      case "unhide-item": store.update(s => { if (s.hidden) delete s.hidden[el.dataset.id]; }); render({ keepScroll: true }); toast("Item de volta no checklist."); break;
       case "cat-toggle": saveUI(ui => { ui.open = Object.assign({}, ui.open || { docs: true }); ui.open[el.dataset.id] = !ui.open[el.dataset.id]; }); render({ keepScroll: true }); break;
       case "filter": recent = new Set(); saveUI(ui => { ui[el.dataset.k] = el.dataset.v; }); render({ keepScroll: true }); break;
       case "view-mode": recent = new Set(); saveUI(ui => { ui.view = el.dataset.v; }); render({ keepScroll: true }); break;

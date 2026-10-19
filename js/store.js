@@ -49,6 +49,7 @@
       v: 2,
       checks: {},
       custom: [],
+      hidden: {},
       expenses: [],
       budget: FT.TRIP.budget,
       catBudgets: Object.assign({}, DEFAULT_CAT_BUDGETS),
@@ -120,6 +121,8 @@
       if (Number.isFinite(tx) && tx >= 0 && tx <= 50) s.fx.tax = tx;
       s.fx.manual = Number.isFinite(mn) && mn > 0 && mn < 100 ? mn : null;
     }
+    s.hidden = {};
+    if (isObj(raw.hidden)) for (const k of Object.keys(raw.hidden).slice(0, 400)) if (raw.hidden[k] && k.length < 60) s.hidden[k] = true;
     if (isObj(raw.undo) && Array.isArray(raw.undo.custom)) s.undo = raw.undo;
     if (isObj(raw.ai)) {
       s.ai.mode = raw.ai.mode === "edit" ? "edit" : "ask";
@@ -185,7 +188,8 @@
     defaults,
     days() { return store.state.days || FT.DAYS_DEFAULT; },
     plans() { return store.state.plans || FT.PLANS_DEFAULT; },
-    items() { return FT.CHECKLIST.concat(store.state.custom); },
+    items() { const h = store.state.hidden || {}; return FT.CHECKLIST.filter(i => !h[i.id]).concat(store.state.custom); },
+    hiddenItems() { const h = store.state.hidden || {}; return FT.CHECKLIST.filter(i => h[i.id]); },
     apiKey() { return ls.get(FT.KEYS.apiKey) || ""; }
   });
   store.save();
