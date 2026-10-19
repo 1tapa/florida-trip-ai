@@ -132,11 +132,11 @@
   function viewHoje(arg) {
     const T = FT.TRIP, t = today(), days = store.days(), plans = store.plans();
     const inTrip = t >= T.start && t <= T.end;
-    let n = inTrip ? Number(t.slice(8)) : 4;
-    const picked = /^\d+$/.test(arg || "") ? Math.min(12, Math.max(4, Number(arg))) : null;
+    let n = inTrip ? Number(t.slice(8)) : FT.FIRST_DAY;
+    const picked = /^\d+$/.test(arg || "") ? Math.min(12, Math.max(FT.FIRST_DAY, Number(arg))) : null;
     if (picked) n = picked;
     const live = inTrip && (!picked || picked === n && n === Number(t.slice(8)));
-    const i = n - 4, d = days[i], p = plans[i], date = FT.u.dayDate(n);
+    const i = n - FT.FIRST_DAY, d = days[i], p = plans[i], date = FT.u.dayDate(n);
     const now = FT.now(), nowMin = now.getHours() * 60 + now.getMinutes();
     let cur = -1, nxt = -1;
     if (live) p.schedule.forEach((b, k) => { const s = startMin(b[0]); if (s == null) return; if (s <= nowMin) cur = k; else if (nxt < 0) nxt = k; });
@@ -151,7 +151,7 @@
         <div class="dayhero__where">${icon("pin")}<span>${esc(d.where)}</span></div>
         <div class="chips" style="margin-top:12px">${FT.app.wxHTML ? FT.app.wxHTML(date) : ""}</div>
       </header>
-      ${!live ? `<div class="callout callout--info">${icon("info")}<div><strong>Esta tela fica ao vivo durante a viagem</strong>Nos dias 4 a 12 de dezembro ela mostra o que está acontecendo agora e o que vem a seguir. Por enquanto, é uma prévia do dia.</div></div>` : ""}
+      ${!live ? `<div class="callout callout--info">${icon("info")}<div><strong>Esta tela fica ao vivo durante a viagem</strong>Nos dias 3 a 12 de dezembro ela mostra o que está acontecendo agora e o que vem a seguir. Por enquanto, é uma prévia do dia.</div></div>` : ""}
       ${live ? `<div class="nowgrid">${block("Agora", cur) || `<div class="nowcard"><div class="nowcard__label">Agora</div><div class="nowcard__title">Ainda não começou</div></div>`}${block("A seguir", nxt) || `<div class="nowcard"><div class="nowcard__label">A seguir</div><div class="nowcard__title">Fim da programação de hoje</div></div>`}</div>` : ""}
       <div class="btn-row" style="margin-top:16px">
         ${park ? `<a class="btn" href="#/parques/${park}">${icon("sun")} Guia do parque</a>` : ""}
@@ -279,7 +279,7 @@
 
   /* Lê o roteiro do dia e devolve as atrações do guia citadas nos títulos, na ordem em que aparecem. */
   function ridesFromDay(park) {
-    const plan = FT.store.plans()[park.day - 4];
+    const plan = FT.store.plans()[park.day - FT.FIRST_DAY];
     if (!plan) return [];
     const found = [];
     for (const b of plan.schedule) {
@@ -651,11 +651,11 @@
   /* Migração: se o cabeçalho do dia 9 ainda é o texto antigo (só Universal Studios), troca pelo de Park-to-Park. Edições do usuário nunca são tocadas. */
   (function migrateParkToPark() {
     try {
-      const st = S(), d = st && st.days && st.days[5], nd = FT.DAYS_DEFAULT[5];
+      const st = S(), k = FT.DAYS_DEFAULT.findIndex(x => x.date === "09"), d = st && st.days && st.days[k], nd = FT.DAYS_DEFAULT[k];
       if (!d || d.title !== "Universal Studios Florida") return;
       if (!/^Dia inteiro no Universal Studios Florida, priorizando/.test(d.desc || "")) return;
       if (!/^Defina de quatro a seis/.test(d.tip || "")) return;
-      store.update(s => { Object.assign(s.days[5], { title: nd.title, where: nd.where, desc: nd.desc, tags: nd.tags.slice(), tip: nd.tip }); });
+      store.update(s => { Object.assign(s.days[k], { title: nd.title, where: nd.where, desc: nd.desc, tags: nd.tags.slice(), tip: nd.tip }); });
     } catch (e) { /* sem migração */ }
   })();
 

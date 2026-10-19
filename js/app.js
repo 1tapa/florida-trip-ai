@@ -104,7 +104,7 @@
   function dueChip(it) {
     if (isDone(it)) return "";
     if (isLate(it)) return `<span class="chip chip--late">${icon("alert")} Atrasado, era até ${short(it.due)}</span>`;
-    if (it.day >= 4 && it.day <= 12) return `<span class="chip">${icon("calendar")} Dia ${short(it.due)}</span>`;
+    if (it.day >= FT.FIRST_DAY && it.day <= 12) return `<span class="chip">${icon("calendar")} Dia ${short(it.due)}</span>`;
     if (it.day === 13) return `<span class="chip">${icon("calendar")} Depois da viagem${it.due ? ", até " + short(it.due) : ""}</span>`;
     if (it.due) {
       const n = diffDays(today(), it.due);
@@ -141,8 +141,8 @@
   function bucket(it) {
     const t = today();
     if (it.day === 13) return [900, "Depois da viagem"];
-    if (it.day >= 4 && it.day <= 12) {
-      const dd = FT.DAYS_DEFAULT[it.day - 4];
+    if (it.day >= FT.FIRST_DAY && it.day <= 12) {
+      const dd = FT.DAYS_DEFAULT[it.day - FT.FIRST_DAY];
       return [100 + it.day, `Durante a viagem, dia ${it.day} (${dd.title})`];
     }
     if (!it.due) return [50, "Sem prazo fixo"];
@@ -181,7 +181,7 @@
 
   /* Grupos de uma fase: [rótulo, itens, é-atrasado]. */
   function phaseGroups(ph, items) {
-    const groups = [], dayTitle = n => { const d = FT.DAYS_DEFAULT[n - 4]; return d ? d.title : ""; };
+    const groups = [], dayTitle = n => { const d = FT.DAYS_DEFAULT[n - FT.FIRST_DAY]; return d ? d.title : ""; };
     const late = items.filter(i => !isDone(i) && isLate(i));
     const rest = items.filter(i => !late.includes(i));
     if (late.length) groups.push(["Atrasados", late, true]);
@@ -194,8 +194,8 @@
       by("Dia 12, dia da volta", i => i.day === 12);
       by("Depois da viagem", i => i.day === 13);
     } else if (ph === "trip") {
-      for (const n of [4, 5, 6, 7, 8, 9, 10]) by(`Dia ${n}, ${dayTitle(n)}`, i => i.day === n);
-      by("Outros", i => !(i.day >= 4 && i.day <= 10));
+      for (const n of [3, 4, 5, 6, 7, 8, 9, 10]) by(`Dia ${n}, ${dayTitle(n)}`, i => i.day === n);
+      by("Outros", i => !(i.day >= 3 && i.day <= 10));
     }
     return groups;
   }
@@ -206,7 +206,7 @@
     if (ph === "pre") extra = sel("cat", FT.CATS.map(c => [c.id, c.short]));
     else if (ph === "magic" || ph === "uni") extra = sel("when", [["0", "Antes de ir"], ["day", "No dia do parque"]]);
     else if (ph === "volta") extra = sel("when", [["0", "Planejar antes de voltar"], ["11", "Dia 11"], ["12", "Dia 12"], ["13", "Depois da viagem"]]);
-    else extra = sel("day", [4, 5, 6, 7, 8, 9, 10].map(n => [String(n), "Dia " + n]));
+    else extra = sel("day", [3, 4, 5, 6, 7, 8, 9, 10].map(n => [String(n), "Dia " + n]));
     return `<details class="addrow"><summary>${icon("plus")} Adicionar item nesta fase</summary>
       <form data-form="add-item" data-phase="${ph}">
         <label class="label" for="ai-t-${ph}">O que precisa fazer?</label>
@@ -326,7 +326,7 @@
     const stubNote = st.late ? `${st.late} ${st.late === 1 ? "item atrasado" : "itens atrasados"}` : `${st.eTotal - st.eDone} essenciais pendentes`;
 
     let upcoming = store.items().filter(i => !isDone(i) && (isLate(i) || i.pri === "e" || (i.due && diffDays(t, i.due) <= 45)))
-      .filter(i => !(i.day >= 4 && i.day <= 13 && diffDays(t, i.due || T.start) > 14));
+      .filter(i => !(i.day >= FT.FIRST_DAY && i.day <= 13 && diffDays(t, i.due || T.start) > 14));
     upcoming = upcoming.sort((a, b) => (isLate(b) - isLate(a)) || sortItems(a, b)).slice(0, 5);
 
     const res = FT.RESERVAS.filter(r => (S().reservas[r.id] || {}).status && S().reservas[r.id].status !== "Pendente").length;
@@ -340,7 +340,7 @@
         <div class="pass__main">
           <div class="pass__kicker">Flórida · 4 a 12 de dezembro de 2026 · ${T.travelers} viajantes</div>
           <div class="pass__route">
-            <div class="pass__stop"><span class="pass__code">${T.arrive.code}</span><span class="pass__city">${T.arrive.city}</span><span class="pass__when">sex, 04/12 · 06h30</span></div>
+            <div class="pass__stop"><span class="pass__code">${T.arrive.code}</span><span class="pass__city">${T.arrive.city}</span><span class="pass__when">qui, 03/12</span></div>
             <div class="pass__line">${icon("plane", "pass__plane")}</div>
             <div class="pass__stop pass__stop--end"><span class="pass__code">${T.depart.code}</span><span class="pass__city">${T.depart.city}</span><span class="pass__when">sáb, 12/12 · 18h15</span></div>
           </div>
@@ -380,7 +380,7 @@
 
   function viewDay(n) {
     const days = store.days(), plans = store.plans();
-    const i = Number(n) - 4;
+    const i = Number(n) - FT.FIRST_DAY;
     if (!(i >= 0 && i < days.length)) return notFound();
     if (editor && editor.n === Number(n)) return viewEditDay(i);
     const d = days[i], p = plans[i], date = FT.u.dayDate(Number(d.date));
@@ -408,7 +408,7 @@
   /* ---------- edição manual de um dia ---------- */
   let editor = null;
   function openEditor(n) {
-    const i = n - 4, d = store.days()[i], p = store.plans()[i];
+    const i = n - FT.FIRST_DAY, d = store.days()[i], p = store.plans()[i];
     editor = { n, draft: { title: d.title, where: d.where || "", desc: d.desc || "", tip: d.tip || "", tags: (d.tags || []).join(", "), note: "", schedule: p.schedule.map(b => [b[0] || "", b[1] || "", b[2] || "", b[3] || ""]) } };
   }
   function collectEditor() {
@@ -446,7 +446,7 @@
   }
   function saveEditor() {
     collectEditor();
-    const dr = editor.draft, n = editor.n, i = n - 4;
+    const dr = editor.draft, n = editor.n, i = n - FT.FIRST_DAY;
     const title = clamp(dr.title, 120);
     if (!title) { toast("Dê um título ao dia."); return false; }
     const schedule = dr.schedule.map(b => [clamp(b[0], 30), clamp(b[1], 120), clamp(b[2], 500), clamp(b[3], 120)]).filter(b => b[1]).map(b => (b[3] ? b : b.slice(0, 3)));
@@ -529,7 +529,7 @@
       ? `<div class="callout callout--info">${icon("info")}<div><strong>Sincronização ligada</strong>Seus dados já estão na nuvem do casal${ok ? "" : ", mas o status agora não está em dia: abra Ajustes e confira antes de trocar"}. No celular novo ${y.loginEmail ? "basta entrar com o e-mail e a senha" : "basta colar o convite"}. Mesmo assim, salve um backup por garantia.</div></div>`
       : `<div class="callout callout--alert">${icon("alert")}<div><strong>A sincronização está desligada</strong>Seus dados existem só neste aparelho. Salve o backup abaixo e guarde fora do celular. Se quiser, ligue a sincronização em Ajustes: aí o celular novo recupera tudo sozinho.</div></div>`;
     return `${backTo()}
-      <header class="page-head"><h1 class="h-page">Trocar de celular</h1><p class="lede">No dia 4 você muda de aparelho. Faça isto antes, para não perder o roteiro, o checklist marcado e as listas de compras.</p></header>
+      <header class="page-head"><h1 class="h-page">Trocar de celular</h1><p class="lede">No dia 3 você muda de aparelho. Faça isto antes, para não perder o roteiro, o checklist marcado e as listas de compras.</p></header>
       ${status}
       <section class="section"><div class="section__head"><h2 class="h-section">Antes de trocar</h2></div>
         <ol class="steps">
@@ -792,9 +792,9 @@
         if (ph === "pre") cat = FT.CATS.some(c => c.id === d.get("cat")) ? d.get("cat") : "dias";
         else if (ph === "magic" || ph === "uni") { cat = "parques"; day = d.get("when") === "day" ? (ph === "magic" ? 7 : 9) : 0; }
         else if (ph === "volta") { const w = Number(d.get("when")); day = [11, 12, 13].includes(w) ? w : 0; }
-        else { const n = Number(d.get("day")); day = n >= 4 && n <= 10 ? n : 4; }
+        else { const n = Number(d.get("day")); day = n >= 3 && n <= 10 ? n : 3; }
         let due = /^\d{4}-\d{2}-\d{2}$/.test(d.get("due") || "") ? d.get("due") : "";
-        if (!due && day >= 4 && day <= 12) due = FT.u.dayDate(day);
+        if (!due && day >= FT.FIRST_DAY && day <= 12) due = FT.u.dayDate(day);
         store.update(s => { s.custom.push({ id: "u-" + uid(), cat, pri: ["e", "i", "o"].includes(d.get("pri")) ? d.get("pri") : "i", title, detail: "", due, day, phase: ph, custom: true }); });
         toast("Item adicionado."); render({ keepScroll: true }); break;
       }

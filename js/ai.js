@@ -58,7 +58,7 @@
     const st = checklistStats();
     const lines = [
       "Hoje: " + FT.u.today() + ".",
-      "Viagem: 2 adultos, de 04/12/2026 a 12/12/2026. Chegada em MIA (Miami) 04/12 às 06h30; saída de MCO (Orlando) 12/12 às 18h15.",
+      "Viagem: 2 adultos, de 03/12/2026 a 12/12/2026. Chegada em MIA (Miami) 03/12 (horário a confirmar); saída de MCO (Orlando) 12/12 às 18h15.",
       "Hotéis: Lauderdale-by-the-Sea (04 a 06/12) e Ramada em Kissimmee (06 a 12/12). Carro alugado: retirada no MIA, devolução no MCO.",
       "Checklist: " + st.pending + " itens pendentes, " + st.essentialPending + " essenciais pendentes, " + st.late + " atrasados.",
       "ROTEIRO ATUAL:"
@@ -99,16 +99,16 @@
   ].join("\n");
 
   const EDIT_INSTRUCTIONS = [
-    "Você edita o roteiro de uma viagem de 2 adultos à Flórida (04 a 12 de dezembro de 2026) a pedido do usuário.",
+    "Você edita o roteiro de uma viagem de 2 adultos à Flórida (03 a 12 de dezembro de 2026) a pedido do usuário.",
     "Responda SOMENTE com um objeto JSON válido, sem texto fora dele, neste formato:",
     '{"summary": "1 a 3 frases em português dizendo o que mudou e por quê", "notes": ["no máximo 3 avisos curtos, ex.: confirmar horário"], "days": [ {"day": 7, "title": "...", "where": "...", "desc": "...", "tags": ["..."], "tip": "...", "schedule": [["09:00", "Título", "Descrição", "Local para o mapa (opcional)"]], "alternatives": [["Nome", "Texto"]]} ], "checklist_add": [ {"cat": "mala", "pri": "i", "title": "...", "detail": "...", "due": "AAAA-MM-DD ou vazio", "day": 0} ], "shopping_add": [{"name": "item", "who": "leo"}], "shopping_remove": ["nome exato de um item da lista"]}',
     "Regras:",
-    "- Em days, inclua APENAS os dias que mudam, e dentro de cada dia APENAS os campos que mudam, mais o campo day (4 a 12). Se mudar schedule, envie a programação completa daquele dia, em ordem de horário.",
+    "- Em days, inclua APENAS os dias que mudam, e dentro de cada dia APENAS os campos que mudam, mais o campo day (3 a 12). Se mudar schedule, envie a programação completa daquele dia, em ordem de horário.",
     "- Cada bloco de schedule é [horário, título, descrição] e, opcionalmente, um quarto item com um local pesquisável no mapa.",
     "- shopping_add e shopping_remove são opcionais. A lista de compras é dividida em duas: who \"leo\" ou who \"camily\" (se não souber de quem é, use leo). Use as compras que vêm junto com o roteiro e não repita itens que já existem.",
     "- checklist_add é opcional (até 8 itens). cat deve ser um destes: " + FT.CATS.map(c => c.id).join(", ") + ". pri: e (essencial), i (importante) ou o (opcional). day: 0 se não for um dia específico.",
     "- Se o usuário disser que editou um dia manualmente, o roteiro enviado já traz as alterações dele: preserve os blocos que ele escreveu (horário e título) e apenas complemente o que faltar, sem reescrever o dia.",
-    "- Preserve tudo que o usuário não pediu para mudar. Mantenha chegada ao MIA às 06h30 no dia 4 e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia (Magic Kingdom no dia 7 e Universal no dia 9; não vão ao Kennedy Space Center nem à festa de Natal), a menos que o usuário peça outra coisa.",
+    "- Preserve tudo que o usuário não pediu para mudar. Mantenha a chegada ao MIA no dia 3 (carro de 1 dia, devolvido no dia 4 com a retirada do Mustang) e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia (Magic Kingdom no dia 7 e Universal no dia 9; não vão ao Kennedy Space Center nem à festa de Natal), a menos que o usuário peça outra coisa.",
     "- Não invente reservas, preços, ingressos comprados nem horários oficiais. Quando um horário depender de confirmação, diga isso em notes.",
     "- Se o pedido estiver vago ou não exigir mudança, devolva days vazio e explique em summary o que você precisa saber."
   ].join("\n");
@@ -161,7 +161,7 @@
     for (const d of Array.isArray(raw.days) ? raw.days : []) {
       if (!d || typeof d !== "object") continue;
       const n = Number(d.day);
-      if (!Number.isInteger(n) || n < 4 || n > 12 || seen.has(n)) continue;
+      if (!Number.isInteger(n) || n < FT.FIRST_DAY || n > 12 || seen.has(n)) continue;
       const changes = {};
       for (const [f, max] of Object.entries(DAY_FIELDS)) if (typeof d[f] === "string" && clamp(d[f], max)) changes[f] = clamp(d[f], max);
       if (Array.isArray(d.tags)) {
@@ -214,7 +214,7 @@
     const days = JSON.parse(JSON.stringify(FT.store.days()));
     const plans = JSON.parse(JSON.stringify(FT.store.plans()));
     for (const { day, changes } of proposal.days) {
-      const i = day - 4;
+      const i = day - FT.FIRST_DAY;
       for (const f of ["title", "where", "desc", "tip", "tags"]) if (changes[f] !== undefined) days[i][f] = changes[f];
       if (changes.schedule) plans[i].schedule = changes.schedule;
       if (changes.alternatives) plans[i].alternatives = changes.alternatives;
@@ -280,7 +280,7 @@
   /* Texto para colar no ChatGPT quando não há chave. */
   function fallbackPrompt(question) {
     return [
-      "Atue como concierge de viagem de um casal brasileiro na Flórida (04 a 12 de dezembro de 2026).",
+      "Atue como concierge de viagem de um casal brasileiro na Flórida (03 a 12 de dezembro de 2026).",
       "Responda em português, de forma prática, e diga quando algo precisa ser confirmado em fonte oficial.",
       "", summaryContext(), "", "PERGUNTA: " + (clamp(question, 1200) || "Sugira ajustes para deixar o roteiro mais leve.")
     ].join("\n");
@@ -301,7 +301,7 @@
 
   function diffRows(day, ch) {
     const days = FT.store.days(), plans = FT.store.plans();
-    const old = days[day - 4], oldPlan = plans[day - 4];
+    const old = days[day - FT.FIRST_DAY], oldPlan = plans[day - FT.FIRST_DAY];
     const rows = [];
     const swap = (label, a, b) => rows.push(`<div class="proposal__diff">${esc(label)}: <s>${esc(a)}</s> → ${esc(b)}</div>`);
     if (ch.title !== undefined && ch.title !== old.title) swap("Título", old.title, ch.title);
@@ -325,7 +325,7 @@
 
   function proposalHTML(m, p) {
     const days = FT.store.days();
-    const rows = p.days.map(({ day, changes }) => `<div class="proposal__day">${icon("edit")}<div><div class="proposal__label">Dia ${day} · ${esc(days[day - 4].title)}</div>${diffRows(day, changes)}</div></div>`);
+    const rows = p.days.map(({ day, changes }) => `<div class="proposal__day">${icon("edit")}<div><div class="proposal__label">Dia ${day} · ${esc(days[day - FT.FIRST_DAY].title)}</div>${diffRows(day, changes)}</div></div>`);
     if (p.add.length) {
       rows.push(`<div class="proposal__day">${icon("checklist")}<div><div class="proposal__label">Novos itens no checklist (${p.add.length})</div>${p.add.map(a => {
         const cat = FT.CATS.find(c => c.id === a.cat);
