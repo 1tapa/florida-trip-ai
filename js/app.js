@@ -158,7 +158,7 @@
     { id: "pre", name: "Pré-viagem", intro: "Tudo o que resolver antes de embarcar. Dá para ver por prazo ou por área." },
     { id: "magic", name: "Magic Kingdom", intro: "Ingresso, app e Lightning Lane antes de ir, e o que levar e conferir no dia 7." },
     { id: "uni", name: "Universal", intro: "Ingresso Park-to-Park, app e Express Pass antes de ir, e o que conferir no dia 9." },
-    { id: "trip", name: "Na viagem", intro: "Chegada a Miami, rota para Kissimmee, Kennedy Space Center, festa de Natal e outros dias." },
+    { id: "trip", name: "Na viagem", intro: "Chegada a Miami, rota para Kissimmee, Disney Springs, outlets e outros dias." },
     { id: "volta", name: "Pré-volta", intro: "Imposto e declaração, malas, carro e MCO, e o que fazer depois de chegar." }
   ];
   const PH_MAGIC0 = ["par-md-ingresso", "par-md-app", "par-md-ll", "par-md-restaurante"];

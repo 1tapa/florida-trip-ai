@@ -108,7 +108,7 @@
     "- shopping_add e shopping_remove são opcionais. A lista de compras é dividida em duas: who \"leo\" ou who \"camily\" (se não souber de quem é, use leo). Use as compras que vêm junto com o roteiro e não repita itens que já existem.",
     "- checklist_add é opcional (até 8 itens). cat deve ser um destes: " + FT.CATS.map(c => c.id).join(", ") + ". pri: e (essencial), i (importante) ou o (opcional). day: 0 se não for um dia específico.",
     "- Se o usuário disser que editou um dia manualmente, o roteiro enviado já traz as alterações dele: preserve os blocos que ele escreveu (horário e título) e apenas complemente o que faltar, sem reescrever o dia.",
-    "- Preserve tudo que o usuário não pediu para mudar. Mantenha chegada ao MIA às 06h30 no dia 4 e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia e a festa de Natal na noite do dia 10, a menos que o usuário peça outra coisa.",
+    "- Preserve tudo que o usuário não pediu para mudar. Mantenha chegada ao MIA às 06h30 no dia 4 e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia (Magic Kingdom no dia 7 e Universal no dia 9; não vão ao Kennedy Space Center nem à festa de Natal), a menos que o usuário peça outra coisa.",
     "- Não invente reservas, preços, ingressos comprados nem horários oficiais. Quando um horário depender de confirmação, diga isso em notes.",
     "- Se o pedido estiver vago ou não exigir mudança, devolva days vazio e explique em summary o que você precisa saber."
   ].join("\n");
