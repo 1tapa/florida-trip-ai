@@ -320,7 +320,7 @@
       return true;
     },
     async join(text) {
-      text = String(text || "").trim();
+      text = String(text || "").trim().replace(/^.*#\/entrar\//, "");
       if (text.startsWith("FTRIP2.")) {
         try { const o = JSON.parse(unb64url(text.slice(7))); if (!validCfg(o)) return false; cfg = pickCfg(o); FT.ls.set(CFG, JSON.stringify(cfg)); if (sync.onUI) sync.onUI(); return true; } catch (e) { return false; }
       }
@@ -355,6 +355,10 @@
       if (r === "timeout" && requireExisting) { requireExisting = false; const back = prevAuth; prevAuth = null; stop(); code = back ? back.code : ""; login = back ? back.login : ""; times = back ? back.times : {}; persist(); setStatus(code ? "connecting" : "off"); if (code) start(); }
       return r;
     },
+    /* Links que preenchem tudo: abrir o link no outro aparelho entra direto. */
+    link(inv) { return inv ? location.href.split("#")[0] + "#/entrar/" + inv : ""; },
+    inviteLink() { return sync.link(sync.invite()); },
+    configLink() { return sync.link(sync.configInvite()); },
     configInvite() { return cfg ? "FTRIP2." + b64url(JSON.stringify(cfg)) : ""; },
     invite() { return code && cfg ? "FTRIP1." + b64url(JSON.stringify({ c: cfg, k: code })) : ""; },
     disconnect() { stop(); code = ""; login = ""; times = {}; persist(); setStatus("off"); },
