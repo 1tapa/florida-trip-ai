@@ -83,6 +83,7 @@
     const m = {};
     for (const k of Object.keys(s.checks)) m["check:" + k] = true;
     for (const c of s.custom) m["custom:" + c.id] = c;
+    for (const k of Object.keys(s.hidden || {})) m["hide:" + k] = true;
     for (const e of s.expenses) m["exp:" + e.id] = e;
     for (const x of s.shopping) m["shop:" + x.id] = x;
     for (const id of Object.keys(s.reservas)) m["res:" + id] = s.reservas[id];
@@ -108,6 +109,7 @@
     switch (type) {
       case "check": if (val) s.checks[id] = true; else delete s.checks[id]; break;
       case "custom": s.custom = swap(s.custom, val); break;
+      case "hide": s.hidden = s.hidden || {}; if (val) s.hidden[id] = true; else delete s.hidden[id]; break;
       case "exp": s.expenses = swap(s.expenses, val); break;
       case "shop": s.shopping = swap(s.shopping, val); break;
       case "res": if (val && typeof val === "object") s.reservas[id] = val; else delete s.reservas[id]; break;
