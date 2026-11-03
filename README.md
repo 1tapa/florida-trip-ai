@@ -1,6 +1,6 @@
 # Florida · Caderno de viagem
 
-Guia pessoal para a viagem à Flórida (4 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 134 itens separado em fases (Pré-viagem, Magic Kingdom, Universal, Na viagem e Pré-volta), reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
+Guia pessoal para a viagem à Flórida (3 a 12 de dezembro de 2026): roteiro dia a dia, checklist com 134 itens separado em fases (Pré-viagem, Magic Kingdom, Universal, Na viagem e Pré-volta), reservas, listas de compras (Leo e Camily), edição manual do roteiro e um concierge com IA.
 
 App estático (PWA): abre sem internet depois da primeira visita e guarda tudo no próprio aparelho (`localStorage`).
 
@@ -78,3 +78,7 @@ Regras de alfândega, preços e horários de parques mudam. Os itens trazem link
 ## Links de convite
 
 Em vez de copiar e colar, o app gera um link (`.../#/entrar/...`) que já traz a configuração e o código: ao abrir no outro aparelho, ele pergunta se quer entrar e conecta. Com login por e-mail e senha, o link leva só a configuração e a pessoa digita e-mail e senha.
+
+## Avisos no celular
+
+Ajustes → Avisos no celular liga notificações de **filas e atrações dos parques** (as que você escolher vigiar) e de **prazos do checklist**. O envio é feito por um Worker da Cloudflare em `worker/` (veja `worker/LEIAME.md`). No iPhone é preciso instalar o guia na Tela de Início antes.

@@ -1,0 +1,758 @@
+[
+ {
+  "id": "doc-passaporte",
+  "pri": "e",
+  "due": "2026-10-19",
+  "title": "Conferir a validade dos dois passaportes"
+ },
+ {
+  "id": "doc-visto",
+  "pri": "e",
+  "due": "2026-10-19",
+  "title": "Conferir o visto americano dos dois"
+ },
+ {
+  "id": "doc-nomes",
+  "pri": "e",
+  "due": "2026-10-26",
+  "title": "Comparar o nome nas passagens com o do passaporte"
+ },
+ {
+  "id": "doc-cnh",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Separar a CNH física dentro da validade"
+ },
+ {
+  "id": "doc-copias",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Salvar cópias digitais de todos os documentos"
+ },
+ {
+  "id": "doc-imigracao",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Preparar as respostas da imigração (CBP)"
+ },
+ {
+  "id": "doc-impressos",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Imprimir os vouchers e confirmações"
+ },
+ {
+  "id": "doc-dinheiro",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Declarar dinheiro em espécie acima do limite"
+ },
+ {
+  "id": "voo-reconfirmar",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Reconfirmar os dois voos"
+ },
+ {
+  "id": "voo-bagagem",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Conferir franquia de bagagem e regras de peso"
+ },
+ {
+  "id": "voo-assentos",
+  "pri": "o",
+  "due": "2026-11-13",
+  "title": "Marcar assentos lado a lado"
+ },
+ {
+  "id": "voo-chegada",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Planejar as primeiras horas em Miami"
+ },
+ {
+  "id": "voo-transporte",
+  "pri": "i",
+  "due": "2026-12-02",
+  "title": "Combinar o transporte até o aeroporto"
+ },
+ {
+  "id": "voo-fuso",
+  "pri": "o",
+  "due": "2026-12-02",
+  "title": "Ajustar o relógio para o fuso da Flórida"
+ },
+ {
+  "id": "voo-checkin",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Fazer o check-in online e salvar os cartões de embarque"
+ },
+ {
+  "id": "voo-mao",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Organizar a bagagem de mão"
+ },
+ {
+  "id": "din-cartoes",
+  "pri": "e",
+  "due": "2026-10-30",
+  "title": "Escolher os cartões da viagem"
+ },
+ {
+  "id": "din-orcamento",
+  "pri": "e",
+  "due": "2026-10-30",
+  "title": "Definir quanto gastar e separar uma reserva para o imposto na volta"
+ },
+ {
+  "id": "din-limite",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Conferir o limite e liberar o uso no exterior"
+ },
+ {
+  "id": "din-custos",
+  "pri": "i",
+  "due": "2026-11-13",
+  "title": "Comparar o custo de cada forma de pagamento"
+ },
+ {
+  "id": "din-dolar",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Pagar sempre em dólar nas maquininhas"
+ },
+ {
+  "id": "din-especie",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Levar algum dinheiro em espécie"
+ },
+ {
+  "id": "din-gorjeta",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Entender a gorjeta (tip)"
+ },
+ {
+  "id": "din-imposto",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Lembrar que o preço da etiqueta não inclui imposto"
+ },
+ {
+  "id": "din-alertas",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Ativar alertas de compra no app do banco"
+ },
+ {
+  "id": "din-carteira",
+  "pri": "o",
+  "due": "2026-12-01",
+  "title": "Adicionar os cartões à Carteira do iPhone"
+ },
+ {
+  "id": "tec-modelo",
+  "pri": "i",
+  "due": "2026-11-13",
+  "title": "Escolher modelo, cor e capacidade dos iPhones"
+ },
+ {
+  "id": "tec-esim",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Confirmar na operadora que o modelo dos EUA funciona no Brasil"
+ },
+ {
+  "id": "tec-tradein",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Entender o trade-in com aparelhos brasileiros"
+ },
+ {
+  "id": "tec-garantia",
+  "pri": "i",
+  "due": "2026-11-20",
+  "title": "Verificar a garantia de um iPhone comprado nos EUA"
+ },
+ {
+  "id": "tec-2fa",
+  "pri": "e",
+  "due": "2026-11-20",
+  "title": "Preparar bancos e autenticações antes da troca"
+ },
+ {
+  "id": "tec-internet",
+  "pri": "e",
+  "due": "2026-11-20",
+  "title": "Resolver a internet nos EUA"
+ },
+ {
+  "id": "tec-backup",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Fazer backup completo dos iPhones atuais"
+ },
+ {
+  "id": "tec-whatsapp",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Garantir o backup do WhatsApp"
+ },
+ {
+  "id": "tec-apps",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Instalar os aplicativos da viagem"
+ },
+ {
+  "id": "tec-adaptador",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Comprar adaptadores de tomada"
+ },
+ {
+  "id": "tec-powerbank",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Separar um power bank e cabos curtos"
+ },
+ {
+  "id": "tec-mapas",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Baixar mapas offline"
+ },
+ {
+  "id": "tec-airtag",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Colocar um rastreador na mala"
+ },
+ {
+  "id": "tec-backup-app",
+  "pri": "e",
+  "due": "2026-12-02",
+  "title": "Salvar o backup deste guia e guardar fora do celular"
+ },
+ {
+  "id": "tec-apple-reserva",
+  "pri": "e",
+  "due": "2026-12-01",
+  "title": "Reservar a retirada na Apple Store (Lincoln Road)"
+ },
+ {
+  "id": "tec-carro",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Levar suporte de celular e cabo para o carro"
+ },
+ {
+  "id": "tec-espaco",
+  "pri": "o",
+  "due": "2026-12-01",
+  "title": "Liberar espaço de armazenamento nos celulares"
+ },
+ {
+  "id": "tec-capa",
+  "pri": "o",
+  "due": "2026-12-01",
+  "title": "Decidir onde comprar capa e película dos novos iPhones"
+ },
+ {
+  "id": "car-reserva",
+  "pri": "e",
+  "due": "2026-10-30",
+  "title": "Conferir a reserva do carro"
+ },
+ {
+  "id": "car-motoristas",
+  "pri": "i",
+  "due": "2026-11-13",
+  "title": "Definir quem dirige e conferir as exigências"
+ },
+ {
+  "id": "car-seguro",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Decidir a cobertura do seguro"
+ },
+ {
+  "id": "car-pedagio",
+  "pri": "e",
+  "due": "2026-11-20",
+  "title": "Resolver os pedágios"
+ },
+ {
+  "id": "car-caucao",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Garantir limite para a caução da locadora"
+ },
+ {
+  "id": "car-regras",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Rever as regras de direção na Flórida"
+ },
+ {
+  "id": "car-estacionamento",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Somar o custo de estacionamento"
+ },
+ {
+  "id": "car-troca",
+  "pri": "e",
+  "due": "2026-12-04",
+  "title": "Devolver o carro de 1 dia e retirar o Mustang no MIA"
+ },
+ {
+  "id": "car-rota6",
+  "pri": "i",
+  "due": "2026-12-06",
+  "title": "Conferir a rota Lauderdale → Kissimmee"
+ },
+ {
+  "id": "car-abastecer",
+  "pri": "i",
+  "due": "2026-12-12",
+  "title": "Abastecer antes de devolver o carro"
+ },
+ {
+  "id": "car-devolucao",
+  "pri": "e",
+  "due": "2026-12-12",
+  "title": "Fotografar o carro na devolução"
+ },
+ {
+  "id": "hot-conf-1",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Confirmar o hotel em Lauderdale-by-the-Sea (4 a 6/12)"
+ },
+ {
+  "id": "hot-conf-2",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Confirmar o Ramada em Kissimmee (6 a 12/12)"
+ },
+ {
+  "id": "hot-taxas",
+  "pri": "i",
+  "due": "2026-11-20",
+  "title": "Perguntar sobre taxas extras"
+ },
+ {
+  "id": "hot-early",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Pedir check-in antecipado ou guarda de malas para 03/12"
+ },
+ {
+  "id": "hot-cartao",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Ter cartão e documento para o check-in"
+ },
+ {
+  "id": "hot-cozinha",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Verificar geladeira e micro-ondas no quarto"
+ },
+ {
+  "id": "hot-endereco",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Salvar endereço e telefone dos hotéis offline"
+ },
+ {
+  "id": "hot-checkout",
+  "pri": "i",
+  "due": "2026-12-12",
+  "title": "Fazer o check-out e conferir o quarto"
+ },
+ {
+  "id": "par-md-restaurante",
+  "pri": "o",
+  "due": "2026-10-19",
+  "title": "Ver reserva de restaurante nos parques"
+ },
+ {
+  "id": "par-md-ingresso",
+  "pri": "e",
+  "due": "2026-10-26",
+  "title": "Confirmar o ingresso do Magic Kingdom (07/12)"
+ },
+ {
+  "id": "par-uni-ingresso",
+  "pri": "e",
+  "due": "2026-10-26",
+  "title": "Confirmar o ingresso Park-to-Park da Universal (os 2 parques em 09/12)"
+ },
+ {
+  "id": "par-md-app",
+  "pri": "i",
+  "due": "2026-11-20",
+  "title": "Criar conta e vincular ingressos no My Disney Experience"
+ },
+ {
+  "id": "par-uni-app",
+  "pri": "i",
+  "due": "2026-11-20",
+  "title": "Instalar o app da Universal e vincular os ingressos"
+ },
+ {
+  "id": "par-uni-express",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Comparar o Express Pass da Universal"
+ },
+ {
+  "id": "par-regras",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Ler as regras de entrada de cada parque"
+ },
+ {
+  "id": "par-prioridades",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Definir as atrações prioritárias de cada dia"
+ },
+ {
+  "id": "par-md-ll",
+  "pri": "i",
+  "due": "2026-12-04",
+  "title": "Decidir sobre o Lightning Lane"
+ },
+ {
+  "id": "par-md-dia",
+  "pri": "i",
+  "due": "2026-12-07",
+  "title": "Conferir o horário do parque e o plano do dia"
+ },
+ {
+  "id": "par-agua",
+  "pri": "i",
+  "due": "2026-12-07",
+  "title": "Levar garrafa reutilizável"
+ },
+ {
+  "id": "par-uni-dia",
+  "pri": "i",
+  "due": "2026-12-09",
+  "title": "Conferir o horário dos dois parques da Universal e o plano do dia"
+ },
+ {
+  "id": "com-lista",
+  "pri": "i",
+  "due": "2026-11-13",
+  "title": "Fechar a lista de compras por pessoa"
+ },
+ {
+  "id": "com-cota",
+  "pri": "e",
+  "due": "2026-11-13",
+  "title": "Calcular o imposto na volta (cota de isenção)"
+ },
+ {
+  "id": "com-tamanhos",
+  "pri": "i",
+  "due": "2026-11-20",
+  "title": "Anotar medidas e a conversão de tamanhos"
+ },
+ {
+  "id": "com-govbr",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Ter uma conta Gov.br prata ou ouro"
+ },
+ {
+  "id": "com-ordem",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Seguir a ordem de compras"
+ },
+ {
+  "id": "com-mala",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Reservar espaço e peso para o que vai comprar"
+ },
+ {
+  "id": "com-vip",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Cadastrar-se no clube VIP dos Premium Outlets"
+ },
+ {
+  "id": "com-presentes",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Fechar a lista de presentes para a família"
+ },
+ {
+  "id": "com-horarios",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Conferir os horários dos outlets"
+ },
+ {
+  "id": "com-mercado",
+  "pri": "i",
+  "due": "2026-12-06",
+  "title": "Fazer mercado antes dos parques"
+ },
+ {
+  "id": "com-troca",
+  "pri": "i",
+  "due": "2026-12-10",
+  "title": "Conferir a política de troca antes de pagar"
+ },
+ {
+  "id": "com-edbv",
+  "pri": "e",
+  "due": "2026-12-12",
+  "title": "Preencher a e-DBV (declaração de bagagem)"
+ },
+ {
+  "id": "sau-seguro",
+  "pri": "e",
+  "due": "2026-10-26",
+  "title": "Contratar o seguro-viagem"
+ },
+ {
+  "id": "sau-remedios",
+  "pri": "e",
+  "due": "2026-11-20",
+  "title": "Separar medicamentos de uso pessoal"
+ },
+ {
+  "id": "sau-apolice",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Salvar a apólice e o telefone de atendimento"
+ },
+ {
+  "id": "sau-emergencia",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Saber como agir em uma emergência"
+ },
+ {
+  "id": "sau-sol",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Levar proteção solar"
+ },
+ {
+  "id": "sau-kit",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Montar um kit básico"
+ },
+ {
+  "id": "sau-alergias",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Anotar alergias e restrições em inglês"
+ },
+ {
+  "id": "sau-pes",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Prevenir bolhas"
+ },
+ {
+  "id": "sau-hidratar",
+  "pri": "i",
+  "due": "2026-12-07",
+  "title": "Hidratar e fazer pausas no parque"
+ },
+ {
+  "id": "mal-tenis",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Amaciar o tênis e levar dois pares"
+ },
+ {
+  "id": "mal-extra",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Garantir mala extra ou espaço para voltar"
+ },
+ {
+  "id": "mal-cadeado",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Comprar cadeado com trava TSA"
+ },
+ {
+  "id": "mal-clima",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Ver a previsão na semana anterior e ajustar a mala"
+ },
+ {
+  "id": "mal-roupas",
+  "pri": "e",
+  "due": "2026-12-01",
+  "title": "Separar roupas para nove dias, em camadas"
+ },
+ {
+  "id": "mal-mochila",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Escolher a mochila pequena dos parques"
+ },
+ {
+  "id": "mal-nec",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Montar a nécessaire"
+ },
+ {
+  "id": "mal-chuva",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Levar poncho leve e saquinhos para o celular"
+ },
+ {
+  "id": "mal-garrafa",
+  "pri": "i",
+  "due": "2026-12-01",
+  "title": "Levar uma garrafa reutilizável"
+ },
+ {
+  "id": "mal-jantar",
+  "pri": "o",
+  "due": "2026-12-01",
+  "title": "Levar uma ou duas roupas mais arrumadas"
+ },
+ {
+  "id": "mal-secador",
+  "pri": "o",
+  "due": "2026-12-01",
+  "title": "Conferir a voltagem de secador e chapinha"
+ },
+ {
+  "id": "mal-pesar",
+  "pri": "i",
+  "due": "2026-12-02",
+  "title": "Pesar as malas antes de sair de casa"
+ },
+ {
+  "id": "seg-golpes",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Comprar ingressos só nos canais oficiais"
+ },
+ {
+  "id": "seg-bloqueio",
+  "pri": "e",
+  "due": "2026-11-27",
+  "title": "Salvar o telefone de bloqueio de cada cartão"
+ },
+ {
+  "id": "seg-consulado",
+  "pri": "i",
+  "due": "2026-11-27",
+  "title": "Salvar o contato do Consulado-Geral do Brasil em Miami"
+ },
+ {
+  "id": "seg-wifi",
+  "pri": "o",
+  "due": "2026-11-27",
+  "title": "Evitar Wi-Fi público para banco"
+ },
+ {
+  "id": "seg-carro",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Não deixar nada à vista no carro"
+ },
+ {
+  "id": "seg-dividir",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Dividir cartões e dinheiro entre os dois"
+ },
+ {
+  "id": "seg-familiar",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Deixar o roteiro com alguém no Brasil"
+ },
+ {
+  "id": "seg-localizacao",
+  "pri": "o",
+  "due": "2026-12-03",
+  "title": "Ativar o compartilhamento de localização entre vocês"
+ },
+ {
+  "id": "seg-cofre",
+  "pri": "i",
+  "due": "2026-12-07",
+  "title": "Usar o cofre do hotel nos dias de parque"
+ },
+ {
+  "id": "dia-vespera",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Véspera: conferir tudo uma última vez"
+ },
+ {
+  "id": "dia-casa",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Deixar a casa em ordem"
+ },
+ {
+  "id": "dia-malas",
+  "pri": "i",
+  "due": "2026-12-11",
+  "title": "Última noite: organizar as malas"
+ },
+ {
+  "id": "dia-mco",
+  "pri": "e",
+  "due": "2026-12-12",
+  "title": "Chegar ao MCO por volta das 15h"
+ },
+ {
+  "id": "dia-brasil",
+  "pri": "i",
+  "due": "2026-12-12",
+  "title": "Ao chegar ao Brasil: ter a declaração e as notas à mão"
+ },
+ {
+  "id": "dia-imposto",
+  "pri": "e",
+  "due": "2026-12-14",
+  "title": "Pagar o imposto da alfândega, se houver"
+ },
+ {
+  "id": "dia-faturas",
+  "pri": "i",
+  "due": "2026-12-20",
+  "title": "Conferir as faturas dos cartões"
+ },
+ {
+  "id": "dia-backup",
+  "pri": "o",
+  "due": "2026-12-14",
+  "title": "Fazer backup das fotos da viagem"
+ },
+ {
+  "id": "dia-notas",
+  "pri": "o",
+  "due": "2026-12-14",
+  "title": "Guardar notas fiscais e garantias"
+ }
+]
