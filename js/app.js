@@ -559,6 +559,7 @@
     return `${backTo()}
       <header class="page-head"><h1 class="h-page">Ajustes e backup</h1><p class="lede">Seus dados ficam neste aparelho e, se você ligar a sincronização, também no seu projeto Firebase. Antes de trocar de celular, veja <a href="#/trocar">o passo a passo</a>.</p></header>
       ${syncSection()}
+      ${FT.push ? FT.push.section() : ""}
       <section class="section"><div class="section__head"><h2 class="h-section">Backup automático</h2></div>
         <div class="stack"><p class="small muted">Todo dia, ao abrir o app, ele guarda uma cópia: ${FT.backup.local().length} neste aparelho (últimos 7 dias)${FT.sync.connected ? " e na nuvem do casal (últimos 14 dias)" : ". Ligue a sincronização para guardar também na nuvem"}. Se algo for apagado sem querer, volte a um dia anterior.</p>
           <div class="btn-row"><button class="btn" type="button" data-act="bk-list">${icon("refresh")} Ver cópias e restaurar</button><button class="btn btn--quiet" type="button" data-act="bk-now">Guardar agora</button></div>
@@ -675,6 +676,7 @@
     const st = S();
     if (FT.ai && await FT.ai.act(act, el, ev)) return;
     if (FT.extra && await FT.extra.act(act, el, ev)) return;
+    if (FT.push && await FT.push.act(act, el, ev)) return;
     switch (act) {
       case "toggle-check": {
         const id = el.dataset.id; recent.add(id);
@@ -774,6 +776,7 @@
 
   function onChangeValue(act, el) {
     if (FT.extra && FT.extra.change(act, el)) return;
+    if (FT.push && FT.push.change(act, el)) return;
     const val = el.value;
     switch (act) {
       case "res-note": store.update(s => { const r = s.reservas[el.dataset.id] || { status: "Pendente", note: "" }; r.note = clamp(val, 300); s.reservas[el.dataset.id] = r; }); break;

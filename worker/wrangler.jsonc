@@ -1,0 +1,12 @@
+// Worker dos avisos do caderno de viagem. Deploy: cd worker && npx wrangler deploy
+// O armazenamento (KV "SUBS") é criado sozinho no primeiro deploy do Wrangler 4.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "florida-trip-push",
+  "main": "index.js",
+  "compatibility_date": "2025-10-01",
+  "kv_namespaces": [{ "binding": "SUBS" }],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "observability": { "enabled": true },
+  "workers_dev": true
+}
