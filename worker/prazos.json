@@ -44,7 +44,7 @@
  {
   "id": "doc-dinheiro",
   "pri": "i",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Declarar dinheiro em espécie acima do limite"
  },
  {
@@ -74,25 +74,25 @@
  {
   "id": "voo-transporte",
   "pri": "i",
-  "due": "2026-12-02",
+  "due": "2026-12-01",
   "title": "Combinar o transporte até o aeroporto"
  },
  {
   "id": "voo-fuso",
   "pri": "o",
-  "due": "2026-12-02",
+  "due": "2026-12-01",
   "title": "Ajustar o relógio para o fuso da Flórida"
  },
  {
   "id": "voo-checkin",
   "pri": "e",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Fazer o check-in online e salvar os cartões de embarque"
  },
  {
   "id": "voo-mao",
   "pri": "e",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Organizar a bagagem de mão"
  },
  {
@@ -236,7 +236,7 @@
  {
   "id": "tec-backup-app",
   "pri": "e",
-  "due": "2026-12-02",
+  "due": "2026-12-01",
   "title": "Salvar o backup deste guia e guardar fora do celular"
  },
  {
@@ -262,6 +262,24 @@
   "pri": "o",
   "due": "2026-12-01",
   "title": "Decidir onde comprar capa e película dos novos iPhones"
+ },
+ {
+  "id": "tec-transferir",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Transferir tudo e conferir o aparelho novo antes de entregar o antigo"
+ },
+ {
+  "id": "tec-restaurar-app",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Restaurar este guia no iPhone novo antes de entregar o antigo"
+ },
+ {
+  "id": "tec-buscar",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Desativar o Buscar iPhone e sair do Apple ID no aparelho antigo"
  },
  {
   "id": "car-reserva",
@@ -306,10 +324,28 @@
   "title": "Somar o custo de estacionamento"
  },
  {
+  "id": "car-retirada",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Ir ao centro de locação do MIA"
+ },
+ {
+  "id": "car-inspecao",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Inspecionar e filmar o carro antes de sair"
+ },
+ {
   "id": "car-troca",
   "pri": "e",
   "due": "2026-12-04",
   "title": "Devolver o carro de 1 dia e retirar o Mustang no MIA"
+ },
+ {
+  "id": "car-descanso",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Descansar antes de dirigir após o voo"
  },
  {
   "id": "car-rota6",
@@ -504,6 +540,12 @@
   "title": "Conferir os horários dos outlets"
  },
  {
+  "id": "com-notas",
+  "pri": "e",
+  "due": "2026-12-03",
+  "title": "Guardar notas fiscais e caixas"
+ },
+ {
   "id": "com-mercado",
   "pri": "i",
   "due": "2026-12-06",
@@ -644,7 +686,7 @@
  {
   "id": "mal-pesar",
   "pri": "i",
-  "due": "2026-12-02",
+  "due": "2026-12-01",
   "title": "Pesar as malas antes de sair de casa"
  },
  {
@@ -680,19 +722,19 @@
  {
   "id": "seg-dividir",
   "pri": "i",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Dividir cartões e dinheiro entre os dois"
  },
  {
   "id": "seg-familiar",
   "pri": "i",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Deixar o roteiro com alguém no Brasil"
  },
  {
   "id": "seg-localizacao",
   "pri": "o",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Ativar o compartilhamento de localização entre vocês"
  },
  {
@@ -704,14 +746,20 @@
  {
   "id": "dia-vespera",
   "pri": "e",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Véspera: conferir tudo uma última vez"
  },
  {
   "id": "dia-casa",
   "pri": "i",
-  "due": "2026-12-03",
+  "due": "2026-12-01",
   "title": "Deixar a casa em ordem"
+ },
+ {
+  "id": "dia-chegada",
+  "pri": "i",
+  "due": "2026-12-03",
+  "title": "Na imigração e na chegada"
  },
  {
   "id": "dia-malas",

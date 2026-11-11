@@ -5,9 +5,9 @@
   const FT = (window.FT = window.FT || {});
 
   FT.TRIP = {
-    start: "2026-12-03",
+    start: "2026-12-02",
     end: "2026-12-12",
-    arrive: { code: "MIA", city: "Miami", date: "2026-12-03", time: "" },
+    arrive: { code: "MIA", city: "Miami", date: "2026-12-03", time: "04:55" },
     depart: { code: "MCO", city: "Orlando", date: "2026-12-12", time: "18:15" },
     travelers: 2,
     budget: 6000,
@@ -15,12 +15,17 @@
     iphones: 2600,
     quota: 1000,
     customsRate: 0.5,
-    weather: { lat: 28.292, lon: -81.4076, name: "Kissimmee" }
+    weather: [
+      { name: "Miami", lat: 25.7907, lon: -80.13, from: "2026-12-03", to: "2026-12-03" },
+      { name: "Lauderdale-by-the-Sea", lat: 26.192, lon: -80.0964, from: "2026-12-04", to: "2026-12-05" },
+      { name: "Kissimmee", lat: 28.292, lon: -81.4076, from: "2026-12-06", to: "2026-12-12" }
+    ]
   };
 
-  FT.FIRST_DAY = 3;
+  FT.FIRST_DAY = 2;
 
   FT.LEGS = {
+    ida: { name: "Ida" },
     miami: { name: "Miami e Lauderdale" },
     estrada: { name: "Estrada" },
     orlando: { name: "Orlando e Kissimmee" },
@@ -31,8 +36,11 @@
   FT.CUSTOMS_CATS = ["Roupas", "Eletrônicos"];
 
   FT.DAYS_DEFAULT = [
+    { date: "02", dow: "QUA", leg: "ida", title: "Embarque: Curitiba → Rio → Miami", where: "CWB → GIG → MIA",
+      desc: "Voo da Gol de Curitiba às 18h05, chegada ao Rio às 19h30, conexão de 2h45 no Galeão e voo AA 964 às 22h15. Pouso em Miami às 04h55 do dia 3.",
+      tags: ["Voo", "Conexão", "Noite a bordo"], tip: "No balcão em Curitiba, peça as malas etiquetadas até Miami (MIA) e os dois cartões de embarque. Confira a etiqueta antes de sair do balcão." },
     { date: "03", dow: "QUI", leg: "miami", title: "Chegada a Miami e iPhone", where: "MIA → Apple Lincoln Road → hotel em Miami",
-      desc: "Pouso em Miami (horário a confirmar), imigração, retirada do carro de 1 dia, compra e configuração do iPhone, passeio leve na Lincoln Road e descanso.",
+      desc: "Pouso em Miami às 04h55, imigração, retirada do carro de 1 dia, compra e configuração do iPhone, passeio leve na Lincoln Road e descanso.",
       tags: ["Chegada", "Apple", "Descanso"], tip: "Dia de chegada: priorize carro, iPhone e hotel. O carro de 1 dia precisa voltar ao MIA no dia 4, na mesma hora da retirada ou antes." },
     { date: "04", dow: "SEX", leg: "miami", title: "South Beach e troca de carro", where: "Hotel → MIA → Miami Beach → Lauderdale-by-the-Sea",
       desc: "Manhã tranquila, devolução do carro de 1 dia e retirada do Mustang no MIA, tarde em South Beach e chegada ao hotel em Lauderdale-by-the-Sea.",
@@ -66,11 +74,25 @@
   /* Cada bloco: [horário, título, descrição, local opcional para abrir no mapa] */
   FT.PLANS_DEFAULT = [
     { schedule: [
-        ["Horário do voo", "Chegada ao MIA", "Imigração, bagagem e procedimentos de entrada. Atualize aqui o horário real do pouso.", "Miami International Airport"],
-        ["Após a bagagem", "Retirar o carro de 1 dia", "Filme a carroceria em 360°, rodas, vidros, interior, painel, combustível e quilometragem. Confira o horário de devolução de amanhã e pergunte sobre pedágios.", "MIA Rental Car Center"],
-        ["Tarde", "Apple Lincoln Road", "Confirmar estoque, preço final e regras de trade-in. Transferir fotos, WhatsApp, contatos, bancos e autenticação antes de apagar ou entregar o aparelho antigo.", "Apple Lincoln Road Miami Beach"],
-        ["Fim da tarde", "Lincoln Road e jantar", "Passeio a pé, café e jantar leve, sem comprometer o descanso depois do voo.", "Lincoln Road Mall Miami Beach"],
-        ["Noite", "Hotel e descanso", "Check-in no hotel da noite de 03/12 (preencha o nome em Reservas) e dormir cedo."]
+        ["15:00", "Sair para o aeroporto de Curitiba (CWB)", "Passaportes com visto, cartões, celulares carregados e malas pesadas. O balcão fecha antes do voo: chegue com folga.", "Aeroporto Internacional Afonso Pena Curitiba"],
+        ["16:00", "Check-in e despacho no balcão", "Peça as malas etiquetadas até Miami (MIA) e os cartões de embarque dos dois voos. Guarde os comprovantes de bagagem."],
+        ["18:05", "Voo Curitiba → Rio de Janeiro (Gol, AA 7732)", "Chegada ao Galeão (GIG) às 19h30."],
+        ["19:30", "Conexão no Galeão", "2h45 até o próximo voo. Vá direto para o embarque internacional: controle de passaportes e raio X. Coma algo antes de embarcar.", "Aeroporto Internacional do Galeão Rio de Janeiro"],
+        ["21:30", "Embarque do AA 964", "Portão do voo para Miami. Premium Economy embarca no Grupo 4."],
+        ["22:15", "Voo Rio → Miami (AA 964)", "8h40 de voo, com jantar e café da manhã. Durma o que puder: o pouso é às 04h55."]
+      ],
+      alternatives: [
+        ["Se o voo da Gol atrasar", "Avise a tripulação ou o balcão da American no Rio assim que pousar. Os dois voos estão no mesmo bilhete: se perder a conexão, a companhia precisa reacomodar vocês."],
+        ["Se as malas não forem etiquetadas até Miami", "Retire-as na esteira do Galeão e despache de novo no balcão da American. Conte com esse tempo dentro das 2h45."],
+        ["Para dormir no voo", "Máscara, tampões de ouvido, casaco leve e meia. Ajuste o relógio para o horário da Flórida ao embarcar."]
+      ] },
+
+    { schedule: [
+        ["04:55", "Chegada ao MIA", "Pouso do AA 964. Imigração, bagagem e procedimentos de entrada.", "Miami International Airport"],
+        ["06:30", "Retirar o carro de 1 dia", "Filme a carroceria em 360°, rodas, vidros, interior, painel, combustível e quilometragem. Confira o horário de devolução de amanhã e pergunte sobre pedágios.", "MIA Rental Car Center"],
+        ["10:00", "Apple Lincoln Road", "Confirmar estoque, preço final e regras de trade-in. Transferir fotos, WhatsApp, contatos, bancos e autenticação antes de apagar ou entregar o aparelho antigo.", "Apple Lincoln Road Miami Beach"],
+        ["12:30", "Lincoln Road e almoço", "Passeio a pé e almoço leve, sem comprometer o descanso depois do voo.", "Lincoln Road Mall Miami Beach"],
+        ["15:00", "Hotel e descanso", "Check-in no hotel da noite de 03/12 (preencha o nome em Reservas), jantar perto e dormir cedo."]
       ],
       alternatives: [
         ["Se o voo atrasar", "Priorize carro e hotel. A Apple pode ficar para o dia 4 ou outro dia, conforme o estoque."],
@@ -218,7 +240,7 @@
   ];
 
   FT.RESERVAS = [
-    { id: "voo-ida", icon: "plane", title: "Voo de ida", when: "03/12, chegada ao MIA", hint: "Companhia, voo, horário de pouso e código da reserva" },
+    { id: "voo-ida", icon: "plane", title: "Voo de ida", when: "02/12: Curitiba 18h05 → Rio 19h30 (Gol) e Rio 22h15 → Miami 04h55 de 03/12 (AA 964)", hint: "Códigos de reserva da American e da Gol, bagagem incluída" },
     { id: "hotel-0", icon: "bed", title: "Hotel em Miami (noite de 03/12)", when: "03 a 04/12", hint: "Nome, endereço e código da reserva" },
     { id: "carro-1d", icon: "car", title: "Carro de 1 dia no MIA", when: "Retirada em 03/12, devolução em 04/12", hint: "Locadora e número da reserva" },
     { id: "voo-volta", icon: "plane", title: "Voo de volta", when: "12/12, saída do MCO às 18h15", hint: "Companhia, voo e código da reserva" },
@@ -227,7 +249,7 @@
     { id: "carro", icon: "car", title: "Carro alugado (Mustang)", when: "Retirada no MIA em 04/12 (troca com o carro de 1 dia), devolução no MCO em 12/12", hint: "Locadora e número da reserva" },
     { id: "ing-md", icon: "ticket", title: "Magic Kingdom", when: "07/12", hint: "Ingresso vinculado ao My Disney Experience?" },
     { id: "ing-uni", icon: "ticket", title: "Universal Orlando", when: "09/12", hint: "Ingresso Park-to-Park (2 parques)" },
-    { id: "seguro", icon: "shield", title: "Seguro-viagem", when: "04 a 12/12", hint: "Seguradora, apólice e telefone 24 horas" }
+    { id: "seguro", icon: "shield", title: "Seguro-viagem", when: "02 a 13/12 (da saída à volta ao Brasil)", hint: "Seguradora, apólice e telefone 24 horas" }
   ];
 
   FT.RESERVA_STATUS = ["Pendente", "Confirmado", "Pago"];
