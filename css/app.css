@@ -34,6 +34,7 @@
   --ok: #1f7a4d;
   --ok-tint: #dff1e8;
 
+  --leg-ida: var(--ink);
   --leg-miami: var(--gulf);
   --leg-estrada: #8696a1;
   --leg-orlando: var(--sun);

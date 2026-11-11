@@ -3,7 +3,7 @@
  * Cada item: [id, prioridade, prazo, dia, título, detalhe, link?]
  *   prioridade: e = essencial, i = importante, o = opcional
  *   prazo:      'AAAA-MM-DD' ou '' (se tiver dia, o prazo é a data do dia)
- *   dia:        0 = sem dia fixo; 4–12 = dia de dezembro de 2026 em que o item acontece;
+ *   dia:        0 = sem dia fixo; 2–12 = dia de dezembro de 2026 em que o item acontece;
  *               13 = depois da viagem
  *   link:       [rótulo, url] opcional (fonte ou página oficial)
  *
@@ -14,7 +14,7 @@
 
   FT.CATS = [
     { id: "docs", name: "Documentos e entrada nos EUA", short: "Documentos", icon: "passport", intro: "O que a imigração, a locadora e as companhias vão pedir." },
-    { id: "voos", name: "Voos e aeroporto", short: "Voos", icon: "plane", intro: "Chegada a Miami no dia 3 e saída de Orlando às 18h15." },
+    { id: "voos", name: "Voos e aeroporto", short: "Voos", icon: "plane", intro: "Saída de Curitiba no dia 2 às 18h05, chegada a Miami no dia 3 às 04h55 e volta de Orlando às 18h15." },
     { id: "dinheiro", name: "Dinheiro e cartões", short: "Dinheiro", icon: "wallet", intro: "Como pagar, quanto isso custa e como não ficar sem acesso ao dinheiro." },
     { id: "tech", name: "Celular, internet e iPhones", short: "Tecnologia", icon: "phone", intro: "A compra dos iPhones é o ponto mais delicado da viagem." },
     { id: "carro", name: "Carro alugado e estrada", short: "Carro", icon: "car", intro: "Retirada no MIA, devolução no MCO e pedágios eletrônicos." },
@@ -53,26 +53,26 @@
         "Tenha à mão o endereço do primeiro hotel, a data do voo de volta e o motivo da viagem (turismo). Declare com clareza o que está trazendo, inclusive comida: as regras para frutas frescas e carnes são rígidas."],
       ["doc-impressos", "i", "2026-12-01", 0, "Imprimir os vouchers e confirmações",
         "Voos, hotéis, carro, ingressos e seguro. Com tudo no celular, uma bateria descarregada na imigração ou na locadora vira problema."],
-      ["doc-dinheiro", "i", "2026-12-03", 0, "Declarar dinheiro em espécie acima do limite",
+      ["doc-dinheiro", "i", "2026-12-01", 0, "Declarar dinheiro em espécie acima do limite",
         "Valores acima de US$ 10.000 na entrada nos EUA e acima de R$ 10 mil na saída do Brasil precisam ser declarados."]
     ],
 
     voos: [
       ["voo-reconfirmar", "e", "2026-11-13", 0, "Reconfirmar os dois voos",
-        "Ida: chegada ao MIA em 03/12 (confira o horário no app da companhia). Volta: saída do MCO em 12/12 às 18h15. Confira horário, terminal e conexões no app da companhia e anote o código da reserva na aba Reservas."],
+        "Ida em 02/12: Curitiba 18h05 → Rio 19h30 (Gol, vendido como AA 7732) e Rio 22h15 → Miami 04h55 de 03/12 (AA 964). Volta: saída do MCO em 12/12 às 18h15. Confira horários e terminais nos apps da American e da Gol e anote os dois códigos de reserva na aba Reservas."],
       ["voo-bagagem", "e", "2026-11-13", 0, "Conferir franquia de bagagem e regras de peso",
-        "Veja quantas malas e quantos quilos cada passageiro pode despachar, o custo de uma mala extra e a franquia de mão. Você vai voltar com compras: decida agora como levará esse peso."],
+        "O bilhete mistura duas tarifas (trecho da Gol em econômica básica e AA 964 em Premium Economy) e o app da American não mostra a franquia. Ligue para a American e confirme por escrito com a Decolar: quantas malas, quantos quilos e se vão etiquetadas de Curitiba até Miami. Você vai voltar com compras: veja também o custo de uma mala extra."],
       ["voo-assentos", "o", "2026-11-13", 0, "Marcar assentos lado a lado",
         "Alguns assentos têm taxa; avalie se vale a pena para o voo longo."],
       ["voo-chegada", "i", "2026-11-27", 0, "Planejar as primeiras horas em Miami",
         "Imigração, bagagem e locadora podem levar de duas a três horas. O quarto só costuma liberar à tarde: veja o item de guarda de malas em Hotéis."],
-      ["voo-transporte", "i", "2026-12-02", 0, "Combinar o transporte até o aeroporto",
-        "Chegue com pelo menos três horas de antecedência em voo internacional e deixe folga para o trânsito."],
-      ["voo-fuso", "o", "2026-12-02", 0, "Ajustar o relógio para o fuso da Flórida",
+      ["voo-transporte", "i", "2026-12-01", 0, "Combinar o transporte até o aeroporto",
+        "O voo da Gol sai de Curitiba às 18h05 de 02/12 e as malas seguem para um voo internacional: planeje estar no aeroporto por volta das 16h e deixe folga para o trânsito."],
+      ["voo-fuso", "o", "2026-12-01", 0, "Ajustar o relógio para o fuso da Flórida",
         "Em dezembro a Flórida fica duas horas atrás de Brasília. Se o celular não mudar sozinho, ajuste o horário."],
-      ["voo-checkin", "e", "2026-12-03", 0, "Fazer o check-in online e salvar os cartões de embarque",
-        "Normalmente abre de 24 a 48 horas antes (confirme com a companhia). Salve os cartões de embarque na Carteira do celular e imprima uma cópia."],
-      ["voo-mao", "e", "2026-12-03", 0, "Organizar a bagagem de mão",
+      ["voo-checkin", "e", "2026-12-01", 0, "Fazer o check-in online e salvar os cartões de embarque",
+        "São dois check-ins. O trecho Curitiba → Rio é pelo site ou app da Gol, com o código de reserva da Gol (costuma abrir cerca de 48 horas antes). O AA 964 é pelo app da American e costuma abrir 24 horas antes, por volta das 22h15 de 01/12. Se o app não liberar por causa da conexão, faça no balcão em Curitiba. Salve os cartões de embarque na Carteira do celular e imprima uma cópia."],
+      ["voo-mao", "e", "2026-12-01", 0, "Organizar a bagagem de mão",
         "Documentos, remédios, eletrônicos, power bank (baterias de lítio nunca vão despachadas), uma troca de roupa e carregadores. Líquidos em frascos de até 100 ml dentro de um saco transparente."]
     ],
 
@@ -126,7 +126,7 @@
         "Miami, Orlando e o caminho da Florida’s Turnpike no Google Maps, para não depender do sinal nos parques e na estrada."],
       ["tec-airtag", "o", "2026-11-27", 0, "Colocar um rastreador na mala",
         "Ajuda a localizar bagagem extraviada, útil na volta com compras caras."],
-      ["tec-backup-app", "e", "2026-12-02", 0, "Salvar o backup deste guia e guardar fora do celular",
+      ["tec-backup-app", "e", "2026-12-01", 0, "Salvar o backup deste guia e guardar fora do celular",
         "Em Mais, Trocar de celular, toque em Salvar backup e mande o arquivo para o seu e-mail ou salve no iCloud Drive. Sem isso, ao trocar de celular no dia 3 você pode perder o roteiro que editou."],
       ["tec-apple-reserva", "e", "2026-12-01", 0, "Reservar a retirada na Apple Store (Lincoln Road)",
         "Reserve o modelo para o horário em que você estará lá e confirme o horário de abertura da loja. Leve passaporte e o cartão de pagamento."],
@@ -294,7 +294,7 @@
         "Para jantares em restaurantes mais caprichados."],
       ["mal-secador", "o", "2026-12-01", 0, "Conferir a voltagem de secador e chapinha",
         "Os EUA usam 120 V. Aparelhos de 220 V não funcionam bem; veja se há secador no hotel."],
-      ["mal-pesar", "i", "2026-12-02", 0, "Pesar as malas antes de sair de casa",
+      ["mal-pesar", "i", "2026-12-01", 0, "Pesar as malas antes de sair de casa",
         "Deixe margem para o que vai comprar e confira o limite de peso da companhia."]
     ],
 
@@ -309,20 +309,20 @@
         "Use dados móveis para acessar contas e fazer transferências."],
       ["seg-carro", "e", "2026-12-03", 0, "Não deixar nada à vista no carro",
         "Guarde compras, bolsas e eletrônicos no porta-malas antes de chegar ao destino. Furtos em carros de turistas acontecem em estacionamentos de praias, outlets e atrações."],
-      ["seg-dividir", "i", "2026-12-03", 0, "Dividir cartões e dinheiro entre os dois",
+      ["seg-dividir", "i", "2026-12-01", 0, "Dividir cartões e dinheiro entre os dois",
         "Se um cartão ou uma carteira se perder, o outro continua funcionando."],
-      ["seg-familiar", "i", "2026-12-03", 0, "Deixar o roteiro com alguém no Brasil",
+      ["seg-familiar", "i", "2026-12-01", 0, "Deixar o roteiro com alguém no Brasil",
         "Envie voos, hotéis, telefone do seguro e o roteiro dia a dia."],
-      ["seg-localizacao", "o", "2026-12-03", 0, "Ativar o compartilhamento de localização entre vocês",
+      ["seg-localizacao", "o", "2026-12-01", 0, "Ativar o compartilhamento de localização entre vocês",
         "Facilita se alguém se perder em um parque lotado."],
       ["seg-cofre", "i", "", 7, "Usar o cofre do hotel nos dias de parque",
         "Deixe passaportes e eletrônicos que não vai usar e leve só as cópias digitais."]
     ],
 
     dias: [
-      ["dia-vespera", "e", "2026-12-03", 0, "Véspera: conferir tudo uma última vez",
+      ["dia-vespera", "e", "2026-12-01", 0, "Véspera: conferir tudo uma última vez",
         "Check-in feito, cartões de embarque salvos, malas pesadas, eletrônicos carregados, documentos na mochila e impressos separados."],
-      ["dia-casa", "i", "2026-12-03", 0, "Deixar a casa em ordem",
+      ["dia-casa", "i", "2026-12-01", 0, "Deixar a casa em ordem",
         "Contas pagas, lixo fora, chaves com alguém de confiança e aparelhos desligados."],
       ["dia-chegada", "i", "", 3, "Na imigração e na chegada",
         "Passaporte e visto à mão, endereço do hotel e data de volta. Depois, siga para a locadora, ative a internet e avise a família que chegou."],
@@ -373,7 +373,7 @@
       const [id, pri, due, day, title, detail, link] = row;
       FT.CHECKLIST.push({
         id, cat: cat.id, pri, day,
-        due: due || (day >= 4 && day <= 12 ? "2026-12-" + String(day).padStart(2, "0") : ""),
+        due: due || (day >= 2 && day <= 12 ? "2026-12-" + String(day).padStart(2, "0") : ""),
         title, detail, link: link || null
       });
     }

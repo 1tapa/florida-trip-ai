@@ -99,16 +99,16 @@
   ].join("\n");
 
   const EDIT_INSTRUCTIONS = [
-    "Você edita o roteiro de uma viagem de 2 adultos à Flórida (03 a 12 de dezembro de 2026) a pedido do usuário.",
+    "Você edita o roteiro de uma viagem de 2 adultos à Flórida (saída do Brasil em 02/12, na Flórida de 03 a 12 de dezembro de 2026) a pedido do usuário.",
     "Responda SOMENTE com um objeto JSON válido, sem texto fora dele, neste formato:",
     '{"summary": "1 a 3 frases em português dizendo o que mudou e por quê", "notes": ["no máximo 3 avisos curtos, ex.: confirmar horário"], "days": [ {"day": 7, "title": "...", "where": "...", "desc": "...", "tags": ["..."], "tip": "...", "schedule": [["09:00", "Título", "Descrição", "Local para o mapa (opcional)"]], "alternatives": [["Nome", "Texto"]]} ], "checklist_add": [ {"cat": "mala", "pri": "i", "title": "...", "detail": "...", "due": "AAAA-MM-DD ou vazio", "day": 0} ], "shopping_add": [{"name": "item", "who": "leo"}], "shopping_remove": ["nome exato de um item da lista"]}',
     "Regras:",
-    "- Em days, inclua APENAS os dias que mudam, e dentro de cada dia APENAS os campos que mudam, mais o campo day (3 a 12). Se mudar schedule, envie a programação completa daquele dia, em ordem de horário.",
+    "- Em days, inclua APENAS os dias que mudam, e dentro de cada dia APENAS os campos que mudam, mais o campo day (2 a 12). Se mudar schedule, envie a programação completa daquele dia, em ordem de horário.",
     "- Cada bloco de schedule é [horário, título, descrição] e, opcionalmente, um quarto item com um local pesquisável no mapa.",
     "- shopping_add e shopping_remove são opcionais. A lista de compras é dividida em duas: who \"leo\" ou who \"camily\" (se não souber de quem é, use leo). Use as compras que vêm junto com o roteiro e não repita itens que já existem.",
     "- checklist_add é opcional (até 8 itens). cat deve ser um destes: " + FT.CATS.map(c => c.id).join(", ") + ". pri: e (essencial), i (importante) ou o (opcional). day: 0 se não for um dia específico.",
     "- Se o usuário disser que editou um dia manualmente, o roteiro enviado já traz as alterações dele: preserve os blocos que ele escreveu (horário e título) e apenas complemente o que faltar, sem reescrever o dia.",
-    "- Preserve tudo que o usuário não pediu para mudar. Mantenha a chegada ao MIA no dia 3 (carro de 1 dia, devolvido no dia 4 com a retirada do Mustang) e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia (Magic Kingdom no dia 7 e Universal no dia 9; não vão ao Kennedy Space Center nem à festa de Natal), a menos que o usuário peça outra coisa.",
+    "- Preserve tudo que o usuário não pediu para mudar. Mantenha o embarque no dia 2 (Gol de Curitiba às 18h05, chegada ao Rio às 19h30, AA 964 às 22h15), a chegada ao MIA no dia 3 às 04h55 (carro de 1 dia, devolvido no dia 4 com a retirada do Mustang) e estar no MCO por volta das 15h no dia 12 (voo às 18h15), os ingressos de cada dia (Magic Kingdom no dia 7 e Universal no dia 9; não vão ao Kennedy Space Center nem à festa de Natal), a menos que o usuário peça outra coisa.",
     "- Não invente reservas, preços, ingressos comprados nem horários oficiais. Quando um horário depender de confirmação, diga isso em notes.",
     "- Se o pedido estiver vago ou não exigir mudança, devolva days vazio e explique em summary o que você precisa saber."
   ].join("\n");
@@ -280,7 +280,7 @@
   /* Texto para colar no ChatGPT quando não há chave. */
   function fallbackPrompt(question) {
     return [
-      "Atue como concierge de viagem de um casal brasileiro na Flórida (03 a 12 de dezembro de 2026).",
+      "Atue como concierge de viagem de um casal brasileiro na Flórida (saída do Brasil em 02/12, na Flórida de 03 a 12 de dezembro de 2026).",
       "Responda em português, de forma prática, e diga quando algo precisa ser confirmado em fonte oficial.",
       "", summaryContext(), "", "PERGUNTA: " + (clamp(question, 1200) || "Sugira ajustes para deixar o roteiro mais leve.")
     ].join("\n");

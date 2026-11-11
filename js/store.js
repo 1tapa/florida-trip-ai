@@ -82,10 +82,22 @@
     const D = FT.DAYS_DEFAULT, P = FT.PLANS_DEFAULT;
     if (!Array.isArray(rdays) || !Array.isArray(rplans) || rdays.length !== rplans.length) return [rdays, rplans];
     rdays = clone(rdays); rplans = clone(rplans);
-    if (rdays.length === D.length - 1 && rdays[0] && rdays[0].date === "04") {
-      rdays.unshift(clone(D[0])); rplans.unshift(clone(P[0]));
-      if (rdays[1] && /^Chegada, iPhone e Miami Beach/.test(rdays[1].title || "")) { rdays[1] = clone(D[1]); rplans[1] = clone(P[1]); }
+    if (rdays.length === D.length - 2 && rdays[0] && rdays[0].date === "04") {
+      rdays.unshift(clone(D[1])); rplans.unshift(clone(P[1]));
+      if (rdays[1] && /^Chegada, iPhone e Miami Beach/.test(rdays[1].title || "")) { rdays[1] = clone(D[2]); rplans[1] = clone(P[2]); }
       flags.add("d3");
+    }
+    /* Dia 2 (embarque em Curitiba) e horário real do pouso em Miami. */
+    if (rdays.length === D.length - 1 && rdays[0] && rdays[0].date === "03") {
+      const d3 = rdays[0], p3 = rplans[0];
+      if (d3 && typeof d3.desc === "string") d3.desc = d3.desc.replace("Pouso em Miami (horário a confirmar)", "Pouso em Miami às 04h55");
+      if (p3 && Array.isArray(p3.schedule)) p3.schedule.forEach(r => {
+        if (!Array.isArray(r) || r[0] !== "Horário do voo") return;
+        r[0] = "04:55";
+        if (typeof r[2] === "string") r[2] = r[2].replace(" Atualize aqui o horário real do pouso.", "").replace(/^Imigração/, "Pouso do AA 964. Imigração");
+      });
+      rdays.unshift(clone(D[0])); rplans.unshift(clone(P[0]));
+      flags.add("d2");
     }
     if (rdays.length !== D.length || flags.has("sem-festa")) return [rdays, rplans];
     rdays.forEach((d, i) => {
@@ -141,7 +153,7 @@
     const flags = new Set(arr(raw.mig).map(String));
     let rdays = raw.days, rplans = raw.plans;
     if (Array.isArray(rdays) && Array.isArray(rplans)) [rdays, rplans] = migratePlan(rdays, rplans, flags);
-    if (!Array.isArray(rdays) || !Array.isArray(rplans)) { flags.add("d3"); flags.add("sem-festa"); }
+    if (!Array.isArray(rdays) || !Array.isArray(rplans)) { flags.add("d3"); flags.add("d2"); flags.add("sem-festa"); }
     s.mig = [...flags].slice(0, 10);
     if (Array.isArray(rdays) && rdays.length === FT.DAYS_DEFAULT.length) s.days = rdays;
     if (Array.isArray(rplans) && rplans.length === FT.PLANS_DEFAULT.length) s.plans = rplans;

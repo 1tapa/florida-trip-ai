@@ -66,21 +66,25 @@
     const w = wx.map && wx.map[date];
     if (!w) {
       const from = FT.u.addDays(date, -15);
+      if (date < FT.TRIP.weather[0].from) return "";
       return today() < from ? `<span class="small muted">Previsão a partir de ${short(from)}</span>` : "";
     }
     const [ic, txt] = wxLabel(w.code);
-    return `<span class="wx">${icon(ic)} ${Math.round(w.max)}°/${Math.round(w.min)}°C · ${txt}${w.pop != null ? ", chuva " + Math.round(w.pop) + "%" : ""}</span>`;
+    return `<span class="wx">${icon(ic)} ${w.city ? esc(w.city) + ": " : ""}${Math.round(w.max)}°/${Math.round(w.min)}°C · ${txt}${w.pop != null ? ", chuva " + Math.round(w.pop) + "%" : ""}</span>`;
   }
   async function loadWeather() {
     if (wx.started) return; wx.started = true;
     try { const c = JSON.parse(FT.ls.get(FT.KEYS.weather) || "null"); if (c && c.map) wx.map = c.map; } catch (e) { /* sem cache */ }
     if (diffDays(today(), FT.TRIP.start) > 15 || today() > FT.TRIP.end) return;
-    const w = FT.TRIP.weather;
+    /* Cada dia usa a previsão da cidade onde vocês estão (Miami, Lauderdale ou Kissimmee). */
     const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
     try {
-      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNew_York&forecast_days=16`, { signal: ctrl.signal });
-      const j = await r.json(); const map = {};
-      (j.daily.time || []).forEach((d, i) => { map[d] = { code: j.daily.weather_code[i], max: j.daily.temperature_2m_max[i], min: j.daily.temperature_2m_min[i], pop: j.daily.precipitation_probability_max[i] }; });
+      const map = {};
+      await Promise.all(FT.TRIP.weather.map(async w => {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${w.lat}&longitude=${w.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FNew_York&forecast_days=16`, { signal: ctrl.signal });
+        const j = await r.json();
+        (j.daily.time || []).forEach((d, i) => { if (d >= w.from && d <= w.to) map[d] = { code: j.daily.weather_code[i], max: j.daily.temperature_2m_max[i], min: j.daily.temperature_2m_min[i], pop: j.daily.precipitation_probability_max[i], city: w.name }; });
+      }));
       wx.map = Object.assign({}, wx.map, map);
       FT.ls.set(FT.KEYS.weather, JSON.stringify({ map: wx.map }));
       if (/^#\/roteiro\/\d+/.test(location.hash)) render({ keepScroll: true });
@@ -321,7 +325,7 @@
     const toStart = diffDays(t, T.start), inTrip = t >= T.start && t <= T.end;
     let count, label;
     if (toStart > 0) { count = toStart; label = toStart === 1 ? "dia para o embarque" : "dias para o embarque"; }
-    else if (inTrip) { count = "Dia " + (diffDays(T.start, t) + 1); label = "de 9 da viagem"; }
+    else if (inTrip) { count = "Dia " + (diffDays(T.start, t) + 1); label = "de 11 da viagem"; }
     else { count = "Fim"; label = "viagem concluída"; }
     const stubNote = st.late ? `${st.late} ${st.late === 1 ? "item atrasado" : "itens atrasados"}` : `${st.eTotal - st.eDone} essenciais pendentes`;
 
@@ -338,13 +342,13 @@
     return `
       <section class="pass" aria-label="Resumo da viagem">
         <div class="pass__main">
-          <div class="pass__kicker">Flórida · 4 a 12 de dezembro de 2026 · ${T.travelers} viajantes</div>
+          <div class="pass__kicker">Flórida · 2 a 12 de dezembro de 2026 · ${T.travelers} viajantes</div>
           <div class="pass__route">
-            <div class="pass__stop"><span class="pass__code">${T.arrive.code}</span><span class="pass__city">${T.arrive.city}</span><span class="pass__when">qui, 03/12</span></div>
+            <div class="pass__stop"><span class="pass__code">${T.arrive.code}</span><span class="pass__city">${T.arrive.city}</span><span class="pass__when">qui, 03/12 · 04h55</span></div>
             <div class="pass__line">${icon("plane", "pass__plane")}</div>
             <div class="pass__stop pass__stop--end"><span class="pass__code">${T.depart.code}</span><span class="pass__city">${T.depart.city}</span><span class="pass__when">sáb, 12/12 · 18h15</span></div>
           </div>
-          <dl class="pass__fields"><div><dt>Noites</dt><dd>8</dd></div><div><dt>Hotéis</dt><dd>2</dd></div><div><dt>Parques</dt><dd>4 dias</dd></div><div><dt>Dias</dt><dd>9</dd></div></dl>
+          <dl class="pass__fields"><div><dt>Noites</dt><dd>9 + voo</dd></div><div><dt>Hotéis</dt><dd>3</dd></div><div><dt>Parques</dt><dd>2 dias</dd></div><div><dt>Dias</dt><dd>11</dd></div></dl>
         </div>
         <a class="pass__stub" href="#/checklist"><div><div class="pass__count">${count}</div><div class="pass__count-label">${label}</div></div><div class="pass__stub-note"><strong>${stubNote}</strong>Abrir o checklist</div></a>
       </section>

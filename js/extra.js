@@ -126,7 +126,15 @@
   /* ======================================================================
      Hoje
      ====================================================================== */
-  const startMin = t => { const m = /^\s*(\d{1,2}):(\d{2})/.exec(t); return m ? +m[1] * 60 + +m[2] : null; };
+  const PERIODO = [[/abertura/i, 9 * 60], [/fim da tarde/i, 17 * 60], [/manh[ãa]/i, 8 * 60], [/tarde/i, 13 * 60], [/noite|depois do parque/i, 19 * 60]];
+  const startMin = t => {
+    const m = /(\d{1,2})[:h](\d{2})/.exec(String(t));
+    if (m) return +m[1] * 60 + +m[2];
+    const p = PERIODO.find(x => x[0].test(String(t)));
+    return p ? p[1] : null;
+  };
+  /* Início de cada bloco em minutos; um bloco sem hora reconhecível começa logo depois do anterior. */
+  const startsOf = schedule => { let prev = null; return schedule.map(b => { let s = startMin(b[0]); if (s == null && prev != null) s = prev + 1; if (s != null) prev = s; return s; }); };
   const PARK_DAYS = { 7: "mk", 9: "usf" };
 
   function viewHoje(arg) {
@@ -139,19 +147,19 @@
     const i = n - FT.FIRST_DAY, d = days[i], p = plans[i], date = FT.u.dayDate(n);
     const now = FT.now(), nowMin = now.getHours() * 60 + now.getMinutes();
     let cur = -1, nxt = -1;
-    if (live) p.schedule.forEach((b, k) => { const s = startMin(b[0]); if (s == null) return; if (s <= nowMin) cur = k; else if (nxt < 0) nxt = k; });
+    if (live) startsOf(p.schedule).forEach((s, k) => { if (s == null) return; if (s <= nowMin) cur = k; else if (nxt < 0) nxt = k; });
     const block = (label, k) => k < 0 ? "" : `<div class="nowcard"><div class="nowcard__label">${label}</div><div class="nowcard__title">${esc(p.schedule[k][1])}</div><div class="small muted">${esc(p.schedule[k][0])}${p.schedule[k][2] ? " · " + esc(p.schedule[k][2]) : ""}</div>${p.schedule[k][3] ? `<a class="tl__place" href="${esc(mapsUrl(p.schedule[k][3]))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Abrir no mapa</a>` : ""}</div>`;
     const reminders = store.items().filter(it => it.day === n && !S().checks[it.id]);
     const park = PARK_DAYS[n];
     const nav = `<div class="daynav"><a class="back" href="#/inicio">${icon("chev-l")} Início</a><div class="daynav__steps">${i > 0 ? `<a class="btn btn--quiet btn--icon" href="#/hoje/${n - 1}" aria-label="Dia anterior">${icon("chev-l")}</a>` : ""}${i < days.length - 1 ? `<a class="btn btn--quiet btn--icon" href="#/hoje/${n + 1}" aria-label="Próximo dia">${icon("chev-r")}</a>` : ""}</div></div>`;
     return `${nav}
       <header class="dayhero" style="--leg-color:var(--leg-${esc(d.leg)})">
-        <div class="dayhero__date">${live ? "Hoje" : inTrip || !picked ? "Prévia do primeiro dia" : "Prévia do dia " + n}, ${esc(FT.u.weekday(date).toLowerCase())}, ${esc(FT.u.dateLong(date))}</div>
+        <div class="dayhero__date">${live ? "Hoje" : inTrip || !picked ? "Prévia do dia do embarque" : "Prévia do dia " + n}, ${esc(FT.u.weekday(date).toLowerCase())}, ${esc(FT.u.dateLong(date))}</div>
         <h1 class="dayhero__title">${esc(d.title)}</h1>
         <div class="dayhero__where">${icon("pin")}<span>${esc(d.where)}</span></div>
         <div class="chips" style="margin-top:12px">${FT.app.wxHTML ? FT.app.wxHTML(date) : ""}</div>
       </header>
-      ${!live ? `<div class="callout callout--info">${icon("info")}<div><strong>Esta tela fica ao vivo durante a viagem</strong>Nos dias 3 a 12 de dezembro ela mostra o que está acontecendo agora e o que vem a seguir. Por enquanto, é uma prévia do dia.</div></div>` : ""}
+      ${!live ? `<div class="callout callout--info">${icon("info")}<div><strong>Esta tela fica ao vivo durante a viagem</strong>Nos dias 2 a 12 de dezembro ela mostra o que está acontecendo agora e o que vem a seguir. Por enquanto, é uma prévia do dia.</div></div>` : ""}
       ${live ? `<div class="nowgrid">${block("Agora", cur) || `<div class="nowcard"><div class="nowcard__label">Agora</div><div class="nowcard__title">Ainda não começou</div></div>`}${block("A seguir", nxt) || `<div class="nowcard"><div class="nowcard__label">A seguir</div><div class="nowcard__title">Fim da programação de hoje</div></div>`}</div>` : ""}
       <div class="btn-row" style="margin-top:16px">
         ${park ? `<a class="btn" href="#/parques/${park}">${icon("sun")} Guia do parque</a>` : ""}
