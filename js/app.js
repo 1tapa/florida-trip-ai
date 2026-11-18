@@ -485,6 +485,16 @@
   }
 
 
+  function iphoneHTML() {
+    const I = FT.IPHONE; if (!I) return "";
+    const ext = (label, path) => `<a href="${esc(I.base + path)}" target="_blank" rel="noopener noreferrer">${icon("external")} ${esc(label)}</a>`;
+    return `<section class="section"><div class="section__head"><h2 class="h-section">Estoque do iPhone em Miami</h2></div>
+      <p class="small muted" style="margin-bottom:10px">${esc(I.model)}. Abra a loja, escolha <strong>256 GB</strong> e a cor no filtro e veja se há retirada disponível. O estoque muda ao longo do dia: confira de novo na manhã do dia 3.</p>
+      <div class="sheet" style="padding:0 16px">${I.stores.map(s => `<div class="place"><span class="place__icon">${icon("phone")}</span><div><div class="place__name">Apple ${esc(s[0])}</div><p class="place__note">${esc(s[1])}</p><div class="place__links">${ext("Ver estoque", s[2])}<a href="${esc(mapsUrl(s[3]))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Abrir no mapa</a></div></div></div>`).join("")}</div>
+      <div class="btn-row" style="margin-top:12px"><a class="btn" href="${esc(I.base + I.city[1])}" target="_blank" rel="noopener noreferrer">${esc(I.city[0])}</a><a class="btn btn--quiet" href="${esc(I.base + I.state[1])}" target="_blank" rel="noopener noreferrer">${esc(I.state[0])}</a></div>
+      <p class="small muted" style="margin-top:10px">Dados do InStockRadar, um site de terceiros. Antes de sair para a loja, confirme e reserve no site ou no app da Apple Store.</p></section>`;
+  }
+
   let shopWho = "leo";
   function viewCompras() {
     const st = S(), who = shopWho === "camily" ? "camily" : "leo", name = who === "camily" ? "Camily" : "Leo";
@@ -497,6 +507,7 @@
       <section><div class="section__head"><h2 class="h-section">Lista ${who === "leo" ? "do" : "da"} ${esc(name)}</h2><span class="small muted">${left} por comprar</span></div>
         <div class="sheet" style="padding:0 16px">${list.length ? list.map(x => `<div class="shop-item${x.done ? " shop-item--done" : ""}"><label class="check"><input type="checkbox" data-act="toggle-shop" data-id="${esc(x.id)}"${x.done ? " checked" : ""} aria-label="Comprado: ${esc(x.name)}"><span class="check__box">${icon("check")}</span></label><span class="shop-item__name">${esc(x.name)}</span><button class="btn btn--quiet btn--icon btn--danger" type="button" data-act="del-shop" data-id="${esc(x.id)}" aria-label="Remover ${esc(x.name)}">${icon("trash")}</button></div>`).join("") : `<div class="empty">A lista da ${esc(name)} está vazia.</div>`}</div>
         <form class="row" data-form="shop" style="margin-top:12px"><label class="sr" for="shopName">Novo item para ${esc(name)}</label><input class="field" id="shopName" name="name" maxlength="80" placeholder="Adicionar item para ${esc(name)}" required><button class="btn btn--primary" type="submit">Adicionar</button></form></section>
+      ${iphoneHTML()}
       <section class="section"><div class="section__head"><h2 class="h-section">Outlets no roteiro</h2></div>
         <div class="sheet" style="padding:0 16px">${FT.OUTLETS.map(o => `<div class="place"><span class="place__icon">${icon("bag")}</span><div><div class="place__name">${esc(o.name)} <span class="chip chip--plain">${esc(o.day)}</span></div><p class="place__note">${esc(o.note)}</p><div class="place__links"><a href="${esc(mapsUrl(o.q))}" target="_blank" rel="noopener noreferrer">${icon("pin")} Abrir no mapa</a></div></div></div>`).join("")}</div></section>
       <section class="section"><div class="section__head"><h2 class="h-section">Estratégia</h2></div><ol class="steps">${FT.ESTRATEGIA_COMPRAS.map(s => `<li><strong>${esc(s[0])}</strong><span>${esc(s[1])}</span></li>`).join("")}</ol></section>`;
