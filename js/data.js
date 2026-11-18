@@ -263,6 +263,22 @@
     { name: "Walmart ou mercado", kind: "Economia diária", q: "Walmart Supercenter", icon: "cart", note: "Frutas, iogurtes, pão, água e lanches para reduzir o gasto com café da manhã e parques." }
   ];
 
+  /* Estoque do iPhone nas Apple Stores (InStockRadar, site de terceiros: confirme sempre no site ou app da Apple). */
+  FT.IPHONE = {
+    model: "iPhone 18 Pro Max, 256 GB",
+    base: "https://instockradar.com/us/",
+    city: ["Todas as lojas de Miami", "iphone-18-pro-max/miami"],
+    state: ["Toda a Flórida (plano B em Orlando)", "iphone-18-pro-max/florida"],
+    stores: [
+      ["Lincoln Road", "Miami Beach · a loja do roteiro (dia 3)", "store/lincolnroad/iphone-18-pro-max", "Apple Lincoln Road Miami Beach"],
+      ["Brickell City Centre", "Miami", "store/brickellcitycentre/iphone-18-pro-max", "Apple Brickell City Centre Miami"],
+      ["Miami Worldcenter", "Miami", "store/miamiworldcenter/iphone-18-pro-max", "Apple Miami Worldcenter"],
+      ["Aventura", "Aventura Mall", "store/aventura/iphone-18-pro-max", "Apple Aventura Mall"],
+      ["Dadeland", "Dadeland Mall", "store/dadeland/iphone-18-pro-max", "Apple Dadeland Miami"],
+      ["The Falls", "Sul de Miami", "store/thefalls/iphone-18-pro-max", "Apple The Falls Miami"]
+    ]
+  };
+
   FT.OUTLETS = [
     { name: "Sawgrass Mills", day: "06/12", q: "Sawgrass Mills Sunrise Florida", note: "Primeira rodada, no caminho para Orlando. Procure peças-chave e ofertas excepcionais." },
     { name: "Orlando Vineland Premium Outlets", day: "10/12", q: "Orlando Vineland Premium Outlets", note: "Manhã e começo da tarde de compras. Foco em roupas principais e calçados." },

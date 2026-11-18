@@ -34,7 +34,8 @@
     uni: ["Hogwarts Express e Park-to-Park", "https://www.universalorlando.com/web/en/us/things-to-do/rides-attractions/hogwarts-express-hogsmeade-station/index.html"],
     receita: ["Receita Federal: viajantes e bagagem", "https://www.gov.br/receitafederal/pt-br"],
     mre: ["Itamaraty: consulados", "https://www.gov.br/mre/pt-br"],
-    disney: ["Walt Disney World (site oficial)", "https://disneyworld.disney.go.com/"]
+    disney: ["Walt Disney World (site oficial)", "https://disneyworld.disney.go.com/"],
+    radar: ["Estoque do iPhone 18 Pro Max em Miami", "https://instockradar.com/us/iphone-18-pro-max/miami"]
   };
 
   const R = {
@@ -129,7 +130,7 @@
       ["tec-backup-app", "e", "2026-12-01", 0, "Salvar o backup deste guia e guardar fora do celular",
         "Em Mais, Trocar de celular, toque em Salvar backup e mande o arquivo para o seu e-mail ou salve no iCloud Drive. Sem isso, ao trocar de celular no dia 3 você pode perder o roteiro que editou."],
       ["tec-apple-reserva", "e", "2026-12-01", 0, "Reservar a retirada na Apple Store (Lincoln Road)",
-        "Reserve o modelo para o horário em que você estará lá e confirme o horário de abertura da loja. Leve passaporte e o cartão de pagamento."],
+        "Reserve o modelo para o horário em que você estará lá e confirme o horário de abertura da loja. Leve passaporte e o cartão de pagamento. Antes, veja em qual loja de Miami há o iPhone 18 Pro Max de 256 GB (a lista por loja também está em Mais → Compras) e confirme no site ou app da Apple.", L.radar],
       ["tec-carro", "i", "2026-12-01", 0, "Levar suporte de celular e cabo para o carro",
         "Facilita o GPS na estrada. Verifique se o carro alugado tem entrada USB ou CarPlay."],
       ["tec-espaco", "o", "2026-12-01", 0, "Liberar espaço de armazenamento nos celulares",
